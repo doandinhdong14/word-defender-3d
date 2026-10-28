@@ -19,7 +19,12 @@ export type AppRoute =
   | 'wardrobe'
   | 'progress'
   | 'settings'
+  | 'account'
+  | 'leaderboard'
+  | 'gifts'
+  | 'events'
   | 'admin';
+// The lobby exposes seven destinations; existing tools remain nested within them.
 
 interface AppContextValue {
   currentRoute: AppRoute;
@@ -67,6 +72,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [dueWordsCount, setDueWordsCount] = useState<number>(0);
 
   const refreshUserData = async () => {
+    if (!account) {
+      setProfile(null);
+      setWallet(null);
+      setInventory(null);
+      setSettings(null);
+      setDueWordsCount(0);
+      return;
+    }
     const prof = await db.profiles.get(profileId);
     if (prof) setProfile(prof);
 
@@ -128,7 +141,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [profileId]);
 
   const navigateTo = (route: AppRoute) => {
-    const requiresAdmin = route === 'admin' || route === 'editor';
+    const requiresAdmin = route === 'admin';
     setCurrentRoute(requiresAdmin && !isAdmin ? 'home' : route);
     refreshUserData();
     window.scrollTo(0, 0);

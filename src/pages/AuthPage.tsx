@@ -56,17 +56,17 @@ export const AuthPage: React.FC = () => {
       <div className="auth-layout">
         <section className="auth-intro" aria-labelledby="auth-title">
           <div className="auth-brand">
-            <img src={getAssetUrl('/assets/logo.png')} alt="" className="auth-logo" />
-            <span>PONPI</span>
+            <img src={getAssetUrl('/pempom.svg')} alt="" className="auth-logo" />
+            <span>pempom</span>
           </div>
-          <h1 id="auth-title">Mỗi phi công,<br />một hành trình riêng.</h1>
+          <h1 id="auth-title">Một tài khoản nhỏ.<br />Cả thế giới chờ bạn.</h1>
           <p>
             Đăng nhập để giữ riêng tiến trình học, xu và tủ đồ của bạn trên thiết bị này.
           </p>
           <div className="auth-security-list">
-            <div><ShieldCheck size={19} /><span>Mật khẩu được băm một chiều, không lưu bản gốc</span></div>
-            <div><LockKeyhole size={19} /><span>Tự khóa khi đăng nhập sai nhiều lần</span></div>
-            <div><KeyRound size={19} /><span>Phiên tự hết hạn sau thời gian không hoạt động</span></div>
+            <div><ShieldCheck size={19} /><span>Giữ tiến trình và bộ trang bị của riêng bạn</span></div>
+            <div><LockKeyhole size={19} /><span>Tích lũy xu qua từng trận chiến</span></div>
+            <div><KeyRound size={19} /><span>Mở quà mỗi ngày, nhận thêm niềm vui</span></div>
           </div>
         </section>
 
@@ -94,13 +94,11 @@ export const AuthPage: React.FC = () => {
 
           <div className="auth-card-heading">
             <span className="auth-eyebrow">{mode === 'login' ? 'CHÀO MỪNG TRỞ LẠI' : 'TẠO HỒ SƠ MỚI'}</span>
-            <h2>{mode === 'login' ? 'Tiếp tục học cùng Ponpi' : 'Bắt đầu hành trình'}</h2>
+            <h2>{mode === 'login' ? 'Tiếp tục học cùng pempom' : 'Bắt đầu hành trình'}</h2>
             <p>
               {mode === 'login'
                 ? 'Nhập thông tin tài khoản của bạn để tiếp tục.'
-                : !hasAccounts
-                  ? 'Tài khoản đầu tiên sẽ là quản trị viên hệ thống.'
-                  : 'Tài khoản mới được tạo với quyền người chơi.'}
+                : 'Tạo tài khoản để bắt đầu cuộc phiêu lưu của bạn.'}
             </p>
           </div>
 

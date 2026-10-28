@@ -9,7 +9,7 @@ import { generateCsvTemplate } from '../data/importExcel';
 import { useAuth } from '../auth/AuthContext';
 
 export const LibraryPage: React.FC = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, account } = useAuth();
   const { navigateTo, selectedSetId, setSelectedSetId } = useApp();
   const [sets, setSets] = useState<VocabularySet[]>([]);
   const [search, setSearch] = useState('');
@@ -56,10 +56,11 @@ export const LibraryPage: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'ponpi_word_template.csv');
+    link.setAttribute('download', 'pempom_word_template.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const filteredSets = sets.filter((s) =>
@@ -84,25 +85,25 @@ export const LibraryPage: React.FC = () => {
             Trang Chủ
           </StickerButton>
 
-          {isAdmin && <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <StickerButton size="sm" onClick={handleDownloadTemplate} icon={<Download size={14} />}>
               Tải Template
             </StickerButton>
             <StickerButton
               variant="mint"
               size="sm"
-              onClick={() => navigateTo('editor')}
+              onClick={() => navigateTo(account ? 'editor' : 'account')}
               icon={<Upload size={14} />}
             >
-              Import CSV
+              Tải tài liệu Excel / CSV
             </StickerButton>
-          </div>}
+          </div>
         </div>
 
         {/* Page Title & Search */}
         <div style={{ marginBottom: '24px' }}>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.2rem', fontWeight: 900 }}>
-            Thư Viện Bộ Từ Vựng
+            Bài học & tài liệu
           </h1>
           <p style={{ color: 'var(--color-muted-ink)', marginTop: '4px' }}>
             Chọn bộ từ có sẵn để luyện tập hoặc tự thêm bộ từ của bạn từ file Excel.

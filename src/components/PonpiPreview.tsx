@@ -16,6 +16,7 @@ interface PonpiPreviewProps {
   width?: number;
   height?: number;
   initialPose?: PoseId;
+  frameless?: boolean;
 }
 
 interface FlyingBullet {
@@ -40,6 +41,7 @@ export const PonpiPreview: React.FC<PonpiPreviewProps> = ({
   width = 240,
   height = 240,
   initialPose = 'idle',
+  frameless = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [pose, setPose] = useState<PoseId>(initialPose);
@@ -64,7 +66,7 @@ export const PonpiPreview: React.FC<PonpiPreviewProps> = ({
 
       ctx.clearRect(0, 0, width, height);
 
-      // Draw Ponpi
+      // Draw pempom
       const centerX = width / 2;
       const centerY = height / 2 + 10;
       drawPonpi(ctx, centerX, centerY, {
@@ -161,13 +163,13 @@ export const PonpiPreview: React.FC<PonpiPreviewProps> = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
       <div
-        className="notebook-grid-bg"
+        className={frameless ? 'character-preview' : 'notebook-grid-bg'}
         style={{
           width: `${width}px`,
           height: `${height}px`,
-          border: 'var(--border-ink)',
+          border: frameless ? 'none' : 'var(--border-ink)',
           borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-sticker)',
+          boxShadow: frameless ? 'none' : 'var(--shadow-sticker)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

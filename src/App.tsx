@@ -13,14 +13,19 @@ import { WardrobePage } from './pages/WardrobePage';
 import { ProgressPage } from './pages/ProgressPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AdminPage } from './pages/AdminPage';
-import { AuthPage } from './pages/AuthPage';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import { getAssetUrl } from './utils/assetUrl';
 import { AppShell } from './components/AppShell';
+import { AccountPage } from './pages/AccountPage';
+import { EventsPage, GiftsPage, LeaderboardPage } from './pages/CommunityPages';
 
 const AppContent: React.FC = () => {
   const { currentRoute } = useApp();
-  const { isAdmin } = useAuth();
+  const { isAdmin, account } = useAuth();
+
+  if (!account && ['prepare', 'battle', 'editor', 'settings', 'wardrobe', 'review', 'progress', 'admin'].includes(currentRoute)) {
+    return <AppShell><AccountPage /></AppShell>;
+  }
 
   let page: React.ReactNode;
   switch (currentRoute) {
@@ -31,7 +36,7 @@ const AppContent: React.FC = () => {
       page = <LibraryPage />;
       break;
     case 'editor':
-      page = isAdmin ? <WordSetEditorPage /> : <HomePage />;
+      page = <WordSetEditorPage />;
       break;
     case 'prepare':
       page = <PreparePage />;
@@ -59,6 +64,18 @@ const AppContent: React.FC = () => {
     case 'admin':
       page = isAdmin ? <AdminPage /> : <HomePage />;
       break;
+    case 'account':
+      page = <AccountPage />;
+      break;
+    case 'leaderboard':
+      page = <LeaderboardPage />;
+      break;
+    case 'gifts':
+      page = <GiftsPage />;
+      break;
+    case 'events':
+      page = <EventsPage />;
+      break;
     default:
       page = <HomePage />;
   }
@@ -72,16 +89,14 @@ const AuthenticatedApplication: React.FC = () => {
   if (!ready) {
     return (
       <div className="notebook-grid-bg app-loading-screen">
-        <img src={getAssetUrl('/assets/logo.png')} alt="" />
+        <img src={getAssetUrl('/pempom.svg')} alt="" />
         <span>Đang kiểm tra phiên đăng nhập…</span>
       </div>
     );
   }
 
-  if (!account) return <AuthPage />;
-
   return (
-    <AppProvider>
+    <AppProvider key={account?.id || 'visitor'}>
       <AppContent />
     </AppProvider>
   );
@@ -125,7 +140,7 @@ export const App: React.FC = () => {
         }}
       >
         <h1 style={{ fontFamily: 'var(--font-display)', color: 'var(--color-danger)' }}>
-          Không thể khởi động Ponpi
+          Không thể khởi động pempom
         </h1>
         <p style={{ maxWidth: '560px', color: 'var(--color-muted-ink)' }}>{dbError}</p>
         <button
@@ -156,7 +171,7 @@ export const App: React.FC = () => {
           color: 'var(--color-ink)',
         }}
       >
-        Đang khởi động Ponpi: Word Blaster...
+        Đang khởi động pempom...
       </div>
     );
   }

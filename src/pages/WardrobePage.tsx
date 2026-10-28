@@ -7,6 +7,7 @@ import { StickerButton } from '../components/StickerButton';
 import { PonpiPreview } from '../components/PonpiPreview';
 import { StoreCategory } from '../types/economy';
 import { getAssetUrl } from '../utils/assetUrl';
+import { playWeaponShootSound } from '../utils/soundEffects';
 import { ArrowLeft, Play, Shirt, ShoppingBag, X } from 'lucide-react';
 
 export const WardrobePage: React.FC = () => {
@@ -18,6 +19,9 @@ export const WardrobePage: React.FC = () => {
   );
 
   const handleEquip = async (itemId: string) => {
+    if (activeTab === 'skill') {
+      playWeaponShootSound(itemId, true);
+    }
     await equipItem(activeTab, itemId);
     await refreshUserData();
   };
@@ -68,10 +72,10 @@ export const WardrobePage: React.FC = () => {
         </div>
 
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.2rem', fontWeight: 900, marginBottom: '6px' }}>
-          Tủ Đồ & Trang Bị Ponpi
+          Tủ Đồ & Trang Bị pempom
         </h1>
         <p style={{ color: 'var(--color-muted-ink)', marginBottom: '24px' }}>
-          Tùy chỉnh màu sắc, loại đạn tên lửa đặc biệt và trang phục chiến đấu cho Ponpi. Thử ngay các tư thế bắn khác nhau!
+          Tùy chỉnh màu sắc, loại đạn tên lửa đặc biệt và trang phục chiến đấu cho pempom. Thử ngay các tư thế bắn khác nhau!
         </p>
 
         {/* Main Grid: Preview on Left + Equipment Slots on Right */}
@@ -79,7 +83,7 @@ export const WardrobePage: React.FC = () => {
           {/* Left: Interactive Rig Preview */}
           <PaperPanel style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px' }}>
             <div style={{ fontWeight: 800, fontSize: '0.9rem', marginBottom: '12px', color: 'var(--color-muted-ink)' }}>
-              XEM 5 HƯỚNG BẮN CỦA PONPI
+              XEM 5 HƯỚNG BẮN CỦA pempom
             </div>
 
             <PonpiPreview
@@ -105,7 +109,7 @@ export const WardrobePage: React.FC = () => {
               }}
             >
               <div style={{ fontWeight: 800, marginBottom: '6px' }}>Đang Trang Bị:</div>
-              <div>• Trang phục: <strong>{equippedOutfit ? equippedOutfit.title : 'Mặc định (Ponpi Vàng)'}</strong></div>
+              <div>• Trang phục: <strong>{equippedOutfit ? equippedOutfit.title : 'Mặc định (pempom Vàng)'}</strong></div>
               <div>• Màu sắc: <strong>{equippedStyle ? equippedStyle.title : 'Golden Sun (Vàng)'}</strong></div>
               <div>
                 • Đạn bắn chính: <strong>{equippedBullet ? equippedBullet.title : 'Tên Lửa Hỏa Tiễn (Rocket)'}</strong>
@@ -171,8 +175,14 @@ export const WardrobePage: React.FC = () => {
                     return (
                       <div
                         key={item.id}
+                        onClick={() => {
+                          if (activeTab === 'skill') {
+                            playWeaponShootSound(item.id, true);
+                          }
+                        }}
                         style={{
                           padding: '12px',
+                          cursor: activeTab === 'skill' ? 'pointer' : 'default',
                           backgroundColor: isEquipped ? '#FFF0F5' : 'var(--color-paper)',
                           border: isEquipped ? '2.5px solid var(--color-ponpi-pink)' : '1.5px solid var(--color-ink)',
                           borderRadius: 'var(--radius-md)',
@@ -255,7 +265,7 @@ export const WardrobePage: React.FC = () => {
             {(activeTab === 'outfit' && inventory?.equippedOutfitId) && (
               <div style={{ marginTop: '16px', borderTop: '1px dashed var(--color-grid)', paddingTop: '12px' }}>
                 <StickerButton size="sm" onClick={() => handleUnequip('outfit')}>
-                  Tháo Trang Phục (Về Ponpi Vàng Mặc Định)
+                  Tháo Trang Phục (Về pempom Vàng Mặc Định)
                 </StickerButton>
               </div>
             )}

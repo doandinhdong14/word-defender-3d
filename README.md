@@ -1,84 +1,42 @@
-﻿# Ponpi: Word Blaster (Word Defender)
+# pempom
 
-Game luyện gõ từ vựng tiếng Anh tương tác kết hợp lối chơi thủ thành (Typing Shooter) phong cách **Sổ tay vẽ tay ô ly (Hand-drawn Notebook Grid)** độc đáo.
+Game luyện từ vựng tiếng Anh bằng cách gõ chữ để bắn quái. React 19, TypeScript, Vite và Canvas; lưu dữ liệu bằng Dexie/IndexedDB.
 
----
+## Khởi chạy
 
-## 🌟 Tính Năng Nổi Bật
-
-1. **Phong Cách Sổ Tay Ô Ly Hoài Niệm (Hand-Drawn Notebook Theme)**:
-   - Giao diện tối giản, tinh tế như được vẽ bằng bút chì và mực trên trang giấy học trò.
-   - Hiệu ứng âm thanh gõ bút, lật trang, nổ hạt giấy sống động.
-
-2. **Mascot Ponpi & Hệ Thống Tùy Biến Đa Dạng**:
-   - Nhân vật chính Ponpi với 5 tư thế ngắm bắn chân thực theo hướng di chuyển của quái.
-   - **Kho Skin phong phú**: Ninja, Samurai, Ghost, Basketball, Soccer, Gladiator, Builder, Halloween...
-   - **Đạn bắn đặc sắc**: Shuriken, Kunai, Tên lửa mini, Bóng đá, Bóng rổ...
-
-3. **3 Chế Độ Học Thông Minh**:
-   - **Chép chính tả (Spelling Copy)**: Gõ chữ theo từ tiếng Anh hiển thị.
-   - **Hồi tưởng (Meaning Recall)**: Xem nghĩa tiếng Việt và gõ từ tiếng Anh tương ứng.
-   - **Nghe phát âm (Listening)**: Nghe phát âm tiếng Anh chuẩn (Web Audio Speech Synthesis) và gõ lại từ.
-   - Tích hợp thuật toán lặp lại ngắt quãng (Spaced Repetition System) giúp ghi nhớ từ vựng lâu dài.
-
-4. **Hệ Thống Bản Đồ (Battle Maps)**:
-   - Nhiều khu vực chiến đấu thử thách: Sân trường, Lớp học, Hẻm Núi Đỏ (Red Canyon)...
-
-5. **Kinh Tế, Cửa Hàng & Tủ Đồ (Wardrobe & Store)**:
-   - Tích lũy Xu (Coins) qua mỗi màn chơi và bài học.
-   - Mua sắm trang phục, đạn và kỹ năng hỗ trợ (Đóng băng/Làm chậm quái vật, bom diện rộng).
-   - Thử đồ và đổi skin trực quan ngay trong phòng thay đồ.
-
-6. **Quản Lý Bộ Từ Vựng Toàn Diện**:
-   - Sẵn sàng các bộ từ vựng chuẩn A1, A2, B1 theo chủ đề.
-   - Nhập bộ từ riêng dễ dàng thông qua file Excel (.xlsx) hoặc .csv.
-   - Lưu trữ an toàn trên thiết bị (Dexie / IndexedDB) kèm tính năng Sao lưu (Backup) & Khôi phục (Restore).
-
-7. **Tài Khoản, Phiên Đăng Nhập & Phân Quyền**:
-   - Đăng ký, đăng nhập, đăng xuất và đổi mật khẩu ngay trong ứng dụng.
-   - Tài khoản đầu tiên là `admin`; các tài khoản tạo sau có vai trò `player`.
-   - Quản trị viên có thể đổi vai trò, vô hiệu hóa/kích hoạt tài khoản và xem nhật ký bảo mật.
-   - Tiến trình, ví xu, tủ đồ, lịch sử trận và dữ liệu ôn tập được tách theo tài khoản.
-   - Mật khẩu được băm bằng PBKDF2-HMAC-SHA256 với salt ngẫu nhiên và 600.000 vòng; có khóa tạm khi thử sai và timeout phiên.
-
-> **Phạm vi bảo mật:** Đây là hệ thống tài khoản cục bộ/offline; dữ liệu và thông tin xác thực nằm trong IndexedDB của trình duyệt hiện tại. Để đồng bộ đa thiết bị hoặc chống người có toàn quyền truy cập máy/trình duyệt, cần chuyển xác thực và dữ liệu sang backend đáng tin cậy.
-
----
-
-## 🚀 Hướng Dẫn Cài Đặt & Khởi Chạy
-
-### Yêu Cầu Hệ Thống
-- Node.js 18+ 
-- npm hoặc pnpm
-
-### Cài đặt
-`ash
-# Cài đặt các thư viện phụ thuộc
+```sh
 npm install
-`
-
-### Chạy môi trường phát triển (Dev)
-`ash
 npm run dev
-`
-Mở trình duyệt truy cập: http://localhost:5173/ (hoặc port hiển thị trên terminal).
+```
 
-### Kiểm thử (Unit Tests)
-`ash
-npm run test
-`
+Mở URL Vite hiển thị, thường là http://localhost:5173. Trên PowerShell bị chặn npm.ps1, dùng `npm.cmd`.
 
-### Đóng gói sản phẩm (Production Build)
-`ash
-npm run build
-`
+```sh
+npm test          # Unit tests
+npm run test:e2e  # Browser tests (Playwright)
+npm run build    # TypeScript + production build vào build/
+```
 
----
+Browser tests dùng Edge trên Windows, Chromium trên hệ điều hành khác. Nếu chưa có Chromium, chạy `npx playwright install chromium`.
 
-## 🛠️ Công Nghệ Sử Dụng
-- **React 19** + **TypeScript** + **Vite**
-- **Lucide React** (Biểu tượng)
-- **Dexie.js** (IndexedDB Wrapper cho lưu trữ offline)
-- **XLSX & PapaParse** (Xử lý file Excel/CSV)
-- **Canvas Confetti** (Hiệu ứng chiến thắng)
-- **Vitest** (Kiểm thử đơn vị tự động)
+## Đúng 7 mục trong giao diện
+
+1. **Chơi:** sảnh game → chế độ chơi → Đấu thường → chọn map, tướng, đạn, tài liệu → xác nhận vào trận. Các chế độ khác hiển thị Sắp ra mắt. Trong Đấu thường có tùy chọn cách học và độ khó.
+2. **Store:** xem thử, mua và trang bị tướng, màu sắc, đạn/kỹ năng bằng xu hiện có. Tủ đồ được đặt bên trong Store.
+3. **Bảng xếp hạng:** điểm cao nhất từ các trận thực tế và tab Diễn đàn.
+4. **Tài khoản:** đăng ký/đăng nhập, hồ sơ, ví xu, các gói mua xu với giao diện payOS. Cài đặt và quản trị nằm bên trong tài khoản.
+5. **Bài học:** bộ từ có sẵn, xem trước, tìm kiếm và tải Excel/CSV (tối đa 5 MB, 5.000 dòng; cần hai cột english/vietnamese). Người chơi thường cũng có thể nhập tài liệu.
+6. **Quà tặng:** quà 50 xu hằng ngày theo ngày Việt Nam, lưu/sao chép ý tưởng, sao chép lời mời bạn bè.
+7. **Sự kiện:** nhiệm vụ thắng trận đầu và hoàn thành 30 từ; xác minh tiến độ và nhận thưởng một lần.
+
+## Phạm vi dữ liệu và tích hợp
+
+- Tài khoản, ví, bài viết diễn đàn, ý tưởng, phần thưởng và bảng xếp hạng lưu trên trình duyệt hiện tại. Chưa có đồng bộ thiết bị, chat trực tuyến hay bảng xếp hạng toàn cầu. UI ghi rõ phạm vi này.
+- Lời mời có mã và liên kết sao chép; chưa có máy chủ xác thực người được mời nên thưởng giới thiệu chưa mở. Ý tưởng được lưu trên máy, chưa tự gửi cho đội ngũ.
+- Thanh toán thật chưa bật. Nút thanh toán khóa khi chưa cấu hình API; không cộng xu giả, không tin redirect là bằng chứng thanh toán. Xem [hợp đồng API payOS](docs/payment-api.md) và [.env.example](.env.example).
+- Giữ tên cơ sở dữ liệu và khóa lưu cũ để người dùng hiện tại không mất tài khoản, tiến trình, xu, trang bị khi đổi thương hiệu. Tên sprite và các ký hiệu renderer nội bộ giữ tương thích tài nguyên cũ.
+- Cấu hình quà khởi đầu, giá Store và trang bị miễn phí đang kế thừa bản game gốc. Không dùng ví cục bộ làm ví tiền thật.
+
+Sảnh có thể xem khi chưa đăng nhập. Trận đấu và thao tác cá nhân yêu cầu tài khoản. Tài khoản đầu tiên vẫn có quyền quản trị theo cơ chế sẵn có.
+
+`spec.md` là đặc tả kỹ thuật ban đầu. Cấu trúc 7 mục và thương hiệu pempom trong bản này thay thế bố cục điều hướng cũ.

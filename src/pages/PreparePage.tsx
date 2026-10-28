@@ -1,413 +1,348 @@
-import React, { useEffect, useState } from 'react';
-import { useApp } from '../app/appStore';
-import { Difficulty, GameMode } from '../types/game';
-import { VocabularyEntry, VocabularySet } from '../types/vocabulary';
-import { db } from '../data/db';
-import { PaperPanel } from '../components/PaperPanel';
-import { StickerButton } from '../components/StickerButton';
-import { CoinBadge } from '../components/CoinBadge';
-import { ArrowLeft, Play, Eye, EyeOff, BookOpen, Volume2, SpellCheck, BrainCircuit, ShieldAlert } from 'lucide-react';
-import { STORE_CATALOG } from '../config/catalog';
-import { MAP_CONFIGS, GameMapId, ALL_MAP_IDS } from '../config/maps';
-import { getAssetUrl } from '../utils/assetUrl';
+import React, { useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  Check,
+  Map,
+  Play,
+  Shield,
+  Swords,
+  Zap,
+} from "lucide-react";
+import { useApp } from "../app/appStore";
+import { db } from "../data/db";
+import { VocabularySet } from "../types/vocabulary";
+import { ALL_MAP_IDS, MAP_CONFIGS } from "../config/maps";
+import { STORE_CATALOG } from "../config/catalog";
+import { getAssetUrl } from "../utils/assetUrl";
+import { PonpiPreview } from "../components/PonpiPreview";
+import { playWeaponShootSound } from "../utils/soundEffects";
 
+const STEPS = [
+  { label: "Chọn map", icon: Map },
+  { label: "Chọn tướng", icon: Shield },
+  { label: "Chọn đạn", icon: Zap },
+  { label: "Tài liệu học", icon: BookOpen },
+];
 export const PreparePage: React.FC = () => {
   const {
     navigateTo,
+    selectedMap,
+    setSelectedMap,
     selectedSetId,
     setSelectedSetId,
     selectedMode,
     setSelectedMode,
     selectedDifficulty,
     setSelectedDifficulty,
-    selectedMap,
-    setSelectedMap,
-    wallet,
     inventory,
+    refreshUserData,
   } = useApp();
-
+  const [step, setStep] = useState(0);
   const [sets, setSets] = useState<VocabularySet[]>([]);
-  const [currentSet, setCurrentSet] = useState<VocabularySet | null>(null);
-  const [previewWords, setPreviewWords] = useState<VocabularyEntry[]>([]);
-  const [showStudyFirst, setShowStudyFirst] = useState(false);
-
+  const [outfit, setOutfit] = useState<string | null>(
+    inventory?.equippedOutfitId || null,
+  );
+  const [bullet, setBullet] = useState(
+    inventory?.equippedBulletId || "bullet_default",
+  );
+  const [error, setError] = useState("");
+  const [launching, setLaunching] = useState(false);
   useEffect(() => {
-    const load = async () => {
-      const allSets = await db.wordSets.toArray();
-      setSets(allSets);
-
-      const active = allSets.find((s) => s.id === selectedSetId) || allSets[0];
-      if (active) {
-        setCurrentSet(active);
-        const words = await db.words.where('setId').equals(active.id).toArray();
-        setPreviewWords(words);
-      }
-    };
-    load();
-  }, [selectedSetId]);
-
-  const handleSetChange = (id: string) => {
-    setSelectedSetId(id);
+    db.wordSets
+      .toArray()
+      .then((all) => {
+        setSets(all);
+        if (!all.some((s) => s.id === selectedSetId) && all[0])
+          setSelectedSetId(all[0].id);
+      })
+      .catch(() => setError("Không tải được tài liệu. Hãy thử lại."));
+  }, []);
+  const outfits = STORE_CATALOG.filter(
+    (i) => i.category === "outfit" && inventory?.ownedItemIds.includes(i.id),
+  );
+  const bullets = STORE_CATALOG.filter(
+    (i) => i.id.startsWith("bullet_") && inventory?.ownedItemIds.includes(i.id),
+  );
+  const activeSet = sets.find((s) => s.id === selectedSetId);
+  const launch = async () => {
+    if (launching) return;
+    setLaunching(true);
+    setError("");
+    try {
+      if (!inventory)
+        throw new Error("Hãy đăng nhập để chọn trang bị và vào trận.");
+      if (
+        !activeSet ||
+        !(await db.words.where("setId").equals(activeSet.id).count())
+      )
+        throw new Error("Hãy chọn tài liệu có ít nhất một từ vựng.");
+      if (
+        (outfit && !inventory.ownedItemIds.includes(outfit)) ||
+        !inventory.ownedItemIds.includes(bullet)
+      )
+        throw new Error("Bạn chưa sở hữu trang bị này.");
+      await db.inventories.update(inventory.profileId, {
+        equippedOutfitId: outfit,
+        equippedBulletId: bullet,
+      });
+      await refreshUserData();
+      navigateTo("battle");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể vào trận.");
+      setLaunching(false);
+    }
   };
-
-  const modes: { id: GameMode; title: string; desc: string; icon: React.ReactNode }[] = [
-    {
-      id: 'copy',
-      title: 'Nấc 1: Gõ Từ (Copy)',
-      desc: 'Quái hiện chữ tiếng Anh màu đỏ. Gõ đúng chữ chuyển sang màu xanh. Quái chết hiện ra nghĩa của từ.',
-      icon: <SpellCheck size={20} color="#0288D1" />,
-    },
-    {
-      id: 'recall',
-      title: 'Nấc 2: Nhớ Nghĩa (Recall)',
-      desc: 'Quái chỉ hiện nghĩa tiếng Việt. Bắt đầu nhắm vào quái thì mất nghĩa đó và điền các chữ cái đúng bạn bấm.',
-      icon: <BrainCircuit size={20} color="#E06C96" />,
-    },
-    {
-      id: 'listen',
-      title: 'Nấc 3: Nghe & Gõ (Listen)',
-      desc: 'Quái phát âm thanh tiếng Anh. Khi nhắm vào quái, gõ từ đúng để bắn hạ quái và hiện ra nghĩa của từ.',
-      icon: <Volume2 size={20} color="#F57F17" />,
-    },
-  ];
-
-  const difficulties: { id: Difficulty; title: string; desc: string }[] = [
-    { id: 'easy', title: 'Dễ (Easy)', desc: 'Tốc độ quái 70% • Phù hợp làm quen' },
-    { id: 'normal', title: 'Vừa (Normal)', desc: 'Tốc độ quái 100% • Trải nghiệm chuẩn' },
-    { id: 'hard', title: 'Khó (Hard)', desc: 'Tốc độ quái 135% • Điểm thưởng cao' },
-  ];
-
-  const equippedSkills = (inventory?.equippedSkillIds || [])
-    .map((id) => STORE_CATALOG.find((item) => item.id === id))
-    .filter(Boolean);
-
   return (
-    <div
-      className="notebook-grid-bg app-page"
-      style={{
-        minHeight: '100vh',
-        padding: '30px 20px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}
-    >
-      <div style={{ width: '100%', maxWidth: '850px' }}>
-        {/* Top Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <StickerButton onClick={() => navigateTo('home')} icon={<ArrowLeft size={18} />}>
-            Trang Chủ
-          </StickerButton>
-          <CoinBadge amount={wallet?.balance || 0} showLabel />
-        </div>
-
-        <PaperPanel>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 900, marginBottom: '6px' }}>
-            Chuẩn Bị Chiến Đấu
-          </h1>
-          <p style={{ color: 'var(--color-muted-ink)', marginBottom: '20px' }}>
-            Chọn bộ từ, chế độ học và cấp độ thử thách trước khi vào trận.
-          </p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-            {/* 1. Chọn Bộ Từ Vựng */}
-            <div>
-              <label style={{ display: 'block', fontWeight: 800, marginBottom: '8px', fontSize: '1.05rem' }}>
-                1. Bộ Từ Vựng Đang Chọn:
-              </label>
-              <div className="prepare-set-row" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <select
-                  value={selectedSetId}
-                  onChange={(e) => handleSetChange(e.target.value)}
-                  style={{
-                    flex: 1,
-                    padding: '10px 14px',
-                    fontFamily: 'var(--font-display)',
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                    border: 'var(--border-ink)',
-                    borderRadius: 'var(--radius-md)',
-                    backgroundColor: '#FFFFFF',
-                    outline: 'none',
-                  }}
-                >
-                  {sets.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.title} ({s.entryIds.length} từ)
-                    </option>
-                  ))}
-                </select>
-                <StickerButton size="sm" onClick={() => navigateTo('library')} icon={<BookOpen size={16} />}>
-                  Đổi Bộ Từ
-                </StickerButton>
-              </div>
-            </div>
-
-            {/* 2. Chọn Chế Độ Học */}
-            <div>
-              <label style={{ display: 'block', fontWeight: 800, marginBottom: '8px', fontSize: '1.05rem' }}>
-                2. Chế Độ Bắn Chữ (Game Mode):
-              </label>
-              <div className="prepare-mode-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
-                {modes.map((m) => {
-                  const isSelected = selectedMode === m.id;
-                  return (
-                    <div
-                      key={m.id}
-                      onClick={() => setSelectedMode(m.id)}
-                      style={{
-                        padding: '14px',
-                        backgroundColor: isSelected ? '#FFF0F5' : '#FFFFFF',
-                        border: isSelected ? '3px solid var(--color-ponpi-pink)' : 'var(--border-ink)',
-                        borderRadius: 'var(--radius-md)',
-                        boxShadow: isSelected ? 'var(--shadow-sticker-hover)' : 'var(--shadow-sticker-sm)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px',
-                        transition: 'all 0.1s ease',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '1rem' }}>
-                        {m.icon}
-                        <span>{m.title}</span>
-                      </div>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--color-muted-ink)', lineHeight: 1.3 }}>
-                        {m.desc}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 3. Chọn Độ Khó */}
-            <div>
-              <label style={{ display: 'block', fontWeight: 800, marginBottom: '8px', fontSize: '1.05rem' }}>
-                3. Tốc Độ & Độ Khó:
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(95px, 1fr))', gap: '10px' }}>
-                {difficulties.map((d) => {
-                  const isSelected = selectedDifficulty === d.id;
-                  return (
-                    <div
-                      key={d.id}
-                      onClick={() => setSelectedDifficulty(d.id)}
-                      style={{
-                        padding: '12px',
-                        backgroundColor: isSelected ? '#FFF8E1' : '#FFFFFF',
-                        border: isSelected ? '3px solid var(--color-accent-yellow)' : 'var(--border-ink)',
-                        borderRadius: 'var(--radius-md)',
-                        boxShadow: isSelected ? 'var(--shadow-sticker-hover)' : 'var(--shadow-sticker-sm)',
-                        cursor: 'pointer',
-                        textAlign: 'center',
-                      }}
-                    >
-                      <div style={{ fontWeight: 800, fontSize: '0.95rem' }}>{d.title}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-muted-ink)', marginTop: '2px' }}>
-                        {d.desc}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 4. Chọn Bản Đồ (Map / Chiến Trường) */}
-            <div>
-              <div className="prepare-map-heading" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <label style={{ fontWeight: 800, fontSize: '1.05rem' }}>
-                  4. Chọn Bản Đồ (Map / Chiến Trường):
-                </label>
-                <span style={{ fontSize: '0.8rem', color: 'var(--color-muted-ink)' }}>
-                  Đang chọn: <strong>{MAP_CONFIGS[selectedMap]?.name}</strong>
+    <div className="portal-page prepare-page">
+      <button className="text-button" onClick={() => navigateTo("home")}>
+        <ArrowLeft size={17} /> Về sảnh
+      </button>
+      <div className="page-heading">
+        <span className="eyebrow">
+          <Swords size={15} /> ĐẤU THƯỜNG
+        </span>
+        <h1>Chuẩn bị cho cuộc phiêu lưu.</h1>
+        <p>Một chiến binh, một thế giới, và những điều mới để khám phá.</p>
+      </div>
+      <div className="prepare-layout">
+        <div className="surface prepare-options">
+          <div className="step-tabs">
+            {STEPS.map(({ label, icon: Icon }, i) => (
+              <button
+                key={label}
+                onClick={() => setStep(i)}
+                className={step === i ? "active" : ""}
+              >
+                <span>
+                  {i < step ? <Check size={15} /> : <Icon size={16} />}
                 </span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
-                {ALL_MAP_IDS.map((mapId) => {
-                  const mapInfo = MAP_CONFIGS[mapId];
-                  const isSelected = selectedMap === mapId;
-                  const isDefault = mapId === 'default';
-
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="step-body">
+            <span className="eyebrow">BƯỚC 0{step + 1} / 04</span>
+            <h2>{STEPS[step].label}</h2>
+            {step === 0 && (
+              <div className="map-grid">
+                {ALL_MAP_IDS.map((id) => {
+                  const m = MAP_CONFIGS[id];
                   return (
-                    <div
-                      key={mapId}
-                      onClick={() => setSelectedMap(mapId)}
-                      style={{
-                        padding: '14px',
-                        backgroundColor: isSelected ? (isDefault ? '#F6F9FA' : '#FCF8F5') : '#FFFFFF',
-                        border: isSelected
-                          ? (isDefault ? '3px solid var(--color-ink)' : `3px solid ${mapInfo.accentColor}`)
-                          : '1.5px solid var(--color-ink)',
-                        borderRadius: 'var(--radius-md)',
-                        boxShadow: isSelected ? 'var(--shadow-sticker-hover)' : 'var(--shadow-sticker-sm)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px',
-                        position: 'relative',
-                        transition: 'all 0.15s ease',
-                      }}
+                    <button
+                      key={id}
+                      className={`map-choice ${selectedMap === id ? "selected" : ""}`}
+                      onClick={() => setSelectedMap(id)}
+                      aria-pressed={selectedMap === id}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span
-                          style={{
-                            fontSize: '0.7rem',
-                            fontWeight: 900,
-                            padding: '2px 8px',
-                            borderRadius: 'var(--radius-full)',
-                            backgroundColor: isDefault ? 'var(--color-muted-ink)' : mapInfo.accentColor,
-                            color: '#FFFFFF',
-                          }}
-                        >
-                          {mapInfo.badge}
-                        </span>
-                        {isSelected && (
-                          <span
-                            style={{
-                              fontSize: '0.78rem',
-                              fontWeight: 900,
-                              color: isDefault ? '#16A34A' : mapInfo.accentColor,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '2px',
-                            }}
-                          >
-                            ✓ ĐANG CHỌN
+                      <span
+                        className="map-thumb"
+                        style={{
+                          backgroundColor: m.previewBg,
+                          backgroundImage: m.previewImage
+                            ? `url(${getAssetUrl(m.previewImage)})`
+                            : undefined,
+                        }}
+                      >
+                        {!m.previewImage && "✎"}
+                        {selectedMap === id && (
+                          <span className="choice-check">
+                            <Check size={14} />
                           </span>
                         )}
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div
-                          style={{
-                            width: '58px',
-                            height: '58px',
-                            borderRadius: '8px',
-                            border: '1.5px solid var(--color-ink)',
-                            backgroundColor: mapInfo.previewBg,
-                            backgroundImage: mapInfo.previewImage ? `url(${getAssetUrl(mapInfo.previewImage)})` : 'none',
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            flexShrink: 0,
-                            boxShadow: '1px 1.5px 0 var(--color-ink)',
-                          }}
-                        >
-                          {!mapInfo.previewImage && (
-                            <div
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                backgroundImage:
-                                  'linear-gradient(to right, #C8DDE6 1px, transparent 1px), linear-gradient(to bottom, #C8DDE6 1px, transparent 1px)',
-                                backgroundSize: '8px 8px',
-                              }}
-                            />
-                          )}
-                        </div>
-
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ fontWeight: 800, fontSize: '0.98rem', color: 'var(--color-ink)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <span>{mapInfo.emoji}</span>
-                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {mapInfo.name}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: '0.78rem', color: 'var(--color-muted-ink)', marginTop: '2px', lineHeight: 1.3 }}>
-                            {mapInfo.tagline}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                      </span>
+                      <strong>{m.name}</strong>
+                      <small>{m.badge}</small>
+                    </button>
                   );
                 })}
               </div>
-            </div>
-
-            {/* 5. Kỹ Năng Đang Trang Bị */}
-            <div
-              style={{
-                padding: '12px 16px',
-                backgroundColor: 'var(--color-paper)',
-                border: '1.5px solid var(--color-ink)',
-                borderRadius: 'var(--radius-md)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <div>
-                <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>5. Kỹ Năng Đang Trang Bị: </span>
-                <span style={{ fontSize: '0.9rem', color: '#0288D1', fontWeight: 700 }}>
-                  {equippedSkills.length > 0
-                    ? equippedSkills.map((s, i) => `Phím [${i + 1}] ${s?.title}`).join(' • ')
-                    : 'Chưa trang bị kỹ năng nào'}
-                </span>
-              </div>
-              <StickerButton size="sm" onClick={() => navigateTo('wardrobe')}>
-                Đổi Kỹ Năng
-              </StickerButton>
-            </div>
-
-            {/* Preview Words Toggle */}
-            <div>
-              <StickerButton
-                size="sm"
-                onClick={() => setShowStudyFirst(!showStudyFirst)}
-                icon={showStudyFirst ? <EyeOff size={16} /> : <Eye size={16} />}
-              >
-                {showStudyFirst ? 'Ẩn Ôn Tập Trước' : 'Ôn Tập Nhanh Danh Sách Từ Trước Trận'}
-              </StickerButton>
-
-              {showStudyFirst && (
-                <div
-                  style={{
-                    marginTop: '12px',
-                    maxHeight: '220px',
-                    overflowY: 'auto',
-                    backgroundColor: 'var(--color-paper)',
-                    border: 'var(--border-ink)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '10px',
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                    gap: '8px',
-                  }}
+            )}
+            {step === 1 && (
+              <div className="equipment-grid">
+                <button
+                  className={`equipment-choice ${!outfit ? "selected" : ""}`}
+                  onClick={() => setOutfit(null)}
+                  aria-pressed={!outfit}
                 >
-                  {previewWords.map((w) => (
-                    <div
-                      key={w.id}
-                      style={{
-                        padding: '6px 10px',
-                        backgroundColor: '#FFFFFF',
-                        border: '1px solid var(--color-ink)',
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: '0.85rem',
-                      }}
+                  <img
+                    src={getAssetUrl("/assets/ponpi/ponpi_idle.png")}
+                    alt=""
+                  />
+                  <strong>pempom nguyên bản</strong>
+                  <small>Luôn sẵn sàng phiêu lưu</small>
+                </button>
+                {outfits.map((i) => (
+                  <button
+                    className={`equipment-choice ${outfit === i.id ? "selected" : ""}`}
+                    key={i.id}
+                    onClick={() => setOutfit(i.id)}
+                    aria-pressed={outfit === i.id}
+                  >
+                    <img src={getAssetUrl(i.iconUrl!)} alt="" />
+                    <strong>{i.title}</strong>
+                    <small>
+                      {outfit === i.id ? "✓ Đang chọn" : "Đã sở hữu"}
+                    </small>
+                  </button>
+                ))}
+              </div>
+            )}
+            {step === 2 && (
+              <div className="equipment-grid bullets-grid">
+                {bullets.map((i) => (
+                  <button
+                    className={`equipment-choice ${bullet === i.id ? "selected" : ""}`}
+                    key={i.id}
+                    onClick={() => {
+                      setBullet(i.id);
+                      playWeaponShootSound(i.id, true);
+                    }}
+                    aria-pressed={bullet === i.id}
+                  >
+                    <img src={getAssetUrl(i.iconUrl!)} alt="" />
+                    <strong>{i.title}</strong>
+                    <small>
+                      {bullet === i.id ? "✓ Đang chọn" : "Đã sở hữu"}
+                    </small>
+                  </button>
+                ))}
+              </div>
+            )}
+            {step === 3 && (
+              <>
+                <div className="lesson-choices">
+                  {sets.map((s) => (
+                    <button
+                      key={s.id}
+                      className={`lesson-choice ${selectedSetId === s.id ? "selected" : ""}`}
+                      onClick={() => setSelectedSetId(s.id)}
+                      aria-pressed={selectedSetId === s.id}
                     >
-                      <strong style={{ fontFamily: 'var(--font-english)' }}>{w.english}</strong>: <span style={{ fontFamily: 'var(--font-vietnamese)' }}>{w.vietnamese}</span>
-                    </div>
+                      <BookOpen size={24} />
+                      <span>
+                        <strong>{s.title}</strong>
+                        <small>{s.entryIds.length} từ vựng</small>
+                      </span>
+                      {selectedSetId === s.id && <Check size={18} />}
+                    </button>
                   ))}
                 </div>
-              )}
-            </div>
-
-            {/* Launch CTA */}
-            <div style={{ marginTop: '8px' }}>
-              <StickerButton
-                variant="primary"
-                size="lg"
-                onClick={() => navigateTo('battle')}
-                icon={<Play fill="var(--color-ink)" size={24} />}
-                style={{ width: '100%', fontSize: '1.3rem', padding: '16px 0' }}
-              >
-                VÀO TRẬN CHIẾN NGAY
-              </StickerButton>
-            </div>
+                <button
+                  className="text-button"
+                  onClick={() => navigateTo("editor")}
+                >
+                  + Tải tài liệu của bạn
+                </button>
+                <div className="prepare-settings">
+                  <label>
+                    Cách học
+                    <select
+                      value={selectedMode}
+                      onChange={(e) =>
+                        setSelectedMode(e.target.value as typeof selectedMode)
+                      }
+                    >
+                      <option value="copy">Nhìn từ và gõ</option>
+                      <option value="recall">Nhớ nghĩa và gõ</option>
+                      <option value="listen">Nghe và gõ</option>
+                    </select>
+                  </label>
+                  <label>
+                    Độ khó
+                    <select
+                      value={selectedDifficulty}
+                      onChange={(e) =>
+                        setSelectedDifficulty(
+                          e.target.value as typeof selectedDifficulty,
+                        )
+                      }
+                    >
+                      <option value="easy">Dễ</option>
+                      <option value="normal">Bình thường</option>
+                      <option value="hard">Khó</option>
+                    </select>
+                  </label>
+                </div>
+              </>
+            )}
           </div>
-        </PaperPanel>
+          <div className="step-controls">
+            <button
+              className="secondary-button"
+              disabled={step === 0}
+              onClick={() => setStep(step - 1)}
+            >
+              <ArrowLeft size={16} /> Quay lại
+            </button>
+            {step < 3 ? (
+              <button
+                className="primary-button"
+                onClick={() => setStep(step + 1)}
+              >
+                Tiếp tục <ArrowRight size={17} />
+              </button>
+            ) : (
+              <button
+                className="primary-button"
+                onClick={launch}
+                disabled={!activeSet || launching}
+              >
+                <Play size={17} fill="currentColor" />
+                {launching ? "Đang vào trận…" : "Xác nhận & vào trận"}
+              </button>
+            )}
+          </div>
+          {error && (
+            <p className="notice error" role="alert">
+              {error}
+            </p>
+          )}
+        </div>
+        <aside className="surface loadout">
+          <span className="eyebrow">CHIẾN BINH CỦA BẠN</span>
+          <PonpiPreview
+            width={270}
+            height={230}
+            scale={1.15}
+            styleId={inventory?.equippedStyleId}
+            outfitId={outfit}
+            frameless
+            showPoseSelector={false}
+          />
+          <h3>
+            {STORE_CATALOG.find((i) => i.id === outfit)?.title ||
+              "pempom nguyên bản"}
+          </h3>
+          <div className="loadout-row">
+            <Map size={17} />
+            <span>
+              <small>BẢN ĐỒ</small>
+              <strong>{MAP_CONFIGS[selectedMap].name}</strong>
+            </span>
+          </div>
+          <div className="loadout-row">
+            <Zap size={17} />
+            <span>
+              <small>ĐẠN</small>
+              <strong>
+                {STORE_CATALOG.find((i) => i.id === bullet)?.title}
+              </strong>
+            </span>
+          </div>
+          <div className="loadout-row">
+            <BookOpen size={17} />
+            <span>
+              <small>TÀI LIỆU</small>
+              <strong>{activeSet?.title || "Chưa chọn"}</strong>
+            </span>
+          </div>
+          <p>
+            Gõ đúng từ để bắn. Dùng phím số 1–3 để kích hoạt kỹ năng đã trang
+            bị.
+          </p>
+        </aside>
       </div>
     </div>
   );

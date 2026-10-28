@@ -1,12 +1,12 @@
-# PONPI: WORD BLASTER — IMPLEMENTATION SPECIFICATION
+# pempom — IMPLEMENTATION SPECIFICATION
 
 **File:** `spec.md`  
 **Version:** 2.0.0 · 2026-10-26  
 **Audience:** OpenAI Codex / developer / QA / UI designer  
 **Status:** READY TO IMPLEMENT (các giá trị mặc định có thể điều chỉnh trong config)  
-**Working title:** Ponpi: Word Blaster (chưa xác minh nhãn hiệu/thương mại)
+**Working title:** pempom (chưa xác minh nhãn hiệu/thương mại)
 
-> **LỆNH DÀNH CHO CODEX:** Đây là **đặc tả sản phẩm và hợp đồng nghiệm thu**, không phải tài liệu brainstorming. Hãy xây dựng **game WEB THẬT, CHƠI ĐƯỢC TỪ ĐẦU ĐẾN CUỐI**, có màn hình, nút hoạt động, gameplay bắn chữ bằng bàn phím, từ vựng, kết quả, dữ liệu lưu, cửa hàng, trang bị, skill và kiểm thử. Không thay đổi yêu cầu `[LOCKED]`. Với chi tiết chưa chốt, dùng mặc định `[DEFAULT]` trong file này, ghi lại ở config và tiếp tục triển khai; **không dừng ở landing page, mockup, form rỗng, nút bấm giả hoặc TODO**. Nếu không có asset hoàn thiện, dùng fallback vẽ tay đơn giản để đảm bảo chạy được, nhưng ưu tiên asset Ponpi của tác giả khi có. Không cần API AI, backend hay tài khoản để game chạy bản đầu.
+> **LỆNH DÀNH CHO CODEX:** Đây là **đặc tả sản phẩm và hợp đồng nghiệm thu**, không phải tài liệu brainstorming. Hãy xây dựng **game WEB THẬT, CHƠI ĐƯỢC TỪ ĐẦU ĐẾN CUỐI**, có màn hình, nút hoạt động, gameplay bắn chữ bằng bàn phím, từ vựng, kết quả, dữ liệu lưu, cửa hàng, trang bị, skill và kiểm thử. Không thay đổi yêu cầu `[LOCKED]`. Với chi tiết chưa chốt, dùng mặc định `[DEFAULT]` trong file này, ghi lại ở config và tiếp tục triển khai; **không dừng ở landing page, mockup, form rỗng, nút bấm giả hoặc TODO**. Nếu không có asset hoàn thiện, dùng fallback vẽ tay đơn giản để đảm bảo chạy được, nhưng ưu tiên asset pempom của tác giả khi có. Không cần API AI, backend hay tài khoản để game chạy bản đầu.
 
 ---
 
@@ -28,10 +28,10 @@
 2. `[LOCKED]` **Background khu vực chiến đấu chỉ có màu giấy và các đường ô ly đồng đều**. Không có tranh vẽ trang trí, texture họa tiết, cây, mây, sao, hành tinh, nhà, lỗ giấy, núi, đường chân trời, vật thể bối cảnh, animation nền hoặc parallax. Có thể có HUD, nhân vật, quái, tag chữ, đạn, hiệu ứng chiến đấu vì đây là đối tượng gameplay chứ không phải họa tiết nền.
 3. `[LOCKED]` **Một trận thông thường chỉ dùng MỘT chủng loại quái thường duy nhất**. Các cá thể được phép khác biểu cảm, kích thước nhỏ hoặc màu sắc rất gần nhau, nhưng giữ cùng silhouette/thiết kế. Boss có thể là biến thể alien riêng, xuất hiện trong wave boss tách biệt; không trộn nhiều giống quái thường cùng lúc.
 4. `[LOCKED]` **Mascot chính là sinh vật hồng trong ảnh do tác giả cung cấp**, thân dạng giọt/thạch, đáy lượn sóng, không chân, hai mắt to, tay nhỏ, **miệng dạng nòng súng**. Giữ shape/mặt/tỷ lệ/phong cách gần ảnh gốc; không biến thành nhân vật khác, không làm Among Us.
-5. `[LOCKED]` Ponpi đứng **ở giữa phần dưới màn chơi**, tự quay hướng và bắn theo mục tiêu; đã có **5 pose**: lên-trái, lên, lên-phải, trái, phải. Đạn phải thật sự bay về phía mục tiêu.
+5. `[LOCKED]` pempom đứng **ở giữa phần dưới màn chơi**, tự quay hướng và bắn theo mục tiêu; đã có **5 pose**: lên-trái, lên, lên-phải, trái, phải. Đạn phải thật sự bay về phía mục tiêu.
 6. `[LOCKED]` Có **3 mode học**: chép từ Anh, nhớ từ Anh từ nghĩa Việt, nghe từ rồi gõ. Ghi nhớ dài hạn dựa trên bằng chứng hồi tưởng chứ không đơn thuần đếm số lần gõ.
 7. `[LOCKED]` Người dùng có thể chọn **bộ từ sẵn có hoặc tự upload Excel** tạo bộ riêng.
-8. `[LOCKED][MVP]` Có **STORE hoàn chỉnh**: kiếm xu qua chơi/học, mua và sở hữu **skill, mũ, áo, style/skin**; vào Wardrobe để trang bị/tháo đồ và nhìn thấy thay đổi trên Ponpi. Có skill/đạn **làm quái chậm lại** hoạt động thực tế trong game.
+8. `[LOCKED][MVP]` Có **STORE hoàn chỉnh**: kiếm xu qua chơi/học, mua và sở hữu **skill, mũ, áo, style/skin**; vào Wardrobe để trang bị/tháo đồ và nhìn thấy thay đổi trên pempom. Có skill/đạn **làm quái chậm lại** hoạt động thực tế trong game.
 9. `[LOCKED]` Thiết kế dễ thương, nét bút đen, giấy ô ly, hoài niệm; **không dashboard SaaS, không 3D bóng bẩy, không neon cyberpunk**.
 10. `[MVP]` Tất cả đường đi nút bấm phải hoạt động, không có màn bị khóa do thiếu tài khoản/server; không để white screen hay lỗi JS chặn game.
 
@@ -57,7 +57,7 @@ Một người mới truy cập URL phải có thể làm liên tục:
 
 ## 1. Core fantasy
 
-> **Một sinh vật thạch màu hồng chiến đấu với những quái vật ngoài hành tinh bằng kiến thức từ vựng. Người chơi nhớ đúng từ thì Ponpi bắn trúng. Mỗi trận cho thêm điểm, xu và giúp ôn tập. Xu dùng để mua kỹ năng, mũ, áo, style cho Ponpi.**
+> **Một sinh vật thạch màu hồng chiến đấu với những quái vật ngoài hành tinh bằng kiến thức từ vựng. Người chơi nhớ đúng từ thì pempom bắn trúng. Mỗi trận cho thêm điểm, xu và giúp ôn tập. Xu dùng để mua kỹ năng, mũ, áo, style cho pempom.**
 
 Hai vòng tiến triển song song:
 
@@ -68,10 +68,10 @@ Hai vòng tiến triển song song:
 
 ## 2. Mascot / nhận diện
 
-- Tên làm việc: **PONPI**. Tagline gợi ý: **Learn. Shoot. Remember.**
+- Tên làm việc: **pempom**. Tagline gợi ý: **Learn. Shoot. Remember.**
 - Cốt lõi hình dáng: hồng pastel, nét viền đen đậm, highlight mềm; thân tròn hạ thấp như ma nhỏ, đáy lượn sóng; **không chân**; hai tay ngắn; mắt lớn; nòng súng chính là miệng.
 - Tính cách: vui, dũng cảm, đáng yêu, hơi ngốc nghếch; không máu me, không vũ khí hiện thực.
-- **Silhouette LOCK:** dù đổi skin phải nhìn vẫn ra Ponpi, không làm mất tay, mắt, nòng súng, hình dáng đáy.
+- **Silhouette LOCK:** dù đổi skin phải nhìn vẫn ra pempom, không làm mất tay, mắt, nòng súng, hình dáng đáy.
 - Thương hiệu có thể mở thành bộ game khác (Listening, Puzzle, Math...), nhưng MVP chỉ triển khai Word Blaster.
 - Không lấy nguyên asset, tên/logo hoặc UI độc quyền của Doodle Jump hay ZType; chỉ lấy cảm hứng generic về cơ chế/thẩm mỹ.
 
@@ -83,7 +83,7 @@ Codex kiểm tra trước ở các đường dẫn (nếu chưa có thì game v�
 - `assets/reference/gameplay_minimal_grid_mockup.png` — mockup mới **nền chỉ ô ly và quái cùng loài**; tham khảo ý tưởng bố cục, không copy pixel-perfect.
 - (Nếu có) `assets/ponpi/*.png` — sprites nền trong suốt sau khi người tạo game cung cấp/tách riêng.
 
-**Quan trọng:** ảnh gốc 5 pose có thể là ảnh ghép chứa tia lửa/đạn/nhãn chữ và nền sáng, **không giả định đã là 5 sprite transparent độc lập**. Khuyến nghị normalize/crop từng pose có kiểm tra thị giác; tách bullet VFX riêng. Không dùng nguyên ảnh ghép làm một sprite trong game. Không cắt một cách máy móc để làm biến dạng mặt/màu/pose. Nếu sprite chưa chuẩn, fallback Ponpi SVG/canvas đơn giản và log cảnh báo; asset pipeline cho phép thay thế không đụng gameplay.
+**Quan trọng:** ảnh gốc 5 pose có thể là ảnh ghép chứa tia lửa/đạn/nhãn chữ và nền sáng, **không giả định đã là 5 sprite transparent độc lập**. Khuyến nghị normalize/crop từng pose có kiểm tra thị giác; tách bullet VFX riêng. Không dùng nguyên ảnh ghép làm một sprite trong game. Không cắt một cách máy móc để làm biến dạng mặt/màu/pose. Nếu sprite chưa chuẩn, fallback pempom SVG/canvas đơn giản và log cảnh báo; asset pipeline cho phép thay thế không đụng gameplay.
 
 ---
 
@@ -133,17 +133,17 @@ Tất cả màu đưa vào file tokens; dùng 1–2 font được cấp phép đ
 
 ### 4.4. Animations
 
-- Bắn đúng ký tự: pose Ponpi chuyển hướng, muzzle flash 80–120ms, bullet spawn có đường đi.
+- Bắn đúng ký tự: pose pempom chuyển hướng, muzzle flash 80–120ms, bullet spawn có đường đi.
 - Viên đạn: tròn hồng, viền ink, trail ngắn, bay được, 100–250ms tùy khoảng cách.
 - Quái trúng: chớp trắng/rung nhẹ, giảm health theo ký tự; hoàn thành từ: pop thành hạt/giấy (0.3s).
 - Skill Slow: bullet xanh nhạt hoặc xanh lam riêng biệt, hiệu ứng quái xanh/đường viền xanh + icon bông tuyết/timer; tốc độ thực sự giảm.
 - Kết thúc wave: label `WAVE CLEAR` 1s, không khóa input vĩnh viễn.
-- Đổi đồ: Ponpi nhún vui một lần; reduced-motion thì bỏ chuyển động thừa.
+- Đổi đồ: pempom nhún vui một lần; reduced-motion thì bỏ chuyển động thừa.
 - UI transition 100–250ms. Không flash toàn màn/hiệu ứng làm che từ.
 
 ### 4.5. Không dùng 3D trong MVP
 
-Game 2D canvas/WebGL với UI HTML; asset minh họa nhiều lớp vẫn có cảm giác hand-drawn, hơi bóng như ảnh gốc Ponpi. Không cần model 3D hoặc physics engine 3D.
+Game 2D canvas/WebGL với UI HTML; asset minh họa nhiều lớp vẫn có cảm giác hand-drawn, hơi bóng như ảnh gốc pempom. Không cần model 3D hoặc physics engine 3D.
 
 ---
 
@@ -168,7 +168,7 @@ Không nút dead-end: nếu chức năng chưa hỗ trợ thì **không hiển t
 
 ### 6.1. HOME `[MVP]`
 
-- Logo `PONPI: WORD BLASTER`, nhân vật chính nổi bật ở giữa, nền chỉ ô ly.
+- Logo `pempom`, nhân vật chính nổi bật ở giữa, nền chỉ ô ly.
 - CTA **PLAY** rõ nhất, `Continue` nếu đã chọn bộ từ, `Word Books`, `Store`, `Wardrobe`, `Progress`, `Settings`.
 - Widget nhỏ: coins, current level, số từ cần ôn. Không biến thành dashboard bảng/biểu đồ dày đặc.
 - Play khi chưa có set -> Library; khi có -> Prepare.
@@ -224,9 +224,9 @@ Không nút dead-end: nếu chức năng chưa hỗ trợ thì **không hiển t
 
 ### 6.9. WARDROBE `[MVP]`
 
-- Ponpi preview lớn trên nền ô ly; 5 pose selector hoặc 5 nút hướng để thử; xem skin real-time.
+- pempom preview lớn trên nền ô ly; 5 pose selector hoặc 5 nút hướng để thử; xem skin real-time.
 - Slot: `hat` (0/1), `shirt` (0/1), `style` (0/1), `activeSkills` (tối đa 3 skill khác nhau), `projectileStyle` optional P1.
-- Equip item ngay lập tức và lưu; `Unequip` trở lại Ponpi mặc định.
+- Equip item ngay lập tức và lưu; `Unequip` trở lại pempom mặc định.
 - Hat và Shirt không được che mắt/nòng súng. Layer phải giữ đúng theo pose.
 - Nút `Start Battle`/`Back`, không dead-end.
 
@@ -242,7 +242,7 @@ Không nút dead-end: nếu chức năng chưa hỗ trợ thì **không hiển t
 ## 7. Logical coordinates / rendering
 
 - `[DEFAULT]` Logical stage `1280 x 720`; responsive letterbox preserving aspect ratio `16:9` for desktop, plus outer background repeating same graph grid. Accept usable viewport from ~960x540 to 1920x1080; scale pixel ratio with devicePixelRatio cap 2.
-- Stage: top 70px HUD, bottom 120px input/skill UI; enemies occupy x 80..1200, y 100..565, Ponpi center x=640, y≈570.
+- Stage: top 70px HUD, bottom 120px input/skill UI; enemies occupy x 80..1200, y 100..565, pempom center x=640, y≈570.
 - On resize: recalc layout/scale; maintain target/bullet integrity. Pause simulation when tab hidden, avoid giant delta on resume.
 - Drawing order: background -> VFX behind -> enemy -> word tags -> player and wearable layers -> bullets/VFX foreground -> HUD HTML.
 - The game is fully keyboard accessible for primary play; pointer click selects enemy and activates abilities in addition to keyboard.
@@ -292,7 +292,7 @@ const GAME_BALANCE = {
 These are **tunable defaults**, not scientific values. Balance must be central config and not duplicated in components.
 
 - Spawn positions avoid overlap of WordTags and HUD. Minimum separation x 180px; retries and delayed spawn if no valid slot.
-- Target reaches defensive line near Ponpi -> lose one heart, mob removed, word logged as timeout/missed, brief invulnerability 0.7s to prevent burst damage.
+- Target reaches defensive line near pempom -> lose one heart, mob removed, word logged as timeout/missed, brief invulnerability 0.7s to prevent burst damage.
 - When all mobs killed or escaped and pending queue empty -> `WAVE_CLEAR` -> next wave. Avoid soft lock if all enemies removed/timeout.
 - Final boss requires completing 5 individual word prompts; boss must never display five simultaneous ambiguous labels.
 - **15 từ/session = khoảng 15 từ phân biệt**, không phải giới hạn số enemy; wave 1–2 (14 mob) + boss 5 prompt (19 lần hỏi) có thể lặp một số từ đến hạn/khó nhưng không lặp ngay liền nhau.
@@ -351,7 +351,7 @@ Không có target: `idle` riêng nếu có, nếu không thì neutral pose đư�
 
 - Mỗi phím đúng tạo một viên đạn **thực sự chuyển động** (`id`,`source`,`targetId`,`velocity`,`effect`,`ttl`). Hiển thị đường bay đến đúng enemy đã khóa, không bắn xuyên làm chết nhầm quái khác.
 - Thành công/chấm từ xảy ra khi **hoàn thành đáp án**, không phụ thuộc collision đồ họa hay FPS; viên đạn là hoạt ảnh xác nhận từng ký tự.
-- Skill bullet màu khác normal bullet; ảnh gốc Ponpi có hiệu ứng bắn không được giữ đạn đứng yên thay cho entity đạn.
+- Skill bullet màu khác normal bullet; ảnh gốc pempom có hiệu ứng bắn không được giữ đạn đứng yên thay cho entity đạn.
 - Asset rig có anchor `muzzle`, `hatAnchor`, `shirtAnchor` cho từng pose; sử dụng cùng rig trong Battle và Wardrobe.
 
 ### 11.3. Events bắt buộc
@@ -394,7 +394,7 @@ Có **4 tab thật sự hoạt động**: `SKILLS`, `HATS`, `SHIRTS`, `STYLES`. 
 
 ### 15.1. Slow Shot — đạn làm chậm `[LOCKED][MVP]`
 
-**Ý tưởng:** Ponpi bắn viên đạn xanh băng vào một quái. **Quái bị trúng sẽ di chuyển chậm lại thực sự**, không chỉ đổi màu.
+**Ý tưởng:** pempom bắn viên đạn xanh băng vào một quái. **Quái bị trúng sẽ di chuyển chậm lại thực sự**, không chỉ đổi màu.
 
 | Thông số | Mặc định |
 |---|---|
@@ -411,7 +411,7 @@ Có **4 tab thật sự hoạt động**: `SKILLS`, `HATS`, `SHIRTS`, `STYLES`. 
 **State transition:**
 
 1. Dùng key/click khi PLAYING, còn charge, cooldown sẵn sàng. Nếu chưa có mục tiêu sống -> không mất charge.
-2. Trừ 1 charge, bắt đầu cooldown, tạo **slow projectile** từ nòng Ponpi tới mục tiêu.
+2. Trừ 1 charge, bắt đầu cooldown, tạo **slow projectile** từ nòng pempom tới mục tiêu.
 3. Projectile chạm enemy -> ghi status `{kind:'slow', multiplier:0.35, expiresAtGameMs:now+5000}`; hiện tint/viền xanh và timer nhỏ.
 4. Trong tick vận động, `enemy.velocityY = baseSpeed * activeSpeedMultiplier`. **Đúng số 35%**, có thể đo bằng test.
 5. Hết hạn -> trở lại tốc độ bình thường; nếu bắn tiếp khi đang slow -> **refresh time**, không nhân multiplier nhiều lần.
@@ -432,7 +432,7 @@ Có **4 tab thật sự hoạt động**: `SKILLS`, `HATS`, `SHIRTS`, `STYLES`. 
 - ID `skill_shield_bubble`, giá 150 xu, tối đa 2 lần/run, cooldown 30s.
 - Kích hoạt tạo một lớp khiên tối đa 12s; chặn **lần chạm phòng thủ tiếp theo** rồi mất.
 - Quái tới đáy vẫn bị xóa, từ bị ghi `missed`. Chỉ HP được bảo vệ, không xóa kết quả học sai.
-- Hiện vòng khiên rõ quanh Ponpi; không che mắt/nòng súng/chữ.
+- Hiện vòng khiên rõ quanh pempom; không che mắt/nòng súng/chữ.
 
 ### 15.4. Quy luật trang bị và thời gian
 
@@ -458,7 +458,7 @@ Có **tối thiểu 3 món mũ, 3 áo, 3 style trả xu và 2 skill trả xu**. 
 | `shirt_hoodie` | shirt | Cozy Hoodie | 100 | Áo hoodie đơn giản |
 | `shirt_sailor` | shirt | Sailor Shirt | 150 | Cổ áo thủy thủ |
 | `shirt_star` | shirt | Star Tee | 180 | Hình sao chỉ **trên áo**, không ở nền |
-| `style_classic` | style | Classic Pink | 0 | Ponpi màu hồng, starter |
+| `style_classic` | style | Classic Pink | 0 | pempom màu hồng, starter |
 | `style_mint` | style | Mint Jelly | 180 | Đổi màu thân mint |
 | `style_lavender` | style | Lavender Jelly | 200 | Thân tím nhạt |
 | `style_sunny` | style | Sunny Peach | 220 | Thân đào |
@@ -467,7 +467,7 @@ Mỗi món cosmetic phải có asset/shape nhìn thấy rõ ở Wardrobe **và B
 
 ### 16.2. Wardrobe rig / layer cho 5 pose
 
-Ponpi có 5 hướng nhắm nên mũ/áo phải căn theo **từng pose**, không đặt CSS `top:-20px` cố định cho mọi hướng.
+pempom có 5 hướng nhắm nên mũ/áo phải căn theo **từng pose**, không đặt CSS `top:-20px` cố định cho mọi hướng.
 
 ```ts
 type PoseId = 'idle'|'fire_up_left'|'fire_up'|'fire_up_right'|'fire_left'|'fire_right';
@@ -488,7 +488,7 @@ type PonpiRig = Record<PoseId, {
 
 - Preview món chưa mua: có overlay `Preview only`.
 - Mua xong -> `Owned`; bấm Equip -> trang bị ngay, persist; `Unequip` cho hat/shirt. Style luôn có đúng một lựa chọn, mặc định Classic.
-- Wardrobe có 5 nút pose; chuyển pose thấy mũ/áo đi theo Ponpi. Khi quay lại Battle vẫn đúng.
+- Wardrobe có 5 nút pose; chuyển pose thấy mũ/áo đi theo pempom. Khi quay lại Battle vẫn đúng.
 - Thực hiện giao diện `Shop -> Buy hat -> Wardrobe -> Equip -> Battle` được **không cần reload**.
 
 ## 17. Xu, XP, phần thưởng
@@ -743,7 +743,7 @@ ponpi-word-blaster/
 │   │   ├── engine/statusEffects.ts
 │   │   ├── entities/Enemy.ts
 │   │   ├── entities/Boss.ts
-│   │   ├── entities/Ponpi.ts
+│   │   ├── entities/pempom.ts
 │   │   ├── assets/ponpiRig.ts
 │   │   ├── assets/PonpiRenderer.ts
 │   │   └── themes/gridTheme.ts
@@ -850,7 +850,7 @@ IndexedDB tables at minimum: `profiles`, `wordSets`, `words`, `learningRecords`,
 
 ## 24. Asset fallback / quality safeguards
 
-- `AssetManifest` points to pose images if present and loaded; on 404 fallback to a **clean hand-drawn Ponpi vector/canvas** that respects body, no feet, eyes and mouth cannon. Never black square/missing texture.
+- `AssetManifest` points to pose images if present and loaded; on 404 fallback to a **clean hand-drawn pempom vector/canvas** that respects body, no feet, eyes and mouth cannon. Never black square/missing texture.
 - Fallback monsters are **ONE PURPLE ALIEN SPECIES** reused through session; boss enlarged/modified same family.
 - UI icons can be drawn SVG or licensed icon library, but consistent outlined style.
 - Avoid hotlinking images from external sites; include assets locally, no copyrighted game sprites.
@@ -883,7 +883,7 @@ IndexedDB tables at minimum: `profiles`, `wordSets`, `words`, `learningRecords`,
 
 ### Milestone 1 — First playable game loop (highest priority)
 
-- Tạo `BattleScene` với Ponpi dưới giữa, quái **cùng một species**, prompt label.
+- Tạo `BattleScene` với pempom dưới giữa, quái **cùng một species**, prompt label.
 - Keyboard targeting/correct typing/bullets/word success, heart, waves, pause, game over/results.
 - End-to-end smoke: `PLAY -> BATTLE -> nhập đúng 1 từ -> thấy quái nổ -> RESULT`.
 - **Nếu milestone này chưa thật sự chạy, không dành thời gian polish Store.**
@@ -913,7 +913,7 @@ IndexedDB tables at minimum: `profiles`, `wordSets`, `words`, `learningRecords`,
 
 ### 27.1. UX / Navigation
 
-- [ ] Mở app thấy Home có Ponpi và các nút rõ ràng, không console error.
+- [ ] Mở app thấy Home có pempom và các nút rõ ràng, không console error.
 - [ ] `PLAY`, Library, Store, Wardrobe, Progress, Settings đều hoạt động.
 - [ ] Chọn built-in set -> Prepare -> Battle có ít nhất 1 enemy spawn, keyboard input works without manual focus.
 - [ ] Tạm dừng Resume/Restart/Quit; tab hidden auto-pause; Resume không spawn duplicate enemy/timers.
@@ -923,7 +923,7 @@ IndexedDB tables at minimum: `profiles`, `wordSets`, `words`, `learningRecords`,
 ### 27.2. Visual Art Rules
 
 - [ ] Battle **chỉ có background ô ly**; không cây/hoa/sao/mây/nhà/hành tinh/đồi/nét trang trí nào ngoài đối tượng gameplay/HUD.
-- [ ] Ponpi là sinh vật hồng dạng gốc, không chân, có nòng súng là miệng, mắt/tay đúng concept.
+- [ ] pempom là sinh vật hồng dạng gốc, không chân, có nòng súng là miệng, mắt/tay đúng concept.
 - [ ] Player đứng giữa phía dưới, không nhảy hay đi chạy như Doodle Jump.
 - [ ] Có 5 pose bắn + idle/fallback, pose đổi theo enemy không nhảy vị trí.
 - [ ] Tất cả mobs **cùng một loài trong một battle**; boss trong wave riêng.
@@ -961,7 +961,7 @@ IndexedDB tables at minimum: `profiles`, `wordSets`, `words`, `learningRecords`,
 
 ### 27.6. Skill-specific (critical)
 
-- [ ] Skill `Slow Shot` slot 1 có đạn xanh **bay từ Ponpi tới quái**, không phải flash tại chỗ.
+- [ ] Skill `Slow Shot` slot 1 có đạn xanh **bay từ pempom tới quái**, không phải flash tại chỗ.
 - [ ] Khi va chạm, tốc độ quái giảm thực còn xấp xỉ 35% trong 5s, trở lại bình thường sau hiệu ứng; non-stacking.
 - [ ] Boss slowdown cap được áp dụng theo config.
 - [ ] Freeze Pulse làm tất cả mob trên màn chậm thật sự; status interaction đúng.
@@ -992,7 +992,7 @@ IndexedDB tables at minimum: `profiles`, `wordSets`, `words`, `learningRecords`,
 **Integration**
 
 - Game events update HUD and Attempts once.
-- Buy item -> loadout -> Ponpi Renderer sees visual item.
+- Buy item -> loadout -> pempom Renderer sees visual item.
 - Store/Progress/Result persistence after simulated reload.
 
 **Playwright E2E**
@@ -1011,7 +1011,7 @@ Một bản được gọi là **đã hoàn thành MVP** khi **đồng thời** 
 
 1. User **chơi được** 3 chế độ và 1 run thắng/thua từ Home đến Results mà không bị kẹt.
 2. Từng ký tự đúng tạo **viên đạn bay thật**; ngắm đúng quái; quái xuống đáy, HP, điểm, combo, boss hoạt động.
-3. Background đúng **ô ly thuần**, quái trong trận đúng **1 loài**, Ponpi bám thiết kế gốc + 5 pose.
+3. Background đúng **ô ly thuần**, quái trong trận đúng **1 loài**, pempom bám thiết kế gốc + 5 pose.
 4. Import file, bộ từ có sẵn, logging attempts, scheduler, review, progress **đúng logic**.
 5. Store tồn tại thật, mua/mặc mũ áo/style và skill hoạt động; **Slow Shot thực sự làm chậm quái**.
 6. Wallet/inventory/history được persist và idempotent; không mất dữ liệu qua reload.
@@ -1025,7 +1025,7 @@ Một bản được gọi là **đã hoàn thành MVP** khi **đồng thời** 
 
 ## 30. Paste-ready instruction (Codex must follow)
 
-> Hãy đọc **toàn bộ `spec.md`**, coi đây là nguồn yêu cầu chính. Khảo sát repo hiện tại và asset trước; nếu repo trống thì khởi tạo app theo stack mặc định trong spec. Tạo một game **web hoàn chỉnh có thể thao tác thật**, không làm demo chỉ có hình tĩnh hoặc menu giả. Implement theo các milestone 0–5 trong file, nhưng ưu tiên vertical slice `Home -> Battle -> Results` chơi được trước, sau đó tích hợp Learning, Store/Wardrobe/Skills, Boss và các kiểm thử. Những thay đổi đặc biệt PHẢI giữ: (1) battle background **chỉ ô ly**, tuyệt đối không trang trí; (2) mobs **một species trong toàn trận**; (3) nhân vật gốc Ponpi hồng 5 hướng bắn; (4) `Slow Shot` có viên đạn thật và giảm tốc quái thật; (5) cửa hàng mua mũ, áo, style và skill bằng xu, trang bị tác động đến Battle. Nếu sprites gốc chỉ ở contact sheet, dùng ảnh gốc làm chuẩn và asset fallback đúng hình để game không kẹt. Viết cả logic và UI, lưu IndexedDB, unit/e2e tests. Tự chạy `npm install`, `npm run build`, `npm run test` và e2e có thể thực hiện trong môi trường; sửa lỗi trước khi kết thúc. Báo cáo hạng mục thực hiện, lệnh run, kết quả test thực và các việc còn chưa hoàn thành một cách trung thực. **Không hỏi lại những yêu cầu đã ghi rõ, không dừng ở kế hoạch hay placeholder.**
+> Hãy đọc **toàn bộ `spec.md`**, coi đây là nguồn yêu cầu chính. Khảo sát repo hiện tại và asset trước; nếu repo trống thì khởi tạo app theo stack mặc định trong spec. Tạo một game **web hoàn chỉnh có thể thao tác thật**, không làm demo chỉ có hình tĩnh hoặc menu giả. Implement theo các milestone 0–5 trong file, nhưng ưu tiên vertical slice `Home -> Battle -> Results` chơi được trước, sau đó tích hợp Learning, Store/Wardrobe/Skills, Boss và các kiểm thử. Những thay đổi đặc biệt PHẢI giữ: (1) battle background **chỉ ô ly**, tuyệt đối không trang trí; (2) mobs **một species trong toàn trận**; (3) nhân vật gốc pempom hồng 5 hướng bắn; (4) `Slow Shot` có viên đạn thật và giảm tốc quái thật; (5) cửa hàng mua mũ, áo, style và skill bằng xu, trang bị tác động đến Battle. Nếu sprites gốc chỉ ở contact sheet, dùng ảnh gốc làm chuẩn và asset fallback đúng hình để game không kẹt. Viết cả logic và UI, lưu IndexedDB, unit/e2e tests. Tự chạy `npm install`, `npm run build`, `npm run test` và e2e có thể thực hiện trong môi trường; sửa lỗi trước khi kết thúc. Báo cáo hạng mục thực hiện, lệnh run, kết quả test thực và các việc còn chưa hoàn thành một cách trung thực. **Không hỏi lại những yêu cầu đã ghi rõ, không dừng ở kế hoạch hay placeholder.**
 
 ### 30.1. Quy trình tự kiểm của Codex
 
@@ -1039,8 +1039,8 @@ Một bản được gọi là **đã hoàn thành MVP** khi **đồng thời** 
 ### 30.2. Do-not-do list
 
 - Do not copy Doodle Jump / ZType assets or trademark.
-- Do not replace Ponpi with a generic spaceship/robot/doodle character if artist source/fallback available.
-- Do not add legs to Ponpi.
+- Do not replace pempom with a generic spaceship/robot/doodle character if artist source/fallback available.
+- Do not add legs to pempom.
 - Do not add any decorative scene drawings to battle grid.
 - Do not mix species in one battle.
 - Do not let skills kill vocabulary without an answer.
@@ -1073,7 +1073,7 @@ Potential future: cloud sync, sharing set via code/QR, classroom challenges, fam
 
 - [ ] `spec.md` placed at repo root.
 - [ ] `README.md` has exact instructions to run/test/build.
-- [ ] Original 5-pose Ponpi reference asset included when supplied, never altered destructively.
+- [ ] Original 5-pose pempom reference asset included when supplied, never altered destructively.
 - [ ] One consistent graph-paper visual system, no decorative backgrounds.
 - [ ] End-to-end gameplay functional from pressing Play.
 - [ ] 3 learning modes; owned vocab sets + Excel/CSV import.

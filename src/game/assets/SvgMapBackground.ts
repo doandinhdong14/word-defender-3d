@@ -13,7 +13,7 @@ import { GAME_BALANCE } from '../../config/balance';
  * - Scaled to cover canvas without distortion (responsive across mobile portrait, landscape, desktop, square)
  * - Full clarity (no dimming/fog overlay)
  * - Retains classic notebook grid lines on top ("vẫn giữ ô ly cũ")
- * - Retains dashed defense perimeter line near Ponpi
+ * - Retains dashed defense perimeter line near pempom
  */
 
 import { getAssetUrl } from '../../utils/assetUrl';
@@ -126,7 +126,7 @@ export function drawSvgMapBackground(
   }
   ctx.stroke();
 
-  // 4. Defensive Line (Subtle dotted line near Ponpi)
+  // 4. Defensive Line (Subtle dotted line near pempom)
   if (typeof options.defenseLineY === 'number') {
     ctx.save();
     ctx.strokeStyle = 'rgba(239, 110, 120, 0.45)';

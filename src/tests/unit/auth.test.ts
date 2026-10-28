@@ -16,7 +16,7 @@ describe('Authentication and authorization', () => {
   });
 
   it('creates the first account as admin without storing the raw password', async () => {
-    const password = 'Ponpi!Secure2026';
+    const password = 'pempom!Secure2026';
     await db.profiles.add({
       id: 'guest_profile',
       name: 'Legacy Pilot',
@@ -25,7 +25,7 @@ describe('Authentication and authorization', () => {
       createdAt: new Date().toISOString(),
     });
     const account = await registerAccount({
-      displayName: 'Admin Ponpi',
+      displayName: 'Admin pempom',
       email: 'Admin@Example.com',
       password,
     });

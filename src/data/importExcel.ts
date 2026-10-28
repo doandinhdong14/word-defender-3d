@@ -15,7 +15,7 @@ export interface ImportSummary {
 
 export function generateCsvTemplate(): string {
   const headers = ['english', 'vietnamese', 'partOfSpeech', 'ipa', 'exampleEn', 'exampleVi', 'acceptedAnswers'];
-  const sample1 = ['brave', 'dũng cảm', 'adj', '/breɪv/', 'The brave little Ponpi fought the alien.', 'Chú Ponpi dũng cảm đã chiến đấu với quái vật.', 'courageous'];
+  const sample1 = ['brave', 'dũng cảm', 'adj', '/breɪv/', 'The brave little pempom fought the alien.', 'Chú pempom dũng cảm đã chiến đấu với quái vật.', 'courageous'];
   const sample2 = ['knowledge', 'kiến thức', 'noun', '/ˈnɒlɪdʒ/', 'Knowledge is our greatest weapon.', 'Kiến thức là vũ khí mạnh nhất của chúng ta.', 'wisdom'];
   return Papa.unparse([headers, sample1, sample2]);
 }

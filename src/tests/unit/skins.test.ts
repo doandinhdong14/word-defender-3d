@@ -146,7 +146,7 @@ describe('New Skins & Color Customization', () => {
     expect(inv?.equippedOutfitId).toBe('outfit_hacker');
     expect(inv?.equippedStyleId).toBe('style_purple');
 
-    // 5. Unequip outfit back to default Ponpi with purple body
+    // 5. Unequip outfit back to default pempom with purple body
     await unequipItem('outfit');
     inv = await db.inventories.get(profileId);
     expect(inv?.equippedOutfitId).toBeNull();

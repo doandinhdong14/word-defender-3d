@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { PONPI_RIG, getPoseFromAngle } from '../../game/assets/ponpiRig';
 import { PoseId } from '../../types/game';
 
-describe('Ponpi Rig and Poses', () => {
+describe('pempom Rig and Poses', () => {
   const allPoses: PoseId[] = [
     'idle',
     'fire_up',

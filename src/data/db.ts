@@ -7,6 +7,7 @@ import { SEED_ENTRIES, SEED_WORD_SETS } from './seedWordSets';
 import { DEFAULT_INVENTORY_SEED } from '../config/catalog';
 import { GAME_BALANCE } from '../config/balance';
 import type { AccountCredential, AuthSession, SecurityEvent } from '../auth/types';
+import type { CommunityPost, RewardClaim } from './community';
 
 export interface UserProfile {
   id: string;
@@ -39,6 +40,8 @@ export class PonpiDatabase extends Dexie {
   accounts!: EntityTable<AccountCredential, 'id'>;
   sessions!: EntityTable<AuthSession, 'id'>;
   securityEvents!: EntityTable<SecurityEvent, 'id'>;
+  communityPosts!: EntityTable<CommunityPost, 'id'>;
+  rewardClaims!: EntityTable<RewardClaim, 'id'>;
 
   constructor() {
     super('PonpiWordBlasterDB');
@@ -81,6 +84,10 @@ export class PonpiDatabase extends Dexie {
         run.profileId = run.profileId || 'guest_profile';
       });
     });
+    this.version(3).stores({
+      communityPosts: 'id, profileId, kind, createdAt',
+      rewardClaims: 'id, profileId, rewardId',
+    });
   }
 }
 
@@ -106,7 +113,7 @@ async function seedMissingData(): Promise<void> {
     if (!hasRegisteredAccounts && !(await db.profiles.get(profileId))) {
       await db.profiles.add({
         id: profileId,
-        name: 'Ponpi Pilot',
+        name: 'pempom Pilot',
         level: 1,
         xp: 0,
         createdAt: now,

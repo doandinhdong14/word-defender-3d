@@ -489,7 +489,7 @@ export function getStyleColor(styleId?: string): string {
  * For the 5 new skins (halloween, basketball, soccer, builder, gladiator), tints the character's
  * pink skin flesh (face, hands, legs, cheeks) into the user's selected style color (e.g. purple/tím),
  * while preserving the original costume colors (jersey, helmet, armor, sneakers, accessories, mouth, eyes).
- * For default Ponpi, applies whole-body hue tinting.
+ * For default pempom, applies whole-body hue tinting.
  */
 function getTintedSkinCanvas(
   img: HTMLImageElement,
@@ -568,7 +568,7 @@ function getTintedSkinCanvas(
             shouldTint = true;
           }
         } else {
-          // Standard Ponpi pink skin flesh
+          // Standard pempom pink skin flesh
           // Exclude white elements (teeth, skull bones, reflections, white bandages/masks)
           const isWhite = r > 215 && g > 215 && b > 215 && Math.abs(r - g) < 22 && Math.abs(g - b) < 22;
           // Exclude deep mouth red (tongue)
@@ -604,7 +604,7 @@ function getTintedSkinCanvas(
       // In case of any context error, fallback to original
     }
   } else if (!outfitId) {
-    // Default Yellow Ponpi: Hue tinting for styles other than yellow
+    // Default Yellow pempom: Hue tinting for styles other than yellow
     if (styleId && styleId !== 'style_yellow' && styleId !== 'style_classic') {
       octx.save();
       octx.globalCompositeOperation = 'hue';
@@ -662,7 +662,7 @@ export function drawPonpi(
   ctx.translate(centerX, centerY);
   ctx.scale(scale * stretchX, scale * stretchY);
 
-  // 1. LAYER 1: BODY BASE (Supports all 8 Outfits + Default Ponpi, with dynamic body color tinting)
+  // 1. LAYER 1: BODY BASE (Supports all 8 Outfits + Default pempom, with dynamic body color tinting)
   const DRAW_SIZE = 120;
   const OFFSET_X = -DRAW_SIZE / 2;
   const OFFSET_Y = -(310 / 512) * DRAW_SIZE; // visual center aligns with origin

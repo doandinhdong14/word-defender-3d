@@ -27,7 +27,7 @@ describe('Backup and restore', () => {
   it('round-trips saved data', async () => {
     await db.profiles.add({
       id: 'guest_profile',
-      name: 'Ponpi Pilot',
+      name: 'pempom Pilot',
       level: 2,
       xp: 125,
       createdAt: new Date().toISOString(),

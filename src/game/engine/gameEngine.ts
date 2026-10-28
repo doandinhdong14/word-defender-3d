@@ -1,4 +1,5 @@
 import {
+  BulletKind,
   BulletState,
   DefeatedWordEffect,
   Difficulty,
@@ -57,7 +58,7 @@ export interface GameEngineOptions {
     slowSkillUsedOnEnemy?: boolean;
   }) => void;
   onRunFinished?: (summary: RunSummary) => void;
-  onSoundEffect?: (type: 'shoot' | 'hit' | 'wrong' | 'hurt' | 'clear' | 'boss_hit' | 'skill') => void;
+  onSoundEffect?: (type: 'shoot' | 'hit' | 'wrong' | 'hurt' | 'clear' | 'boss_hit' | 'skill', weaponKind?: BulletKind | string, isFinishing?: boolean) => void;
 }
 
 export class GameEngine {
@@ -371,9 +372,9 @@ export class GameEngine {
 
       if (hit.kind === 'slow_shot') {
         applySlowEffect(enemy, this.gameTimeMs, 5000, 0.35);
-        this.onSoundEffect?.('skill');
+        this.onSoundEffect?.('hit', hit.kind);
       } else {
-        this.onSoundEffect?.('hit');
+        this.onSoundEffect?.('hit', hit.kind);
       }
 
       // Enemy dies ONLY when the lethal bullet actually reaches and hits it!
@@ -419,7 +420,7 @@ export class GameEngine {
       this.prepareWave(this.currentWave + 1);
     }
 
-    // Update Ponpi Pose direction
+    // Update pempom Pose direction
     this.updatePonpiPose();
   }
 
@@ -618,13 +619,13 @@ export class GameEngine {
     // Valid next character
     this.typedBuffer = evalResult.newBuffer;
     this.muzzleFlashMs = 120;
-    this.onSoundEffect?.('shoot');
 
     if (evalResult.isComplete) {
       const matchedAnswer = evalResult.matchedAnswer || currentTarget.word;
 
       // Spawn lethal finishing bullet that carries matchedWord
-      this.spawnNormalBullet(currentTarget.id, true, matchedAnswer);
+      const bullet = this.spawnNormalBullet(currentTarget.id, true, matchedAnswer);
+      this.onSoundEffect?.('shoot', bullet.kind, true);
 
       // Mark enemy as pending defeat - so it will die ONLY when the bullet hits it!
       currentTarget.pendingDefeat = true;
@@ -661,7 +662,8 @@ export class GameEngine {
       this.selectedEnemyId = null;
       this.typedBuffer = '';
     } else {
-      this.spawnNormalBullet(currentTarget.id, false);
+      const bullet = this.spawnNormalBullet(currentTarget.id, false);
+      this.onSoundEffect?.('shoot', bullet.kind, false);
     }
   }
 
@@ -816,7 +818,7 @@ export class GameEngine {
       const bullet = createBullet(startX, startY, target.id, bulletKind as any, this.gameTimeMs);
       this.bullets.push(bullet);
 
-      this.onSoundEffect?.('skill');
+      this.onSoundEffect?.('shoot', bulletKind, true);
       return true;
     }
 
@@ -827,7 +829,7 @@ export class GameEngine {
       skill.readyAtGameMs = this.gameTimeMs + skill.cooldownMs;
 
       applyFreezePulse(this.enemies, this.gameTimeMs, 3000);
-      this.onSoundEffect?.('skill');
+      this.onSoundEffect?.('skill', 'skill_freeze_pulse');
       return true;
     }
 
@@ -837,7 +839,7 @@ export class GameEngine {
 
       this.shieldActive = true;
       this.shieldExpiresAtMs = this.gameTimeMs + 12000;
-      this.onSoundEffect?.('skill');
+      this.onSoundEffect?.('skill', 'skill_shield_bubble');
       return true;
     }
 
@@ -862,12 +864,14 @@ export class GameEngine {
       this.typedBuffer = evalResult.newBuffer;
       if (evalResult.isComplete) {
         const matchedAnswer = evalResult.matchedAnswer || target.word;
-        this.spawnNormalBullet(target.id, true, matchedAnswer);
+        const bullet = this.spawnNormalBullet(target.id, true, matchedAnswer);
+        this.onSoundEffect?.('shoot', bullet.kind, true);
         target.pendingDefeat = true;
         this.selectedEnemyId = null;
         this.typedBuffer = '';
       } else {
-        this.spawnNormalBullet(target.id, false);
+        const bullet = this.spawnNormalBullet(target.id, false);
+        this.onSoundEffect?.('shoot', bullet.kind, false);
       }
     }
   }

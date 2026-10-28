@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useApp } from '../app/appStore';
 import { GameEngine } from '../game/engine/gameEngine';
+import { playSoundEffect, configureSoundSettings } from '../utils/soundEffects';
 import { selectSessionWords } from '../learning/sessionSelector';
 import { logAttempt } from '../learning/attempts';
 import { drawAlienPurple, drawPonpi } from '../game/assets/PonpiRenderer';
@@ -123,93 +124,23 @@ export const BattlePage: React.FC = () => {
     };
   }, []);
 
-  // Sound effect handler using Web Audio synthesizer
-  const playSynthSound = (type: string) => {
-    if (settingsRef.current?.audioEnabled === false) return;
-
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = audioContextRef.current && audioContextRef.current.state !== 'closed'
-        ? audioContextRef.current
-        : new AudioCtx();
-      if (!ctx) return;
-      audioContextRef.current = ctx;
-      if (ctx.state === 'suspended') {
-        void ctx.resume().catch(() => undefined);
-      }
-
-      const volume = Math.max(0, Math.min(1, settingsRef.current?.volume ?? 0.8));
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      const now = ctx.currentTime;
-      if (type === 'shoot') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(480, now);
-        osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
-        gain.gain.setValueAtTime(0.12 * volume, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
-        osc.start(now);
-        osc.stop(now + 0.08);
-      } else if (type === 'hit') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(320, now);
-        osc.frequency.exponentialRampToValueAtTime(120, now + 0.12);
-        gain.gain.setValueAtTime(0.15 * volume, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
-        osc.start(now);
-        osc.stop(now + 0.12);
-      } else if (type === 'wrong') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(180, now);
-        osc.frequency.linearRampToValueAtTime(140, now + 0.1);
-        gain.gain.setValueAtTime(0.12 * volume, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
-        osc.start(now);
-        osc.stop(now + 0.1);
-      } else if (type === 'hurt') {
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(150, now);
-        osc.frequency.exponentialRampToValueAtTime(60, now + 0.25);
-        gain.gain.setValueAtTime(0.2 * volume, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
-        osc.start(now);
-        osc.stop(now + 0.25);
-      } else if (type === 'clear') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, now);
-        osc.frequency.setValueAtTime(554.37, now + 0.1);
-        osc.frequency.setValueAtTime(659.25, now + 0.2);
-        gain.gain.setValueAtTime(0.15 * volume, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
-        osc.start(now);
-        osc.stop(now + 0.35);
-      } else if (type === 'skill') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, now);
-        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.18);
-        gain.gain.setValueAtTime(0.15 * volume, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
-        osc.start(now);
-        osc.stop(now + 0.18);
-      }
-    } catch (e) {
-      // AudioContext unavailable or restricted
-    }
-  };
-
   useEffect(() => {
-    return () => {
-      const ctx = audioContextRef.current;
-      audioContextRef.current = null;
-      if (ctx && ctx.state !== 'closed') {
-        void ctx.close().catch(() => undefined);
-      }
-    };
-  }, []);
+    configureSoundSettings(
+      settings?.audioEnabled ?? true,
+      settings?.volume ?? 0.8
+    );
+  }, [settings?.audioEnabled, settings?.volume]);
+
+  // Sound effect handler using dedicated procedural sound engine
+  const playSynthSound = (type: any, weaponKind?: string, isFinishing?: boolean) => {
+    playSoundEffect(
+      type,
+      weaponKind,
+      isFinishing,
+      settingsRef.current?.volume,
+      settingsRef.current?.audioEnabled
+    );
+  };
 
   // Initialize Game Session
   useEffect(() => {
@@ -247,8 +178,8 @@ export const BattlePage: React.FC = () => {
           setLastRunSummary(summary);
           navigateTo('results');
         },
-        onSoundEffect: (type) => {
-          playSynthSound(type);
+        onSoundEffect: (type, weaponKind, isFinishing) => {
+          playSynthSound(type, weaponKind, isFinishing);
         },
       });
 
@@ -380,7 +311,7 @@ export const BattlePage: React.FC = () => {
       }
       ctx.stroke();
 
-      // Defensive line (subtle dotted red line near Ponpi)
+      // Defensive line (subtle dotted red line near pempom)
       ctx.strokeStyle = 'rgba(239, 110, 120, 0.45)';
       ctx.lineWidth = Math.max(1.25, 2 * visualScale);
       ctx.setLineDash([Math.max(5, 8 * visualScale), Math.max(5, 8 * visualScale)]);
@@ -391,7 +322,7 @@ export const BattlePage: React.FC = () => {
       ctx.setLineDash([]);
     }
 
-    // 2. Draw Shield Bubble around Ponpi if active
+    // 2. Draw Shield Bubble around pempom if active
     if (eng.shieldActive) {
       ctx.save();
       ctx.translate(mapX(GAME_BALANCE.ponpiCenterX), mapY(GAME_BALANCE.ponpiCenterY));
@@ -407,7 +338,7 @@ export const BattlePage: React.FC = () => {
       ctx.restore();
     }
 
-    // 3. Draw Ponpi (Positioned lower, scaled smaller for open field feel)
+    // 3. Draw pempom (Positioned lower, scaled smaller for open field feel)
     drawPonpi(ctx, mapX(GAME_BALANCE.ponpiCenterX), mapY(GAME_BALANCE.ponpiCenterY), {
       pose: eng.currentPose,
       styleId: eng.equippedStyleId,
