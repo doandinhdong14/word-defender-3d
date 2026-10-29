@@ -101,6 +101,7 @@ function toSafeAccount(account: AccountCredential): SafeAccount {
     createdAt: account.createdAt,
     lastLoginAt: account.lastLoginAt,
     lockedUntil: account.lockedUntil,
+    authProvider: account.authProvider,
   };
 }
 
@@ -207,7 +208,7 @@ async function migrateLegacyGuestData(accountId: string, displayName: string): P
   });
 }
 
-export async function getCurrentAccount(): Promise<SafeAccount | null> {
+async function getLocalAccount(): Promise<SafeAccount | null> {
   let pointer: StoredSessionPointer;
   try {
     const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
@@ -255,6 +256,59 @@ export async function getCurrentAccount(): Promise<SafeAccount | null> {
 
   validatedAccountId = account.id;
   return toSafeAccount(account);
+}
+
+async function fetchGoogleAccount(): Promise<SafeAccount | null> {
+  const response = await fetch('/api/auth/session', { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(10_000) });
+  if (!response.ok) throw new Error('Không thể kiểm tra phiên Google. Vui lòng thử lại.');
+  const { account } = await response.json() as { account: SafeAccount | null };
+  if (!account) return null;
+  if (account.authProvider !== 'google' || !account.id.startsWith('google:') || !account.email || account.role !== 'player') {
+    throw new AuthError('Phiên Google không hợp lệ.', 'invalid_google_session');
+  }
+  return account;
+}
+
+async function syncGoogleAccount(identity: SafeAccount): Promise<SafeAccount> {
+  const now = new Date().toISOString();
+  // Use the provider subject as the key. Matching an email alone must never link
+  // a verified Google identity to an existing local password account.
+  await db.transaction('rw', [db.accounts, db.profiles, db.wallets, db.inventories, db.ledger, db.settings], async () => {
+    const stored = await db.accounts.get(identity.id);
+    if (stored?.status === 'disabled') throw new AuthError('Tài khoản đã bị vô hiệu hóa.', 'account_disabled');
+    await db.accounts.put({
+      ...identity, normalizedEmail: identity.id, role: 'player',
+      createdAt: stored?.createdAt ?? identity.createdAt, updatedAt: now,
+      passwordHash: '', passwordSalt: '', passwordIterations: 0, failedLoginAttempts: 0,
+    });
+    if (!stored) {
+      await db.profiles.add({ id: identity.id, name: identity.displayName, level: 1, xp: 0, createdAt: now });
+      await db.wallets.add({ profileId: identity.id, balance: GAME_BALANCE.initialCoinBalance, totalEarned: GAME_BALANCE.initialCoinBalance, totalSpent: 0 });
+      await db.inventories.add({ profileId: identity.id, ...DEFAULT_INVENTORY_SEED, ownedItemIds: [...DEFAULT_INVENTORY_SEED.ownedItemIds], equippedSkillIds: [...DEFAULT_INVENTORY_SEED.equippedSkillIds] });
+      await db.ledger.add({ id: `ledger_onboarding_${identity.id}`, profileId: identity.id, kind: 'onboarding', amount: GAME_BALANCE.initialCoinBalance, referenceId: `onboarding_${identity.id}`, at: now });
+      await db.settings.add({ id: getSettingsId(identity.id), audioEnabled: true, volume: 0.8, reduceMotion: false, fontSize: 'normal', desktopReminderDismissed: false });
+    }
+  });
+  if (validatedAccountId !== identity.id) await createSession(identity.id);
+  validatedAccountId = identity.id;
+  return toSafeAccount((await db.accounts.get(identity.id))!);
+}
+
+export async function getCurrentAccount(): Promise<SafeAccount | null> {
+  const local = await getLocalAccount();
+  const returningFromGoogle = new URLSearchParams(window.location.search).get('auth') === 'google';
+  if (local && local.authProvider !== 'google' && !returningFromGoogle) return local;
+  try {
+    const identity = await fetchGoogleAccount();
+    if (!identity) {
+      validatedAccountId = null;
+      return null;
+    }
+    return await syncGoogleAccount(identity);
+  } catch {
+    validatedAccountId = null;
+    return null;
+  }
 }
 
 export async function registerAccount(input: {
@@ -391,6 +445,10 @@ export async function loginAccount(email: string, password: string): Promise<Saf
 
 export async function logoutAccount(): Promise<void> {
   const accountId = getActiveProfileId();
+  if (accountId.startsWith('google:')) {
+    const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin', signal: AbortSignal.timeout(10_000) });
+    if (!response.ok) throw new AuthError('Chưa đăng xuất được. Vui lòng thử lại.', 'logout_failed');
+  }
   try {
     const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (raw) {
@@ -467,6 +525,7 @@ export async function changePassword(currentPassword: string, newPassword: strin
   const account = await db.accounts.get(current.id);
   if (!account) throw new AuthError('Không tìm thấy tài khoản.', 'not_found');
 
+  if (account.authProvider === 'google') throw new AuthError('Hãy quản lý mật khẩu trong Tài khoản Google của bạn.', 'google_password');
   const currentHash = await derivePasswordHash(currentPassword.slice(0, 128), account.passwordSalt, account.passwordIterations);
   if (!timingSafeEqualBase64(currentHash, account.passwordHash)) {
     throw new AuthError('Mật khẩu hiện tại không chính xác.', 'invalid_current_password');

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../../data/db';
 import {
   getCurrentAccount,
@@ -13,6 +13,11 @@ describe('Authentication and authorization', () => {
   beforeEach(async () => {
     sessionStorage.clear();
     await Promise.all(db.tables.map((table) => table.clear()));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    window.history.replaceState(null, '', '/');
   });
 
   it('creates the first account as admin without storing the raw password', async () => {
@@ -65,5 +70,35 @@ describe('Authentication and authorization', () => {
 
     expect(await getCurrentAccount()).toBeNull();
     expect(await db.sessions.get(session.id)).toBeUndefined();
+  });
+
+  it('uses the verified Google subject without linking a matching local email or granting admin', async () => {
+    const local = await registerAccount({ displayName: 'Local Pilot', email: 'pilot@example.com', password: 'Cosmos!Secure2026' });
+    const identity = { id: 'google:12345', email: local.email, displayName: 'Google Pilot', role: 'player', status: 'active', authProvider: 'google', createdAt: new Date().toISOString() };
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ account: identity }) });
+    vi.stubGlobal('fetch', fetchMock);
+    window.history.replaceState(null, '', '/?auth=google');
+    const google = await getCurrentAccount();
+    expect(google).toMatchObject({ id: identity.id, role: 'player', authProvider: 'google' });
+    expect((await db.accounts.get(local.id))?.role).toBe('admin');
+    expect(await db.accounts.count()).toBe(2);
+    const wallet = await db.wallets.get(identity.id);
+    await db.wallets.update(identity.id, { balance: 42 });
+    window.history.replaceState(null, '', '/');
+    expect((await getCurrentAccount())?.id).toBe(identity.id);
+    expect((await db.wallets.get(identity.id))?.balance).toBe(42);
+    expect(await db.ledger.where('profileId').equals(identity.id).count()).toBe(1);
+    expect(wallet?.balance).toBeGreaterThan(0);
+    await logoutAccount();
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/logout', expect.objectContaining({ method: 'POST' }));
+  });
+
+  it('does not trust a local Google profile when the server session is absent', async () => {
+    const identity = { id: 'google:54321', email: 'pilot@gmail.com', displayName: 'Google Pilot', role: 'player', status: 'active', authProvider: 'google', createdAt: new Date().toISOString() };
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ account: identity }) });
+    vi.stubGlobal('fetch', fetchMock);
+    expect(await getCurrentAccount()).toMatchObject({ id: identity.id });
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ account: null }) });
+    expect(await getCurrentAccount()).toBeNull();
   });
 });

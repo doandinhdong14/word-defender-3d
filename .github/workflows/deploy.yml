@@ -37,6 +37,9 @@ jobs:
       - name: Run tests
         run: npm run test
 
+      - name: Run authentication server tests
+        run: npm run test:server
+
       - name: Build application
         run: npm run build
 

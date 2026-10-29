@@ -39,6 +39,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!active) return;
         setAccount(current);
         setHasAccounts(registered);
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('auth') === 'google') {
+          url.searchParams.delete('auth');
+          if (!current) url.searchParams.set('auth_error', 'google_failed');
+          window.history.replaceState(null, '', url);
+        }
       })
       .finally(() => {
         if (active) setReady(true);

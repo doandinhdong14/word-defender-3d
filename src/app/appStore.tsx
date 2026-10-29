@@ -53,7 +53,7 @@ const AppContext = createContext<AppContextValue | null>(null);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { account, isAdmin } = useAuth();
   const profileId = account?.id ?? 'guest_profile';
-  const [currentRoute, setCurrentRoute] = useState<AppRoute>('home');
+  const [currentRoute, setCurrentRoute] = useState<AppRoute>(() => new URLSearchParams(window.location.search).has('auth_error') ? 'account' : 'home');
   const [selectedSetId, setSelectedSetId] = useState<string>('set_everyday');
   const [selectedMode, setSelectedMode] = useState<GameMode>('copy');
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('normal');

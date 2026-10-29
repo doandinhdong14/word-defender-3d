@@ -2,6 +2,7 @@ export type UserRole = 'admin' | 'player';
 export type AccountStatus = 'active' | 'disabled';
 
 export interface AccountCredential {
+  authProvider?: 'google';
   id: string;
   email: string;
   normalizedEmail: string;
@@ -19,6 +20,7 @@ export interface AccountCredential {
 }
 
 export interface SafeAccount {
+  authProvider?: 'google';
   id: string;
   email: string;
   displayName: string;

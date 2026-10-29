@@ -163,7 +163,7 @@ export const SettingsPage: React.FC = () => {
               </div>
             </div>
 
-            <form className="settings-password-form" onSubmit={handlePasswordChange}>
+            {account?.authProvider === 'google' ? <p>Bạn đăng nhập bằng Google. Quản lý mật khẩu tại <a href="https://myaccount.google.com/security" target="_blank" rel="noreferrer">Tài khoản Google</a>.</p> : <form className="settings-password-form" onSubmit={handlePasswordChange}>
               <div>
                 <div className="settings-section-label"><KeyRound size={18} /> Đổi mật khẩu</div>
                 <p>Mật khẩu mới cần ít nhất 10 ký tự và kết hợp 3 nhóm ký tự.</p>
@@ -176,7 +176,7 @@ export const SettingsPage: React.FC = () => {
               <StickerButton size="sm" type="submit" disabled={changingPassword}>
                 {changingPassword ? 'Đang đổi…' : 'Cập nhật mật khẩu'}
               </StickerButton>
-            </form>
+            </form>}
 
             <div style={{ height: '1px', backgroundColor: 'var(--color-grid)' }} />
 

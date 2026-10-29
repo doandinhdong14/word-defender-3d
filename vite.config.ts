@@ -13,6 +13,10 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
+    proxy: {
+      '/api/auth': 'http://127.0.0.1:3001',
+      '/api/health': 'http://127.0.0.1:3001',
+    },
     fs: {
       strict: false,
     },
