@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Eye, EyeOff, KeyRound, LockKeyhole, LogIn, ShieldCheck, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { validatePassword } from '../auth/authService';
 import { PaperPanel } from '../components/PaperPanel';
 import { StickerButton } from '../components/StickerButton';
-import { getAssetUrl } from '../utils/assetUrl';
 
 type AuthMode = 'login' | 'register';
 
@@ -81,22 +80,10 @@ export const AuthPage: React.FC = () => {
     <div className="auth-shell notebook-grid-bg">
       <div className="auth-layout">
         <section className="auth-intro" aria-labelledby="auth-title">
-          <div className="auth-brand">
-            <img src={getAssetUrl('/pempom.svg')} alt="" className="auth-logo" />
-            <span>pempom</span>
-          </div>
-          <h1 id="auth-title">Một tài khoản nhỏ.<br />Cả thế giới chờ bạn.</h1>
-          <p>
-            Đăng nhập để giữ riêng tiến trình học, xu và tủ đồ của bạn trên thiết bị này.
-          </p>
-          <div className="auth-security-list">
-            <div><ShieldCheck size={19} /><span>Giữ tiến trình và bộ trang bị của riêng bạn</span></div>
-            <div><LockKeyhole size={19} /><span>Tích lũy xu qua từng trận chiến</span></div>
-            <div><KeyRound size={19} /><span>Mở quà mỗi ngày, nhận thêm niềm vui</span></div>
-          </div>
+          <h1 id="auth-title">Tài khoản</h1>
         </section>
 
-        <PaperPanel className="auth-card" foldedCorner>
+        <PaperPanel className="auth-card">
           <div className="auth-tabs" role="tablist" aria-label="Tài khoản">
             <button
               type="button"
@@ -116,16 +103,6 @@ export const AuthPage: React.FC = () => {
             >
               Đăng ký
             </button>
-          </div>
-
-          <div className="auth-card-heading">
-            <span className="auth-eyebrow">{mode === 'login' ? 'CHÀO MỪNG TRỞ LẠI' : 'TẠO HỒ SƠ MỚI'}</span>
-            <h2>{mode === 'login' ? 'Tiếp tục học cùng pempom' : 'Bắt đầu hành trình'}</h2>
-            <p>
-              {mode === 'login'
-                ? 'Nhập thông tin tài khoản của bạn để tiếp tục.'
-                : 'Tạo tài khoản để bắt đầu cuộc phiêu lưu của bạn.'}
-            </p>
           </div>
 
           {googleEnabled && (
@@ -233,7 +210,7 @@ export const AuthPage: React.FC = () => {
           </form>
 
           <p className="auth-local-note">
-            Google xác thực danh tính của bạn. Tiến trình game được lưu trong trình duyệt này.
+            Tiến trình được lưu trên trình duyệt này.
           </p>
         </PaperPanel>
       </div>

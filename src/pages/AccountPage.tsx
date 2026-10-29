@@ -69,9 +69,7 @@ export const AccountPage: React.FC = () => {
   return (
     <div className="portal-page">
       <div className="page-heading">
-        <span className="eyebrow">GÓC RIÊNG CỦA NHÀ THÁM HIỂM</span>
-        <h1>Tài khoản & ví xu</h1>
-        <p>Hành trình, trang bị và những đồng xu của bạn.</p>
+        <h1>Tài khoản</h1>
       </div>
       <div className="account-layout">
         <aside className="surface profile-card">

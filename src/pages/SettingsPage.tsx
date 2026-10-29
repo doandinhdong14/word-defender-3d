@@ -111,18 +111,12 @@ export const SettingsPage: React.FC = () => {
       }}
     >
       <div style={{ width: '100%', maxWidth: '700px' }}>
-        <div style={{ marginBottom: '20px' }}>
-          <StickerButton onClick={() => navigateTo('home')} icon={<ArrowLeft size={18} />}>
-            Trang Chủ
-          </StickerButton>
-        </div>
-
         <PaperPanel>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 900, marginBottom: '6px' }}>
-            Cài Đặt Trò Chơi
+            Cài đặt
           </h1>
           <p style={{ color: 'var(--color-muted-ink)', marginBottom: '24px' }}>
-            Quản lý âm thanh, giao diện và dữ liệu sao lưu cục bộ trên trình duyệt.
+            Âm thanh, chuyển động & dữ liệu.
           </p>
 
           {msg && (

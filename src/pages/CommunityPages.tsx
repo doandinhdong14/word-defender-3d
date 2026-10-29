@@ -82,9 +82,7 @@ export const LeaderboardPage: React.FC = () => {
   return (
     <div className="portal-page">
       <div className="page-heading">
-        <span className="eyebrow">CÙNG CHƠI, CÙNG TIẾN BỘ</span>
-        <h1>Bảng xếp hạng & cộng đồng</h1>
-        <p>Mỗi chiến thắng đều xứng đáng được chia sẻ.</p>
+        <h1>Bảng xếp hạng</h1>
       </div>
       <div className="pill-tabs">
         <button
@@ -288,9 +286,7 @@ export const GiftsPage: React.FC = () => {
   return (
     <div className="portal-page">
       <div className="page-heading">
-        <span className="eyebrow">NIỀM VUI NHỎ MỖI NGÀY</span>
-        <h1>Một hộp quà. Nhiều bất ngờ.</h1>
-        <p>Ghé thăm, chia sẻ ý tưởng và rủ bạn cùng phiêu lưu.</p>
+        <h1>Quà tặng</h1>
       </div>
       {notice && (
         <p className="notice" role="status">
@@ -442,8 +438,7 @@ export const EventsPage: React.FC = () => {
   return (
     <div className="portal-page">
       <div className="page-heading">
-        <span className="eyebrow">THỬ THÁCH NHỎ, NIỀM VUI LỚN</span>
-        <h1>Chơi hết mình. Rinh quà xinh.</h1>
+        <h1>Sự kiện</h1>
         <p>Nhiệm vụ khởi đầu dành cho mọi nhà thám hiểm pempom.</p>
       </div>
       <PublishedMessages type="event" />

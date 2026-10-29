@@ -56,26 +56,22 @@ export const WardrobePage: React.FC = () => {
     >
       <div style={{ width: '100%', maxWidth: '850px' }}>
         {/* Top Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <StickerButton onClick={() => navigateTo('home')} icon={<ArrowLeft size={18} />}>
-            Trang Chủ
-          </StickerButton>
-
+        <div className="doodle-toolbar">
           <div style={{ display: 'flex', gap: '10px' }}>
             <StickerButton variant="accent" size="sm" onClick={() => navigateTo('store')} icon={<ShoppingBag size={16} />}>
-              Mua Thêm Đồ
+              Store
             </StickerButton>
             <StickerButton variant="primary" size="sm" onClick={() => navigateTo('prepare')} icon={<Play fill="var(--color-ink)" size={16} />}>
-              Vào Trận Ngay
+              Vào trận
             </StickerButton>
           </div>
         </div>
 
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.2rem', fontWeight: 900, marginBottom: '6px' }}>
-          Tủ Đồ & Trang Bị pempom
+          Tủ đồ
         </h1>
         <p style={{ color: 'var(--color-muted-ink)', marginBottom: '24px' }}>
-          Tùy chỉnh màu sắc, loại đạn tên lửa đặc biệt và trang phục chiến đấu cho pempom. Thử ngay các tư thế bắn khác nhau!
+          Chọn trang phục và trang bị.
         </p>
 
         {/* Main Grid: Preview on Left + Equipment Slots on Right */}

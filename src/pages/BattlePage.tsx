@@ -4,7 +4,8 @@ import { GameEngine } from '../game/engine/gameEngine';
 import { playSoundEffect, configureSoundSettings } from '../utils/soundEffects';
 import { selectSessionWords } from '../learning/sessionSelector';
 import { logAttempt } from '../learning/attempts';
-import { drawAlienPurple, drawPonpi } from '../game/assets/PonpiRenderer';
+import { drawPonpi } from '../game/assets/PonpiRenderer';
+import { drawMonster } from '../game/assets/MonsterRenderer';
 import { drawBullet } from '../game/assets/BulletRenderer';
 import { WordTag } from '../components/WordTag';
 import { StickerButton } from '../components/StickerButton';
@@ -350,18 +351,23 @@ export const BattlePage: React.FC = () => {
       breathingTime: eng.gameTimeMs,
     });
 
-    // 4. Draw Enemies (Single species: Alien Purple, Boss in wave 3 - scaled down)
+    // 4. Draw Enemies (All 30 rich monster species + epic Bosses with natural animation)
     for (const enemy of eng.enemies) {
       const isSlow = (enemy.statusEffects.slowUntilGameMs || 0) > eng.gameTimeMs;
       const isFrozen = (enemy.statusEffects.freezeUntilGameMs || 0) > eng.gameTimeMs;
 
-      drawAlienPurple(ctx, mapX(enemy.x), mapY(enemy.y), {
+      drawMonster(ctx, mapX(enemy.x), mapY(enemy.y), {
+        speciesId: enemy.speciesId,
+        isBoss: enemy.isBoss,
         selected: enemy.id === eng.selectedEnemyId,
         isSlowed: isSlow,
         isFrozen: isFrozen,
         animTime: eng.gameTimeMs,
-        boss: enemy.isBoss,
-        scale: 0.58 * visualScale,
+        lastHitTimeMs: enemy.lastHitGameMs,
+        bossSegmentsRemaining: enemy.bossSegmentsRemaining,
+        bossMaxSegments: enemy.bossMaxSegments,
+        pendingDefeat: enemy.pendingDefeat,
+        scale: visualScale,
       });
     }
 
@@ -604,9 +610,9 @@ export const BattlePage: React.FC = () => {
                 style={{
                   position: 'absolute',
                   left: isMobile
-                    ? `clamp(${enemy.isBoss ? 68 : 40}px, ${leftPct}%, calc(100% - ${enemy.isBoss ? 68 : 40}px))`
+                    ? `clamp(${enemy.isBoss ? 78 : 40}px, ${leftPct}%, calc(100% - ${enemy.isBoss ? 78 : 40}px))`
                     : `${leftPct}%`,
-                  top: `${topPct + (enemy.isBoss ? 4.8 : 3.2)}%`,
+                  top: `${topPct + (enemy.isBoss ? 7.2 : 3.6)}%`,
                   transform: 'translate(-50%, 0)',
                   pointerEvents: 'auto',
                   opacity: enemy.pendingDefeat ? 0.9 : 1,

@@ -36,6 +36,7 @@ export interface EnemyState {
     meaningText?: string;
   }>;
   pendingDefeat?: boolean;
+  lastHitGameMs?: number;
 }
 
 export interface DefeatedWordEffect {

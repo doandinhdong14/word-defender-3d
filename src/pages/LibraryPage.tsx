@@ -84,14 +84,10 @@ export const LibraryPage: React.FC = () => {
     >
       <div style={{ width: '100%', maxWidth: '900px' }}>
         {/* Navigation Bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
-          <StickerButton onClick={() => navigateTo('home')} icon={<ArrowLeft size={18} />}>
-            Trang Chủ
-          </StickerButton>
-
+        <div className="doodle-toolbar">
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <StickerButton size="sm" onClick={handleDownloadTemplate} icon={<Download size={14} />}>
-              Tải Template
+              Tải mẫu
             </StickerButton>
             <StickerButton
               variant="mint"
@@ -107,10 +103,10 @@ export const LibraryPage: React.FC = () => {
         {/* Page Title & Search */}
         <div style={{ marginBottom: '24px' }}>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.2rem', fontWeight: 900 }}>
-            Bài học & tài liệu
+            Bài học
           </h1>
           <p style={{ color: 'var(--color-muted-ink)', marginTop: '4px' }}>
-            Chọn bộ từ có sẵn để luyện tập hoặc tự thêm bộ từ của bạn từ file Excel.
+            Chọn hoặc nhập bộ từ.
           </p>
 
           <input

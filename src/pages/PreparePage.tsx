@@ -7,7 +7,6 @@ import {
   Map,
   Play,
   Shield,
-  Swords,
   Zap,
 } from "lucide-react";
 import { useApp } from "../app/appStore";
@@ -96,15 +95,8 @@ export const PreparePage: React.FC = () => {
   };
   return (
     <div className="portal-page prepare-page">
-      <button className="text-button" onClick={() => navigateTo("home")}>
-        <ArrowLeft size={17} /> Về sảnh
-      </button>
       <div className="page-heading">
-        <span className="eyebrow">
-          <Swords size={15} /> ĐẤU THƯỜNG
-        </span>
-        <h1>Chuẩn bị cho cuộc phiêu lưu.</h1>
-        <p>Một chiến binh, một thế giới, và những điều mới để khám phá.</p>
+        <h1>Chuẩn bị</h1>
       </div>
       <div className="prepare-layout">
         <div className="surface prepare-options">

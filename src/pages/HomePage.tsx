@@ -1,221 +1,107 @@
 import React, { useState } from "react";
 import {
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  Check,
-  ChevronRight,
-  Crosshair,
-  Gift,
-  LockKeyhole,
-  Play,
-  Sparkles,
-  Swords,
-  Trophy,
+  ArrowLeft, ArrowRight, CalendarDays, Crosshair, Gift, LockKeyhole,
+  ShoppingBag, Sparkles, Swords, Trophy, UserRound,
 } from "lucide-react";
 import { useApp } from "../app/appStore";
 import { PonpiPreview } from "../components/PonpiPreview";
-import { getAssetUrl } from "../utils/assetUrl";
-import { PublishedMessages } from '../components/PublishedMessages';
+import "../styles/doodle-home.css";
 
 export const HomePage: React.FC = () => {
-  const { navigateTo, inventory, profile } = useApp();
+  const { navigateTo } = useApp();
   const [modesOpen, setModesOpen] = useState(false);
-  if (modesOpen)
-    return (
+
+  if (modesOpen) return (
+    <main className="doodle-modes notebook-grid-bg">
       <div className="portal-page">
         <button className="text-button" onClick={() => setModesOpen(false)}>
           <ArrowLeft size={17} /> Về sảnh
         </button>
-        <div className="page-heading">
-          <span className="eyebrow">CHỌN CÁCH BẠN TỎA SÁNG</span>
-          <h1>Sẵn sàng xuất kích?</h1>
-          <p>Một trận đấu mới. Một bước tiến mới.</p>
-        </div>
+        <div className="page-heading"><h1>Chơi gì hôm nay?</h1></div>
         <div className="mode-grid">
-          <button
-            className="mode-card available"
-            onClick={() => navigateTo("prepare")}
-          >
-            <span className="tag green">
-              <span className="status-dot" /> ĐANG MỞ
-            </span>
+          <button className="mode-card available" onClick={() => navigateTo("prepare")}>
+            <span className="tag green"><span className="status-dot" /> ĐANG MỞ</span>
             <Swords size={56} strokeWidth={1.4} />
             <h2>Đấu thường</h2>
-            <p>
-              Bảo vệ thế giới bằng sức mạnh từ vựng. Tùy chọn bản đồ và trang bị
-              của bạn.
-            </p>
-            <span className="mode-cta">
-              Thiết lập trận đấu <ArrowRight size={20} />
-            </span>
+            <span className="mode-cta">Vào trận <ArrowRight size={20} /></span>
           </button>
           {[
-            {
-              name: "Đấu xếp hạng",
-              icon: Trophy,
-              desc: "Chinh phục thứ hạng của riêng bạn.",
-            },
-            {
-              name: "Đấu cùng bạn bè",
-              icon: Crosshair,
-              desc: "Cùng đồng đội tạo nên chiến thắng.",
-            },
-            {
-              name: "Thử thách đặc biệt",
-              icon: Sparkles,
-              desc: "Những cuộc phiêu lưu đang chờ đón.",
-            },
-          ].map(({ name, icon: Icon, desc }) => (
+            { name: "Đấu xếp hạng", icon: Trophy },
+            { name: "Đấu cùng bạn bè", icon: Crosshair },
+            { name: "Thử thách đặc biệt", icon: Sparkles },
+          ].map(({ name, icon: Icon }) => (
             <div className="mode-card locked" key={name}>
-              <span className="tag">
-                <LockKeyhole size={12} /> SẮP RA MẮT
-              </span>
+              <span className="tag"><LockKeyhole size={12} /> SẮP RA MẮT</span>
               <Icon size={48} strokeWidth={1.3} />
               <h2>{name}</h2>
-              <p>{desc}</p>
-              <span className="mode-cta">Sắp ra mắt</span>
             </div>
           ))}
         </div>
       </div>
-    );
+    </main>
+  );
 
   return (
-    <div className="lobby">
-      <PublishedMessages type="announcement" />
-      <div className="lobby-heading">
-        <div>
-          <span className="eyebrow">MỘT CHÚT HỌC. THẬT NHIỀU VUI.</span>
-          <h1>Hôm nay, mình phiêu lưu đâu?</h1>
+    <main className="doodle-home notebook-grid-bg" aria-labelledby="doodle-title">
+      <nav className="doodle-utilities" aria-label="Tiện ích">
+        <button onClick={() => navigateTo("gifts")}><Gift aria-hidden="true" /><span>Quà tặng</span></button>
+        <button onClick={() => navigateTo("events")}><CalendarDays aria-hidden="true" /><span>Sự kiện</span></button>
+      </nav>
+
+      <div className="doodle-scene">
+        <h1 id="doodle-title">pempom</h1>
+
+        <div className="doodle-decorations" aria-hidden="true">
+          <svg className="doodle-ufo" viewBox="0 0 180 130" fill="none">
+            <path d="m58 55-29 67q62-14 119 0l-29-67" fill="#efd59a" opacity=".16" stroke="none" />
+            <path d="M47 52Q64-9 101 13q16 11 24 39" fill="#b2c56b" />
+            <path d="M9 59C3 38 173 33 170 54S23 80 9 59Z" fill="#d6d4b8" />
+            <path d="M25 66q59 13 127-8M34 73l-5 9m112-13 7 9" />
+            <path d="m72 24 5-4m15 0 4 2" stroke="#e3e9b9" strokeWidth="5" />
+          </svg>
+          <svg className="doodle-bug doodle-bug-green" viewBox="0 0 64 46" fill="none">
+            <path d="m20 12-3-6m14 5 1-7m11 9 5-5M14 24l-8-1m11 12-5 6m18-5-1 7m14-9 4 6m4-16 7 1" />
+            <path d="M12 23C11 8 48 10 51 23s-34 20-39 0Z" fill="#b2c56b" />
+            <path d="m21 21 1 3m8-4 1 3" />
+          </svg>
+          <svg className="doodle-bug doodle-bug-blue" viewBox="0 0 64 46" fill="none">
+            <path d="m20 12-3-6m14 5 1-7m11 9 5-5M14 24l-8-1m11 12-5 6m18-5-1 7m14-9 4 6m4-16 7 1" />
+            <path d="M12 23C11 8 48 10 51 23s-34 20-39 0Z" fill="#91bfc4" />
+            <path d="m21 21 1 3m8-4 1 3" />
+          </svg>
+          <svg className="doodle-star" viewBox="0 0 42 48" fill="none">
+            <path d="m21 3 4 15 13 6-13 5-4 16-5-16-13-5 13-6Z" fill="#efcb7a" />
+          </svg>
+          <svg className="doodle-flight" viewBox="0 0 145 95" fill="none">
+            <path d="M4 85q47 9 49-17c2-22-41-3-22 11q24 17 55-34" strokeDasharray="4 7" strokeWidth="1.5" />
+            <path d="m80 23 55-17-20 43-10-18Z" fill="#f5e5b9" />
+            <path d="m105 31 30-25m-30 25-2 15 12-12" />
+          </svg>
         </div>
-        <span className="lobby-season">
-          <span>✳</span> Hành trình từ vựng
-        </span>
-      </div>
-      <section className="lobby-arena">
-        <div className="arena-landscape" aria-hidden="true" />
-        <div className="arena-grain" aria-hidden="true" />
-        <div className="hero-copy">
-          <span className="hero-tag">
-            <Sparkles size={14} /> CHÀO MỪNG ĐẾN VỚI PEMPOM
-          </span>
-          <h2>
-            Thế giới nhỏ.
-            <br />
-            Phiêu lưu <em>lớn.</em>
-          </h2>
-          <p>
-            Nạp từ vựng. Chọn chiến binh.
-            <br />
-            Gõ thật chuẩn và bùng nổ cùng pempom!
-          </p>
-          <button className="play-cta" onClick={() => setModesOpen(true)}>
-            <Play size={24} fill="currentColor" />
-            <span>
-              CHƠI NGAY<small>Cuộc phiêu lưu bắt đầu từ đây</small>
-            </span>
-            <ChevronRight size={23} />
-          </button>
-          <span className="hero-tip">
-            <Check size={14} /> Chơi theo cách của bạn, học theo nhịp của bạn.
-          </span>
-        </div>
-        <div className="hero-character">
-          <span className="character-bubble">
-            Sẵn sàng chưa? <span>✦</span>
-          </span>
-          <div className="floating-word word-one">
-            adventure <small>/ədˈventʃər/</small>
-          </div>
-          <div className="floating-word word-two">
-            <Check size={15} /> let's play!
-          </div>
-          <div className="character-platform" />
+
+        <nav className="doodle-play-menu" aria-label="Bắt đầu">
+          <button className="doodle-oval doodle-play" onClick={() => setModesOpen(true)}>Chơi</button>
+          <button className="doodle-oval doodle-lessons" onClick={() => navigateTo("library")}>Bài học</button>
+        </nav>
+
+        <div className="doodle-mascot" role="img" aria-label="Nhân vật pempom mặc định">
           <PonpiPreview
-            width={430}
-            height={360}
-            scale={2.65}
-            styleId={inventory?.equippedStyleId || "style_yellow"}
-            outfitId={inventory?.equippedOutfitId}
-            frameless
-            showPoseSelector={false}
+            width={280} height={260} scale={2.1}
+            styleId="style_yellow" outfitId={null}
+            frameless showPoseSelector={false}
           />
-          <span className="character-name">
-            <span className="status-dot" /> {profile?.name || "pempom"}{" "}
-            <small>NHÀ THÁM HIỂM TỪ VỰNG</small>
-          </span>
+          <svg className="doodle-platform" viewBox="0 0 180 32" fill="none" aria-hidden="true">
+            <path d="M15 7C40 3 143 2 164 7q17 5 3 17C134 30 44 28 14 25Q0 20 15 7Z" fill="#a9c56a" stroke="currentColor" strokeWidth="2.6" />
+            <path d="m22 12-5 7m13-8-5 9m116-9-4 10m13-9-4 7m-107 2 86 1" stroke="#e3edb9" strokeWidth="2" strokeLinecap="round" />
+          </svg>
         </div>
-        <button className="arena-gift" onClick={() => navigateTo("gifts")}>
-          <span className="gift-drawing">
-            <Gift size={43} strokeWidth={1.5} />
-          </span>
-          <span>
-            Quà dành cho bạn<small>Mở một chút bất ngờ!</small>
-          </span>
-          <ChevronRight size={17} />
-          <i />
-        </button>
-        <span className="arena-coordinate">
-          PEMPOM WORLD <span>✦</span> YOUR NEXT ADVENTURE
-        </span>
-      </section>
-      <div className="lobby-bottom">
-        <button
-          className="lobby-card shop-card"
-          onClick={() => navigateTo("store")}
-        >
-          <span className="card-overline">TRANG BỊ CÁ TÍNH</span>
-          <h3>Nhỏ mà có võ.</h3>
-          <p>Tướng xịn, đạn chất. Sẵn sàng tỏa sáng.</p>
-          <span className="card-link">
-            Khám phá Store <ArrowRight size={16} />
-          </span>
-          <img
-            src={getAssetUrl("/assets/samurai/outfit_samurai_icon.png")}
-            alt="Trang phục Samurai"
-          />
-        </button>
-        <button
-          className="lobby-card lesson-card"
-          onClick={() => navigateTo("library")}
-        >
-          <span className="card-overline">HÀNH TRANG TRI THỨC</span>
-          <h3>Từ mới, sức mạnh mới.</h3>
-          <p>Chọn bộ từ có sẵn hoặc tải tài liệu của bạn.</p>
-          <span className="card-link">
-            Vào bài học <ArrowRight size={16} />
-          </span>
-          <span className="lesson-illustration">
-            <BookOpen size={57} strokeWidth={1.35} />
-            <i>Aa</i>
-          </span>
-        </button>
-        <button
-          className="lobby-card event-card"
-          onClick={() => navigateTo("events")}
-        >
-          <span className="card-overline">THỬ THÁCH TRONG GAME</span>
-          <h3>Chơi vui. Rinh quà.</h3>
-          <p>Những nhiệm vụ nhỏ, phần thưởng thật vui.</p>
-          <span className="card-link">
-            Xem sự kiện <ArrowRight size={16} />
-          </span>
-          <span className="event-illustration">
-            <Trophy size={58} strokeWidth={1.4} />
-            <Sparkles size={20} />
-          </span>
-        </button>
       </div>
-      <div className="lobby-note">
-        <span>
-          <span className="status-dot" /> Sẵn sàng cho một trận đấu mới
-        </span>
-        <span>
-          Gõ đúng một từ. Tiến thêm một bước. <ArrowDown size={13} />
-        </span>
-      </div>
-    </div>
+
+      <nav className="doodle-bottom-nav" aria-label="Khám phá">
+        <button onClick={() => navigateTo("store")}><ShoppingBag aria-hidden="true" /><span>Store</span></button>
+        <button onClick={() => navigateTo("leaderboard")}><Trophy aria-hidden="true" /><span>Bảng xếp hạng</span></button>
+        <button onClick={() => navigateTo("account")}><UserRound aria-hidden="true" /><span>Tài khoản</span></button>
+      </nav>
+    </main>
   );
 };

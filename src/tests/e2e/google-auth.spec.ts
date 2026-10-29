@@ -4,7 +4,7 @@ test('Google button works in both account tabs and starts the server flow', asyn
   await page.route('**/api/auth/config', route => route.fulfill({ json: { googleEnabled: true } }));
   await page.route('**/api/auth/google/start', route => route.fulfill({ contentType: 'text/html', body: '<h1>Google authorization started</h1>' }));
   await page.goto('/');
-  await page.locator('.game-sidebar nav').getByRole('button', { name: 'Tài khoản', exact: true }).click();
+  await page.locator('.game-navigation, .doodle-home nav').getByRole('button', { name: 'Tài khoản', exact: true }).click();
   const google = page.getByRole('button', { name: 'Tiếp tục với Google' });
   await expect(google).toBeVisible();
   await page.getByRole('tab', { name: 'Đăng nhập', exact: true }).click();
@@ -28,9 +28,9 @@ test('verified Google account initializes a player profile, survives reload, and
   await page.route('**/api/auth/session', route => route.fulfill({ json: { account: signedIn ? identity : null } }));
   await page.route('**/api/auth/logout', route => { signedIn = false; return route.fulfill({ status: 204 }); });
   await page.goto('/?auth=google');
-  await expect(page.getByRole('heading', { name: 'Hôm nay, mình phiêu lưu đâu?' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'pempom' })).toBeVisible();
   await expect(page).not.toHaveURL(/auth=google/);
-  const accountTab = page.locator('.game-sidebar nav').getByRole('button', { name: 'Tài khoản', exact: true });
+  const accountTab = page.locator('.game-navigation, .doodle-home nav').getByRole('button', { name: 'Tài khoản', exact: true });
   await accountTab.click();
   await expect(page.getByText(identity.email, { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Quản trị', exact: true })).toHaveCount(0);

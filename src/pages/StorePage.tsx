@@ -50,9 +50,8 @@ export const StorePage: React.FC = () => {
   return (
     <div className="portal-page">
       <div className="page-heading">
-        <span className="eyebrow">MỘT PHONG CÁCH RẤT RIÊNG</span>
-        <h1>Nhỏ mà có võ.</h1>
-        <p>Chọn chiến binh, đổi sắc màu, mang theo loại đạn yêu thích.</p>
+        <h1>Store</h1>
+        <p>Trang phục, màu sắc & kỹ năng.</p>
       </div>
       <div className="store-layout">
         <div>

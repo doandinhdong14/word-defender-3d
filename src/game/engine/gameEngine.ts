@@ -23,6 +23,7 @@ import {
   canActivateSkill,
 } from './skills';
 import { speakEnglishWord } from '../../learning/pronunciation';
+import { REGULAR_MONSTER_SPECIES, BOSS_MONSTER_SPECIES } from '../assets/MonsterRenderer';
 
 export type GameStateStatus =
   | 'READY'
@@ -234,9 +235,13 @@ export class GameEngine {
         ? '🔊 [Nghe từ]'
         : entry.english;
 
+    const chosenSpecies = REGULAR_MONSTER_SPECIES[
+      Math.floor(Math.random() * REGULAR_MONSTER_SPECIES.length)
+    ]?.id || 'bat_purple';
+
     const enemy: EnemyState = {
       id: `mob_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
-      speciesId: 'purple_one_eye_alien',
+      speciesId: chosenSpecies,
       entryId: entry.id,
       word: entry.english,
       acceptedAnswers: entry.acceptedAnswers.length > 0 ? entry.acceptedAnswers : [entry.english],
@@ -281,9 +286,13 @@ export class GameEngine {
     const speedMult = GAME_BALANCE.speedMultiplierByDifficulty[this.difficulty] || 1.0;
     const bossSpeed = (GAME_BALANCE.baseEnemySpeedPxPerSec * speedMult) * 0.45; // slower boss
 
+    const chosenBoss = BOSS_MONSTER_SPECIES[
+      Math.floor(Math.random() * BOSS_MONSTER_SPECIES.length)
+    ]?.id || 'boss_magma_demon';
+
     const bossEnemy: EnemyState = {
       id: `boss_${Date.now()}`,
-      speciesId: 'purple_one_eye_alien',
+      speciesId: chosenBoss,
       entryId: firstWord.id,
       word: firstWord.english,
       acceptedAnswers: firstWord.acceptedAnswers.length > 0 ? firstWord.acceptedAnswers : [firstWord.english],
@@ -295,8 +304,8 @@ export class GameEngine {
       statusEffects: {},
       selected: true,
       spawnedAtGameMs: this.gameTimeMs,
-      width: 120,
-      height: 120,
+      width: 140,
+      height: 140,
       isBoss: true,
       bossSegmentsRemaining: bossCount,
       bossMaxSegments: bossCount,
@@ -369,6 +378,8 @@ export class GameEngine {
     for (const hit of projResult.hitEnemyIds) {
       const enemy = this.enemies.find((e) => e.id === hit.enemyId);
       if (!enemy) continue;
+
+      enemy.lastHitGameMs = this.gameTimeMs;
 
       if (hit.kind === 'slow_shot') {
         applySlowEffect(enemy, this.gameTimeMs, 5000, 0.35);
