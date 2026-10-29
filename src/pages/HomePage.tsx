@@ -6,9 +6,11 @@ import {
 import { useApp } from "../app/appStore";
 import { PonpiPreview } from "../components/PonpiPreview";
 import "../styles/doodle-home.css";
+import { useAuth } from '../auth/AuthContext';
 
 export const HomePage: React.FC = () => {
   const { navigateTo } = useApp();
+  const { account } = useAuth();
   const [modesOpen, setModesOpen] = useState(false);
 
   if (modesOpen) return (
@@ -20,9 +22,10 @@ export const HomePage: React.FC = () => {
         <div className="page-heading"><h1>Chơi gì hôm nay?</h1></div>
         <div className="mode-grid">
           <button className="mode-card available" onClick={() => navigateTo("prepare")}>
-            <span className="tag green"><span className="status-dot" /> ĐANG MỞ</span>
+            <span className="tag green"><span className="status-dot" /> {account ? 'ĐANG MỞ' : 'MIỄN PHÍ · KHÔNG CẦN ĐĂNG NHẬP'}</span>
             <Swords size={56} strokeWidth={1.4} />
             <h2>Đấu thường</h2>
+            {!account && <p>Bộ từ cơ bản · pempom nguyên bản · map ô ly</p>}
             <span className="mode-cta">Vào trận <ArrowRight size={20} /></span>
           </button>
           {[

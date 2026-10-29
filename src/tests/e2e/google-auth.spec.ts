@@ -1,14 +1,14 @@
 import { expect, test } from '@playwright/test';
 
-test('Google button works in both account tabs and starts the server flow', async ({ page }) => {
+test('Google is the only sign-in method and starts the server flow', async ({ page }) => {
   await page.route('**/api/auth/config', route => route.fulfill({ json: { googleEnabled: true } }));
   await page.route('**/api/auth/google/start', route => route.fulfill({ contentType: 'text/html', body: '<h1>Google authorization started</h1>' }));
   await page.goto('/');
   await page.locator('.game-navigation, .doodle-home nav').getByRole('button', { name: 'Tài khoản', exact: true }).click();
   const google = page.getByRole('button', { name: 'Tiếp tục với Google' });
   await expect(google).toBeVisible();
-  await page.getByRole('tab', { name: 'Đăng nhập', exact: true }).click();
-  await expect(google).toBeVisible();
+  await expect(page.getByRole('tab')).toHaveCount(0);
+  await expect(page.locator('input[type=password], input[type=email]')).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   await google.click();
@@ -39,8 +39,8 @@ test('verified Google account initializes a player profile, survives reload, and
   await expect(page.getByText(identity.email, { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
   await accountTab.click();
-  await expect(page.getByRole('tab', { name: 'Đăng nhập', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Đăng nhập bằng Google' })).toBeVisible();
   await page.reload();
   await accountTab.click();
-  await expect(page.getByRole('tab', { name: 'Đăng nhập', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Đăng nhập bằng Google' })).toBeVisible();
 });

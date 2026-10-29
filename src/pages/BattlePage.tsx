@@ -28,8 +28,11 @@ import {
 import { DefeatedWordEffect, RunSummary } from '../types/game';
 import { GameMapId, getActiveMapId, setActiveMapId, MAP_CONFIGS } from '../config/maps';
 import { drawSvgMapBackground } from '../game/assets/SvgMapBackground';
+import { useAuth } from '../auth/AuthContext';
+import { BASIC_MAP_ID, BASIC_MODE, createGuestInventory, getBasicWords, isBasicSet } from '../config/access';
 
 export const BattlePage: React.FC = () => {
+  const { account } = useAuth();
   const {
     selectedSetId,
     selectedMode,
@@ -150,8 +153,15 @@ export const BattlePage: React.FC = () => {
     let isMounted = true;
 
     const initEngine = async () => {
+      if (!account && (!isBasicSet(selectedSetId) || selectedMap !== BASIC_MAP_ID || selectedMode !== BASIC_MODE)) {
+        navigateTo('account');
+        return;
+      }
+      const loadout = account ? inventory : createGuestInventory();
       // Select 15 words according to spaced repetition logic
-      const sessionWords = await selectSessionWords(selectedSetId, GAME_BALANCE.sessionWords);
+      const sessionWords = account
+        ? await selectSessionWords(selectedSetId, GAME_BALANCE.sessionWords)
+        : getBasicWords(selectedSetId).sort(() => Math.random() - 0.5).slice(0, GAME_BALANCE.sessionWords);
       if (!isMounted) return;
 
       if (sessionWords.length === 0) {
@@ -165,15 +175,15 @@ export const BattlePage: React.FC = () => {
         mode: selectedMode,
         difficulty: selectedDifficulty,
         words: sessionWords,
-        equippedSkills: inventory?.equippedSkillIds || ['skill_slow_shot'],
-        equippedOutfitId: inventory?.equippedOutfitId || null,
-        equippedHatId: inventory?.equippedHatId || null,
-        equippedShirtId: inventory?.equippedShirtId || null,
-        equippedStyleId: inventory?.equippedStyleId || 'style_yellow',
-        equippedBulletId: inventory?.equippedBulletId || 'bullet_missile',
+        equippedSkills: loadout?.equippedSkillIds || [],
+        equippedOutfitId: loadout?.equippedOutfitId || null,
+        equippedHatId: loadout?.equippedHatId || null,
+        equippedShirtId: loadout?.equippedShirtId || null,
+        equippedStyleId: loadout?.equippedStyleId || 'style_yellow',
+        equippedBulletId: loadout?.equippedBulletId || 'bullet_default',
         maxConcurrentEnemies: isMobile ? 3 : GAME_BALANCE.maxConcurrentEnemies,
         onAttempt: (params) => {
-          logAttempt(params);
+          if (account) void logAttempt(params);
         },
         onRunFinished: (summary: RunSummary) => {
           setLastRunSummary(summary);
@@ -983,7 +993,7 @@ export const BattlePage: React.FC = () => {
                     padding: '3px 6px',
                   }}
                 >
-                  {selectedMap === 'forest-mountain' ? '↺ Chuyển về Map Mặc Định' : '🌲 Thử nghiệm Map: Phong Cảnh Núi Rừng'}
+                  {!account ? 'Đăng nhập Google để mở thêm map' : selectedMap === 'forest-mountain' ? '↺ Chuyển về Map Mặc Định' : '🌲 Thử nghiệm Map: Phong Cảnh Núi Rừng'}
                 </button>
               </div>
             </div>

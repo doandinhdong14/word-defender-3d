@@ -1,21 +1,15 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
   getCurrentAccount,
-  hasRegisteredAccounts,
-  loginAccount,
   logoutAccount,
-  registerAccount,
 } from './authService';
 import type { SafeAccount } from './types';
 
 interface AuthContextValue {
   account: SafeAccount | null;
   ready: boolean;
-  hasAccounts: boolean;
   isAdmin: boolean;
   hasPermission: (permission: string) => boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (input: { displayName: string; email: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccount: () => Promise<void>;
 }
@@ -25,21 +19,18 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [account, setAccount] = useState<SafeAccount | null>(null);
   const [ready, setReady] = useState(false);
-  const [hasAccounts, setHasAccounts] = useState(false);
 
   const refreshAccount = useCallback(async () => {
-    const [current, registered] = await Promise.all([getCurrentAccount(), hasRegisteredAccounts()]);
+    const current = await getCurrentAccount();
     setAccount(current);
-    setHasAccounts(registered);
   }, []);
 
   useEffect(() => {
     let active = true;
-    Promise.all([getCurrentAccount(), hasRegisteredAccounts()])
-      .then(([current, registered]) => {
+    getCurrentAccount()
+      .then((current) => {
         if (!active) return;
         setAccount(current);
-        setHasAccounts(registered);
         const url = new URL(window.location.href);
         if (url.searchParams.get('auth') === 'google') {
           url.searchParams.delete('auth');
@@ -65,18 +56,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const next = await loginAccount(email, password);
-    setAccount(next);
-    setHasAccounts(true);
-  }, []);
-
-  const register = useCallback(async (input: { displayName: string; email: string; password: string }) => {
-    const next = await registerAccount(input);
-    setAccount(next);
-    setHasAccounts(true);
-  }, []);
-
   const logout = useCallback(async () => {
     await logoutAccount();
     setAccount(null);
@@ -85,14 +64,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = useMemo<AuthContextValue>(() => ({
     account,
     ready,
-    hasAccounts,
-    isAdmin: account?.authProvider === 'google' ? Boolean(account.permissions?.includes('admin.access')) : account?.role === 'admin',
+    isAdmin: account?.authProvider === 'google' && Boolean(account.permissions?.includes('admin.access')),
     hasPermission: (permission: string) => account?.authProvider === 'google' && Boolean(account.permissions?.includes(permission)),
-    login,
-    register,
     logout,
     refreshAccount,
-  }), [account, ready, hasAccounts, login, register, logout, refreshAccount]);
+  }), [account, ready, logout, refreshAccount]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

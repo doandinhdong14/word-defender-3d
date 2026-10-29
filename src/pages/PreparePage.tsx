@@ -17,6 +17,8 @@ import { STORE_CATALOG } from "../config/catalog";
 import { getAssetUrl } from "../utils/assetUrl";
 import { PonpiPreview } from "../components/PonpiPreview";
 import { playWeaponShootSound } from "../utils/soundEffects";
+import { useAuth } from '../auth/AuthContext';
+import { BASIC_MAP_ID, BASIC_MODE, getBasicSets, getBasicWords, isBasicSet } from '../config/access';
 
 const STEPS = [
   { label: "Chọn map", icon: Map },
@@ -25,6 +27,8 @@ const STEPS = [
   { label: "Tài liệu học", icon: BookOpen },
 ];
 export const PreparePage: React.FC = () => {
+  const { account } = useAuth();
+  const isGuest = !account;
   const {
     navigateTo,
     selectedMap,
@@ -49,8 +53,7 @@ export const PreparePage: React.FC = () => {
   const [error, setError] = useState("");
   const [launching, setLaunching] = useState(false);
   useEffect(() => {
-    db.wordSets
-      .toArray()
+    (isGuest ? Promise.resolve(getBasicSets()) : db.wordSets.toArray())
       .then((all) => {
         setSets(all);
         if (!all.some((s) => s.id === selectedSetId) && all[0])
@@ -72,9 +75,13 @@ export const PreparePage: React.FC = () => {
     try {
       if (!inventory)
         throw new Error("Hãy đăng nhập để chọn trang bị và vào trận.");
+      if (isGuest && (!isBasicSet(selectedSetId) || selectedMap !== BASIC_MAP_ID || selectedMode !== BASIC_MODE || outfit || bullet !== 'bullet_default')) {
+        navigateTo('account');
+        return;
+      }
       if (
         !activeSet ||
-        !(await db.words.where("setId").equals(activeSet.id).count())
+        !(isGuest ? getBasicWords(activeSet.id).length : await db.words.where("setId").equals(activeSet.id).count())
       )
         throw new Error("Hãy chọn tài liệu có ít nhất một từ vựng.");
       if (
@@ -82,10 +89,12 @@ export const PreparePage: React.FC = () => {
         !inventory.ownedItemIds.includes(bullet)
       )
         throw new Error("Bạn chưa sở hữu trang bị này.");
-      await db.inventories.update(inventory.profileId, {
-        equippedOutfitId: outfit,
-        equippedBulletId: bullet,
-      });
+      if (!isGuest) {
+        await db.inventories.update(inventory.profileId, {
+          equippedOutfitId: outfit,
+          equippedBulletId: bullet,
+        });
+      }
       await refreshUserData();
       navigateTo("battle");
     } catch (e) {
@@ -98,6 +107,10 @@ export const PreparePage: React.FC = () => {
       <div className="page-heading">
         <h1>Chuẩn bị</h1>
       </div>
+      {isGuest && <div className="notice guest-notice">
+        <p><strong>Chơi miễn phí</strong> · Hai bộ từ cơ bản, tướng pempom nguyên bản, map ô ly và đạn cơ bản.</p>
+        <button className="text-button" onClick={() => navigateTo('account')}>Đăng nhập Google để mở thêm tính năng</button>
+      </div>}
       <div className="prepare-layout">
         <div className="surface prepare-options">
           <div className="step-tabs">
@@ -145,7 +158,7 @@ export const PreparePage: React.FC = () => {
                         )}
                       </span>
                       <strong>{m.name}</strong>
-                      <small>{m.badge}</small>
+                      <small>{isGuest && id !== BASIC_MAP_ID ? 'Đăng nhập Google để mở' : m.badge}</small>
                     </button>
                   );
                 })}
@@ -179,6 +192,7 @@ export const PreparePage: React.FC = () => {
                     </small>
                   </button>
                 ))}
+                {isGuest && <button className="equipment-choice" onClick={() => navigateTo('account')}><Shield size={32} /><strong>Thêm tướng</strong><small>Đăng nhập Google để mở</small></button>}
               </div>
             )}
             {step === 2 && (
@@ -200,6 +214,7 @@ export const PreparePage: React.FC = () => {
                     </small>
                   </button>
                 ))}
+                {isGuest && <button className="equipment-choice" onClick={() => navigateTo('account')}><Zap size={32} /><strong>Thêm đạn và kỹ năng</strong><small>Đăng nhập Google để mở</small></button>}
               </div>
             )}
             {step === 3 && (
@@ -225,7 +240,7 @@ export const PreparePage: React.FC = () => {
                   className="text-button"
                   onClick={() => navigateTo("editor")}
                 >
-                  + Tải tài liệu của bạn
+                  {isGuest ? 'Đăng nhập Google để thêm bộ từ và tải tài liệu' : '+ Tải tài liệu của bạn'}
                 </button>
                 <div className="prepare-settings">
                   <label>
@@ -237,8 +252,8 @@ export const PreparePage: React.FC = () => {
                       }
                     >
                       <option value="copy">Nhìn từ và gõ</option>
-                      <option value="recall">Nhớ nghĩa và gõ</option>
-                      <option value="listen">Nghe và gõ</option>
+                      <option value="recall">Nhớ nghĩa và gõ{isGuest ? ' · Đăng nhập Google' : ''}</option>
+                      <option value="listen">Nghe và gõ{isGuest ? ' · Đăng nhập Google' : ''}</option>
                     </select>
                   </label>
                   <label>
@@ -331,8 +346,7 @@ export const PreparePage: React.FC = () => {
             </span>
           </div>
           <p>
-            Gõ đúng từ để bắn. Dùng phím số 1–3 để kích hoạt kỹ năng đã trang
-            bị.
+            {isGuest ? 'Gõ đúng từ để bắn. Đăng nhập Google để lưu tiến trình và nhận phần thưởng từ các trận tiếp theo.' : 'Gõ đúng từ để bắn. Dùng phím số 1–3 để kích hoạt kỹ năng đã trang bị.'}
           </p>
         </aside>
       </div>

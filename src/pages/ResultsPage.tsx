@@ -5,9 +5,11 @@ import { PaperPanel } from '../components/PaperPanel';
 import { StickerButton } from '../components/StickerButton';
 import { CoinBadge } from '../components/CoinBadge';
 import confetti from 'canvas-confetti';
+import { useAuth } from '../auth/AuthContext';
 import { Trophy, Skull, RotateCcw, BookOpen, ShoppingBag, Home, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export const ResultsPage: React.FC = () => {
+  const { account } = useAuth();
   const { lastRunSummary, navigateTo, refreshUserData, settings } = useApp();
   const [reward, setReward] = useState<{ coins: number; xp: number }>({ coins: 0, xp: 0 });
 
@@ -30,7 +32,7 @@ export const ResultsPage: React.FC = () => {
       setReward({ coins: res.coinsEarned, xp: res.xpEarned });
       refreshUserData();
     };
-    award();
+    if (account) void award();
   }, [lastRunSummary]);
 
   if (!lastRunSummary) {
@@ -96,7 +98,11 @@ export const ResultsPage: React.FC = () => {
           </p>
 
           {/* Reward Highlights */}
-          <div
+          {!account && <div className="notice guest-notice">
+            <p>Bạn vừa chơi miễn phí. Đăng nhập Google để lưu tiến trình và nhận xu, XP từ các trận tiếp theo.</p>
+            <button className="primary-button" onClick={() => navigateTo('account')}>Đăng nhập Google</button>
+          </div>}
+          {account && <div
             style={{
               margin: '24px 0',
               padding: '16px',
@@ -135,8 +141,7 @@ export const ResultsPage: React.FC = () => {
                 +{reward.xp} XP
               </div>
             </div>
-          </div>
-
+          </div>}
           {/* Stats Grid */}
           <div
             style={{

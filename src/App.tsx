@@ -19,12 +19,13 @@ import { getAssetUrl } from './utils/assetUrl';
 import { AppShell } from './components/AppShell';
 import { AccountPage } from './pages/AccountPage';
 import { EventsPage, GiftsPage, LeaderboardPage } from './pages/CommunityPages';
+import { isGuestRoute } from './config/access';
 
 const AppContent: React.FC = () => {
   const { currentRoute } = useApp();
   const { account } = useAuth();
 
-  if (!account && ['prepare', 'battle', 'editor', 'settings', 'wardrobe', 'review', 'progress', 'admin'].includes(currentRoute)) {
+  if (!account && !isGuestRoute(currentRoute)) {
     return <AppShell><AccountPage /></AppShell>;
   }
 

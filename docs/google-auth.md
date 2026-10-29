@@ -36,9 +36,19 @@ The redirect URI and audience must be configured by a Google Cloud project owner
 
 Google identities use the stable Google subject (`google:<sub>`), default to
 the player role unless explicitly granted staff access, and never automatically link to a local password account
-merely because the emails match. Existing local accounts continue to work.
+merely because the emails match. Google is the only sign-in method. Legacy
+password accounts remain in storage, but their sessions no longer authenticate
+and their login/registration entry points reject requests.
 Google proves identity across devices; game progress, coins and inventory are
 still stored in IndexedDB on each browser. No cloud progress sync is included.
+
+Guests can play the Everyday Communication and School & Academic starter lists,
+using copy mode, the notebook map, original yellow pempom and default bullet.
+These starter lessons come from the bundled seed data and remain playable when
+managed lessons change. Guest runs show results and allow retries without
+persisting learning records, rewards or account progress. All other routes and
+loadouts require Google sign-in. Guest equipment is created in memory rather
+than restored from a previous account or the legacy guest inventory.
 
 Central users, roles and managed content are now stored in PostgreSQL; see
 [Administration](admin.md) for OWNER_EMAIL, permissions and deployment requirements.

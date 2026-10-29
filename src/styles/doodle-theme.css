@@ -154,6 +154,14 @@
 .doodle-shell .auth-local-note { color: #766b59; font-size: 13px; padding: 20px 0; margin: 0 24px; line-height: 1.5; }
 .doodle-shell .password-meter { font-size: 13px; }
 
+.doodle-shell .google-only-auth { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.doodle-shell .google-only-auth h2 { margin: 0; font-size: 24px; }
+.doodle-shell .google-only-auth p { margin: 0; line-height: 1.6; }
+.doodle-shell .google-only-auth :is(.auth-google-section, .auth-local-note) { margin: 0; padding: 0; }
+.doodle-shell .google-only-auth .notice { display: block; margin: 0; }
+.doodle-shell .guest-notice { flex-direction: column; align-items: flex-start; }
+.doodle-shell .guest-notice p { margin: 0; }
+
 /* Store, loadout, community and account details use the same paper palette. */
 .doodle-shell .store-item { padding: 16px; }
 .doodle-shell .item-stage { background: #f6ecd5; border: 1px dashed #d9c9ab; }

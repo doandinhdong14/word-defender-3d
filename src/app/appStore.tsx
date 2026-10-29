@@ -6,6 +6,7 @@ import { DEFAULT_INVENTORY_SEED } from '../config/catalog';
 import { GameMapId, getActiveMapId, setActiveMapId } from '../config/maps';
 import { useAuth } from '../auth/AuthContext';
 import { getSettingsId } from '../auth/authService';
+import { BASIC_MAP_ID, BASIC_MODE, createGuestInventory, isBasicSet } from '../config/access';
 
 export type AppRoute =
   | 'home'
@@ -54,20 +55,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const { account, isAdmin } = useAuth();
   const profileId = account?.id ?? 'guest_profile';
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(() => window.location.pathname === '/admin' ? 'admin' : new URLSearchParams(window.location.search).has('auth_error') ? 'account' : 'home');
-  const [selectedSetId, setSelectedSetId] = useState<string>('set_everyday');
-  const [selectedMode, setSelectedMode] = useState<GameMode>('copy');
+  const [selectedSetId, setSelectedSetIdState] = useState<string>('set_everyday');
+  const [selectedMode, setSelectedModeState] = useState<GameMode>('copy');
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('normal');
-  const [selectedMap, setSelectedMapState] = useState<GameMapId>(getActiveMapId());
+  const [selectedMap, setSelectedMapState] = useState<GameMapId>(() => account ? getActiveMapId() : BASIC_MAP_ID);
   const [lastRunSummary, setLastRunSummary] = useState<RunSummary | null>(null);
 
   const setSelectedMap = (map: GameMapId) => {
+    if (!account && map !== BASIC_MAP_ID) { setCurrentRoute('account'); return; }
     setActiveMapId(map);
     setSelectedMapState(map);
   };
 
+  const setSelectedSetId = (id: string) => {
+    if (!account && !isBasicSet(id)) { setCurrentRoute('account'); return; }
+    setSelectedSetIdState(id);
+  };
+  const setSelectedMode = (mode: GameMode) => {
+    if (!account && mode !== BASIC_MODE) { setCurrentRoute('account'); return; }
+    setSelectedModeState(mode);
+  };
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [inventory, setInventory] = useState<Inventory | null>(null);
+  const [inventory, setInventory] = useState<Inventory | null>(() => account ? null : createGuestInventory());
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [dueWordsCount, setDueWordsCount] = useState<number>(0);
 
@@ -75,7 +86,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!account) {
       setProfile(null);
       setWallet(null);
-      setInventory(null);
+      setInventory(createGuestInventory());
       setSettings(null);
       setDueWordsCount(0);
       return;

@@ -1,22 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-async function register(page: Page, name: string, email: string) {
-  await page
-    .locator(".game-navigation, .doodle-home nav")
-    .getByRole("button", { name: "Tài khoản", exact: true })
-    .click();
-  await page.getByRole("tab", { name: "Đăng ký", exact: true }).click();
-  await page.getByLabel("Tên hiển thị").fill(name);
-  await page.getByLabel("Email", { exact: true }).fill(email);
-  await page.getByLabel("Mật khẩu", { exact: true }).fill("Adventure!2026");
-  await page.getByLabel("Xác nhận mật khẩu").fill("Adventure!2026");
-  await page
-    .getByRole("button", { name: "Tạo tài khoản", exact: true })
-    .click();
-  await expect(
-    page.getByRole("heading", { name: "pempom" }),
-  ).toBeVisible();
-}
 
 test("minimal doodle landing has working navigation and responsive game modes", async ({
   page,
@@ -89,14 +72,9 @@ test("a regular player can import lessons, claim gifts, post, equip, and enter b
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/");
-  await register(page, "Người quản trị", "admin@example.com");
-  await page
-    .locator(".game-navigation, .doodle-home nav")
-    .getByRole("button", { name: "Tài khoản", exact: true })
-    .click();
-  await page.getByRole("button", { name: "Đăng xuất", exact: true }).click();
-  await register(page, "Nhà thám hiểm", "player@example.com");
+  const identity = { id: 'google:pempom-player', email: 'player@example.com', displayName: 'Nhà thám hiểm', role: 'player', status: 'active', authProvider: 'google', createdAt: new Date().toISOString() };
+  await page.route('**/api/auth/session', route => route.fulfill({ json: { account: identity } }));
+  await page.goto('/');
   await page
     .locator(".game-navigation, .doodle-home nav")
     .getByRole("button", { name: "Quà tặng", exact: true })

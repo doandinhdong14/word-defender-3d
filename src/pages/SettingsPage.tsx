@@ -5,19 +5,15 @@ import { exportBackupData, importBackupData } from '../data/backup';
 import { PaperPanel } from '../components/PaperPanel';
 import { StickerButton } from '../components/StickerButton';
 import { ArrowLeft, Download, Upload, Trash2, Volume2, VolumeX, Eye, Sparkles, Coins, KeyRound, LogOut, ShieldCheck } from 'lucide-react';
-import { changePassword, getSettingsId } from '../auth/authService';
+import { getSettingsId } from '../auth/authService';
 import { useAuth } from '../auth/AuthContext';
 
 export const SettingsPage: React.FC = () => {
   const { navigateTo, settings, refreshUserData, addTestCoins, wallet } = useApp();
-  const { account, isAdmin, logout, refreshAccount } = useAuth();
+  const { account, isAdmin, logout } = useAuth();
   const [audioEnabled, setAudioEnabled] = useState(settings?.audioEnabled ?? true);
   const [reduceMotion, setReduceMotion] = useState(settings?.reduceMotion ?? false);
   const [msg, setMsg] = useState<string | null>(null);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [changingPassword, setChangingPassword] = useState(false);
 
   const saveSettings = async (audio: boolean, motion: boolean) => {
     setAudioEnabled(audio);
@@ -79,25 +75,6 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
-  const handlePasswordChange = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (newPassword !== confirmPassword) {
-      showMsg('Mật khẩu xác nhận chưa khớp.');
-      return;
-    }
-    setChangingPassword(true);
-    try {
-      await changePassword(currentPassword, newPassword);
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      await refreshAccount();
-    } catch (caught) {
-      showMsg(caught instanceof Error ? caught.message : 'Không thể đổi mật khẩu.');
-    } finally {
-      setChangingPassword(false);
-    }
-  };
 
   return (
     <div
@@ -157,20 +134,7 @@ export const SettingsPage: React.FC = () => {
               </div>
             </div>
 
-            {account?.authProvider === 'google' ? <p>Bạn đăng nhập bằng Google. Quản lý mật khẩu tại <a href="https://myaccount.google.com/security" target="_blank" rel="noreferrer">Tài khoản Google</a>.</p> : <form className="settings-password-form" onSubmit={handlePasswordChange}>
-              <div>
-                <div className="settings-section-label"><KeyRound size={18} /> Đổi mật khẩu</div>
-                <p>Mật khẩu mới cần ít nhất 10 ký tự và kết hợp 3 nhóm ký tự.</p>
-              </div>
-              <div className="settings-password-grid">
-                <input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} autoComplete="current-password" placeholder="Mật khẩu hiện tại" required />
-                <input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} autoComplete="new-password" placeholder="Mật khẩu mới" minLength={10} maxLength={128} required />
-                <input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" placeholder="Nhập lại mật khẩu mới" minLength={10} maxLength={128} required />
-              </div>
-              <StickerButton size="sm" type="submit" disabled={changingPassword}>
-                {changingPassword ? 'Đang đổi…' : 'Cập nhật mật khẩu'}
-              </StickerButton>
-            </form>}
+            <p>Bạn đăng nhập bằng Google. Quản lý mật khẩu tại <a href="https://myaccount.google.com/security" target="_blank" rel="noreferrer">Tài khoản Google</a>.</p>
 
             <div style={{ height: '1px', backgroundColor: 'var(--color-grid)' }} />
 

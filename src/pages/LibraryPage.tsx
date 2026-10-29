@@ -8,6 +8,7 @@ import { ArrowLeft, Plus, Upload, Trash2, Eye, Download, Check } from 'lucide-re
 import { generateCsvTemplate } from '../data/importExcel';
 import { useAuth } from '../auth/AuthContext';
 import { syncPublishedLessons } from '../data/publishedContent';
+import { getBasicSets, getBasicWords } from '../config/access';
 
 export const LibraryPage: React.FC = () => {
   const { isAdmin, account } = useAuth();
@@ -18,6 +19,7 @@ export const LibraryPage: React.FC = () => {
   const [previewWords, setPreviewWords] = useState<VocabularyEntry[]>([]);
 
   const loadSets = async () => {
+    if (!account) { setSets(getBasicSets()); return; }
     await syncPublishedLessons().catch(() => {});
     const allSets = await db.wordSets.toArray();
     setSets(allSets);
@@ -33,7 +35,7 @@ export const LibraryPage: React.FC = () => {
   };
 
   const handlePreview = async (set: VocabularySet) => {
-    const words = await db.words.where('setId').equals(set.id).toArray();
+    const words = account ? await db.words.where('setId').equals(set.id).toArray() : getBasicWords(set.id);
     setPreviewSet(set);
     setPreviewWords(words);
   };
@@ -55,6 +57,7 @@ export const LibraryPage: React.FC = () => {
   };
 
   const handleDownloadTemplate = () => {
+    if (!account) { navigateTo('account'); return; }
     const csvContent = generateCsvTemplate();
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -106,7 +109,7 @@ export const LibraryPage: React.FC = () => {
             Bài học
           </h1>
           <p style={{ color: 'var(--color-muted-ink)', marginTop: '4px' }}>
-            Chọn hoặc nhập bộ từ.
+            {account ? 'Chọn hoặc nhập bộ từ.' : 'Hai bộ từ cơ bản miễn phí, không cần đăng nhập.'}
           </p>
 
           <input
@@ -130,6 +133,7 @@ export const LibraryPage: React.FC = () => {
         </div>
 
         {/* Word Sets Grid */}
+        {!account && <div className="notice guest-notice"><button className="text-button" onClick={() => navigateTo('account')}>Đăng nhập Google để mở thêm bộ từ và nhập tài liệu riêng</button></div>}
         <div
           style={{
             display: 'grid',
