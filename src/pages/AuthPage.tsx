@@ -13,6 +13,7 @@ const googleErrors: Record<string, string> = {
   invalid_state: 'Phiên đăng nhập Google đã hết hạn hoặc không hợp lệ. Hãy thử lại.',
   not_configured: 'Đăng nhập Google chưa được cấu hình. Vui lòng thử lại sau.',
   google_failed: 'Chưa đăng nhập được bằng Google. Vui lòng thử lại.',
+  account_disabled: 'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.',
 };
 
 export const AuthPage: React.FC = () => {

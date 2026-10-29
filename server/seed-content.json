@@ -1,0 +1,1028 @@
+[
+  {
+    "id": "set_everyday",
+    "type": "lesson",
+    "title": "Everyday Communication",
+    "description": "Từ vựng giao tiếp hàng ngày thông dụng và dễ nhớ.",
+    "status": "published",
+    "words": [
+      {
+        "id": "word_ev_1",
+        "setId": "set_everyday",
+        "english": "improve",
+        "vietnamese": "cải thiện",
+        "acceptedAnswers": [
+          "improve",
+          "better"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/ɪmˈpruːv/",
+        "exampleEn": "Practice will improve your typing speed.",
+        "exampleVi": "Luyện tập sẽ cải thiện tốc độ gõ của bạn.",
+        "difficulty": 1,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_2",
+        "setId": "set_everyday",
+        "english": "prepare",
+        "vietnamese": "chuẩn bị",
+        "acceptedAnswers": [
+          "prepare"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/prɪˈpeə(r)/",
+        "exampleEn": "I need to prepare for my exam tomorrow.",
+        "exampleVi": "Tôi cần chuẩn bị cho kỳ thi ngày mai.",
+        "difficulty": 1,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_3",
+        "setId": "set_everyday",
+        "english": "delicious",
+        "vietnamese": "ngon miệng",
+        "acceptedAnswers": [
+          "delicious",
+          "tasty"
+        ],
+        "partOfSpeech": "adj",
+        "ipa": "/dɪˈlɪʃəs/",
+        "exampleEn": "The soup smells really delicious.",
+        "exampleVi": "Món súp có mùi thật ngon miệng.",
+        "difficulty": 1,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_4",
+        "setId": "set_everyday",
+        "english": "imagine",
+        "vietnamese": "tưởng tượng",
+        "acceptedAnswers": [
+          "imagine"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/ɪˈmædʒɪn/",
+        "exampleEn": "Can you imagine living on Mars?",
+        "exampleVi": "Bạn có thể tưởng tượng sống trên sao Hỏa không?",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_5",
+        "setId": "set_everyday",
+        "english": "remember",
+        "vietnamese": "ghi nhớ",
+        "acceptedAnswers": [
+          "remember",
+          "recall"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/rɪˈmembə(r)/",
+        "exampleEn": "Remember to save your work frequently.",
+        "exampleVi": "Hãy nhớ lưu bài của bạn thường xuyên.",
+        "difficulty": 1,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_6",
+        "setId": "set_everyday",
+        "english": "friend",
+        "vietnamese": "bạn bè",
+        "acceptedAnswers": [
+          "friend"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/frend/",
+        "exampleEn": "A good friend is hard to find.",
+        "exampleVi": "Một người bạn tốt rất khó tìm.",
+        "difficulty": 1,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_7",
+        "setId": "set_everyday",
+        "english": "journey",
+        "vietnamese": "hành trình",
+        "acceptedAnswers": [
+          "journey",
+          "trip"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˈdʒɜːni/",
+        "exampleEn": "Learning English is a lifelong journey.",
+        "exampleVi": "Học tiếng Anh là một hành trình cả đời.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_8",
+        "setId": "set_everyday",
+        "english": "weather",
+        "vietnamese": "thời tiết",
+        "acceptedAnswers": [
+          "weather"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˈweðə(r)/",
+        "exampleEn": "The weather today is warm and sunny.",
+        "exampleVi": "Thời tiết hôm nay ấm áp và có nắng.",
+        "difficulty": 1,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_9",
+        "setId": "set_everyday",
+        "english": "listen",
+        "vietnamese": "lắng nghe",
+        "acceptedAnswers": [
+          "listen",
+          "hear"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/ˈlɪsn/",
+        "exampleEn": "Listen carefully to the teacher.",
+        "exampleVi": "Lắng nghe giáo viên cẩn thận.",
+        "difficulty": 1,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_10",
+        "setId": "set_everyday",
+        "english": "relax",
+        "vietnamese": "thư giãn",
+        "acceptedAnswers": [
+          "relax"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/rɪˈlæks/",
+        "exampleEn": "Take a deep breath and relax.",
+        "exampleVi": "Hít một hơi thật sâu và thư giãn.",
+        "difficulty": 1,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_11",
+        "setId": "set_everyday",
+        "english": "energy",
+        "vietnamese": "năng lượng",
+        "acceptedAnswers": [
+          "energy",
+          "power"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˈenədʒi/",
+        "exampleEn": "I feel full of energy this morning.",
+        "exampleVi": "Tôi cảm thấy tràn đầy năng lượng sáng nay.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_12",
+        "setId": "set_everyday",
+        "english": "protect",
+        "vietnamese": "bảo vệ",
+        "acceptedAnswers": [
+          "protect",
+          "guard"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/prəˈtekt/",
+        "exampleEn": "We must protect our environment.",
+        "exampleVi": "Chúng ta phải bảo vệ môi trường.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_13",
+        "setId": "set_everyday",
+        "english": "gentle",
+        "vietnamese": "dịu dàng",
+        "acceptedAnswers": [
+          "gentle",
+          "mild"
+        ],
+        "partOfSpeech": "adj",
+        "ipa": "/ˈdʒentl/",
+        "exampleEn": "She spoke with a gentle voice.",
+        "exampleVi": "Cô ấy nói bằng một giọng dịu dàng.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_14",
+        "setId": "set_everyday",
+        "english": "discover",
+        "vietnamese": "khám phá",
+        "acceptedAnswers": [
+          "discover",
+          "find"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/dɪˈskʌvə(r)/",
+        "exampleEn": "They will discover new places on holiday.",
+        "exampleVi": "Họ sẽ khám phá những địa điểm mới trong kỳ nghỉ.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_15",
+        "setId": "set_everyday",
+        "english": "wonder",
+        "vietnamese": "kinh ngạc",
+        "acceptedAnswers": [
+          "wonder"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˈwʌndə(r)/",
+        "exampleEn": "The stars filled the child with wonder.",
+        "exampleVi": "Những vì sao khiến đứa trẻ đầy kinh ngạc.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_16",
+        "setId": "set_everyday",
+        "english": "look after",
+        "vietnamese": "chăm sóc",
+        "acceptedAnswers": [
+          "look after",
+          "take care of"
+        ],
+        "partOfSpeech": "phrasal verb",
+        "ipa": "/lʊk ˈɑːftə(r)/",
+        "exampleEn": "Please look after my cat while I am away.",
+        "exampleVi": "Làm ơn chăm sóc con mèo của tôi khi tôi vắng nhà.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_17",
+        "setId": "set_everyday",
+        "english": "comfortable",
+        "vietnamese": "thoải mái",
+        "acceptedAnswers": [
+          "comfortable",
+          "comfy"
+        ],
+        "partOfSpeech": "adj",
+        "ipa": "/ˈkʌmftəbl/",
+        "exampleEn": "This sofa is really comfortable.",
+        "exampleVi": "Chiếc ghế sofa này thực sự thoải mái.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_18",
+        "setId": "set_everyday",
+        "english": "happiness",
+        "vietnamese": "hạnh phúc",
+        "acceptedAnswers": [
+          "happiness",
+          "joy"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˈhæpinəs/",
+        "exampleEn": "Good health brings true happiness.",
+        "exampleVi": "Sức khỏe tốt mang lại hạnh phúc đích thực.",
+        "difficulty": 1,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_19",
+        "setId": "set_everyday",
+        "english": "habit",
+        "vietnamese": "thói quen",
+        "acceptedAnswers": [
+          "habit"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˈhæbɪt/",
+        "exampleEn": "Reading books is a wonderful habit.",
+        "exampleVi": "Đọc sách là một thói quen tuyệt vời.",
+        "difficulty": 1,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ev_20",
+        "setId": "set_everyday",
+        "english": "courage",
+        "vietnamese": "dũng cảm",
+        "acceptedAnswers": [
+          "courage",
+          "bravery"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˈkʌrɪdʒ/",
+        "exampleEn": "He had the courage to tell the truth.",
+        "exampleVi": "Anh ấy đã có lòng dũng cảm để nói sự thật.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      }
+    ]
+  },
+  {
+    "id": "set_school",
+    "type": "lesson",
+    "title": "School & Academic",
+    "description": "Từ vựng trường học, bài vở và môi trường học thuật.",
+    "status": "published",
+    "words": [
+      {
+        "id": "word_sc_1",
+        "setId": "set_school",
+        "english": "assignment",
+        "vietnamese": "bài tập",
+        "acceptedAnswers": [
+          "assignment",
+          "homework"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/əˈsaɪnmənt/",
+        "exampleEn": "The biology assignment is due on Friday.",
+        "exampleVi": "Bài tập sinh học phải nộp vào thứ Sáu.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_2",
+        "setId": "set_school",
+        "english": "library",
+        "vietnamese": "thư viện",
+        "acceptedAnswers": [
+          "library"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˈlaɪbrəri/",
+        "exampleEn": "Students study quietly in the library.",
+        "exampleVi": "Học sinh học tập yên lặng trong thư viện.",
+        "difficulty": 1,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_3",
+        "setId": "set_school",
+        "english": "knowledge",
+        "vietnamese": "kiến thức",
+        "acceptedAnswers": [
+          "knowledge"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˈnɒlɪdʒ/",
+        "exampleEn": "Knowledge is power.",
+        "exampleVi": "Kiến thức là sức mạnh.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_4",
+        "setId": "set_school",
+        "english": "experiment",
+        "vietnamese": "thí nghiệm",
+        "acceptedAnswers": [
+          "experiment"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ɪkˈsperɪmənt/",
+        "exampleEn": "We conducted a science experiment.",
+        "exampleVi": "Chúng tôi đã thực hiện một thí nghiệm khoa học.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_5",
+        "setId": "set_school",
+        "english": "scholarship",
+        "vietnamese": "học bổng",
+        "acceptedAnswers": [
+          "scholarship"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˈskɒləʃɪp/",
+        "exampleEn": "She won a full university scholarship.",
+        "exampleVi": "Cô ấy đã giành được học bổng đại học toàn phần.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_6",
+        "setId": "set_school",
+        "english": "research",
+        "vietnamese": "nghiên cứu",
+        "acceptedAnswers": [
+          "research",
+          "study"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/rɪˈsɜːtʃ/",
+        "exampleEn": "He needs to research the topic thoroughly.",
+        "exampleVi": "Anh ấy cần nghiên cứu kỹ lưỡng chủ đề này.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_7",
+        "setId": "set_school",
+        "english": "presentation",
+        "vietnamese": "thuyết trình",
+        "acceptedAnswers": [
+          "presentation"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˌpreznˈteɪʃn/",
+        "exampleEn": "Our group gave a ten-minute presentation.",
+        "exampleVi": "Nhóm chúng tôi đã thuyết trình mười phút.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_8",
+        "setId": "set_school",
+        "english": "curriculum",
+        "vietnamese": "giáo trình",
+        "acceptedAnswers": [
+          "curriculum",
+          "syllabus"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/kəˈrɪkjələm/",
+        "exampleEn": "The math curriculum includes algebra and geometry.",
+        "exampleVi": "Giáo trình toán bao gồm đại số và hình học.",
+        "difficulty": 4,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_9",
+        "setId": "set_school",
+        "english": "discipline",
+        "vietnamese": "kỷ luật",
+        "acceptedAnswers": [
+          "discipline"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˈdɪsəplɪn/",
+        "exampleEn": "Self-discipline is essential for success.",
+        "exampleVi": "Tính tự kỷ luật là điều cần thiết để thành công.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_10",
+        "setId": "set_school",
+        "english": "semester",
+        "vietnamese": "học kỳ",
+        "acceptedAnswers": [
+          "semester",
+          "term"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/sɪˈmestə(r)/",
+        "exampleEn": "The autumn semester ends in December.",
+        "exampleVi": "Học kỳ mùa thu kết thúc vào tháng mười hai.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_11",
+        "setId": "set_school",
+        "english": "certificate",
+        "vietnamese": "chứng chỉ",
+        "acceptedAnswers": [
+          "certificate"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/səˈtɪfɪkət/",
+        "exampleEn": "You will receive a certificate upon completion.",
+        "exampleVi": "Bạn sẽ nhận được chứng chỉ sau khi hoàn thành.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_12",
+        "setId": "set_school",
+        "english": "evaluate",
+        "vietnamese": "đánh giá",
+        "acceptedAnswers": [
+          "evaluate",
+          "assess"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/ɪˈvæljueɪt/",
+        "exampleEn": "The teacher will evaluate our essays.",
+        "exampleVi": "Giáo viên sẽ đánh giá bài luận của chúng tôi.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_13",
+        "setId": "set_school",
+        "english": "graduate",
+        "vietnamese": "tốt nghiệp",
+        "acceptedAnswers": [
+          "graduate"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/ˈɡrædʒueɪt/",
+        "exampleEn": "She will graduate with honors next year.",
+        "exampleVi": "Cô ấy sẽ tốt nghiệp danh dự vào năm tới.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_14",
+        "setId": "set_school",
+        "english": "attendance",
+        "vietnamese": "điểm danh",
+        "acceptedAnswers": [
+          "attendance"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/əˈtendəns/",
+        "exampleEn": "Regular attendance is required for this course.",
+        "exampleVi": "Khóa học này yêu cầu điểm danh chuyên cần.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_15",
+        "setId": "set_school",
+        "english": "vocabulary",
+        "vietnamese": "từ vựng",
+        "acceptedAnswers": [
+          "vocabulary"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/vəˈkæbjələri/",
+        "exampleEn": "pempom helps you learn new vocabulary quickly.",
+        "exampleVi": "pempom giúp bạn học từ vựng mới nhanh chóng.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_16",
+        "setId": "set_school",
+        "english": "discussion",
+        "vietnamese": "thảo luận",
+        "acceptedAnswers": [
+          "discussion",
+          "debate"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/dɪˈskʌʃn/",
+        "exampleEn": "We had an engaging classroom discussion.",
+        "exampleVi": "Chúng tôi đã có một buổi thảo luận lớp học sôi nổi.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_17",
+        "setId": "set_school",
+        "english": "comprehend",
+        "vietnamese": "thấu hiểu",
+        "acceptedAnswers": [
+          "comprehend",
+          "understand"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/ˌkɒmprɪˈhend/",
+        "exampleEn": "Can you comprehend the meaning of this poem?",
+        "exampleVi": "Bạn có thể thấu hiểu ý nghĩa của bài thơ này không?",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_18",
+        "setId": "set_school",
+        "english": "literature",
+        "vietnamese": "văn học",
+        "acceptedAnswers": [
+          "literature"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˈlɪtrətʃə(r)/",
+        "exampleEn": "English literature is fascinating.",
+        "exampleVi": "Văn học Anh thật thú vị.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_19",
+        "setId": "set_school",
+        "english": "mathematics",
+        "vietnamese": "toán học",
+        "acceptedAnswers": [
+          "mathematics",
+          "math"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˌmæθəˈmætɪks/",
+        "exampleEn": "Mathematics develops logical reasoning.",
+        "exampleVi": "Toán học phát triển tư duy logic.",
+        "difficulty": 2,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_sc_20",
+        "setId": "set_school",
+        "english": "collaboration",
+        "vietnamese": "hợp tác",
+        "acceptedAnswers": [
+          "collaboration",
+          "cooperation"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/kəˌlæbəˈreɪʃn/",
+        "exampleEn": "Team collaboration leads to creative solutions.",
+        "exampleVi": "Hợp tác nhóm dẫn đến các giải pháp sáng tạo.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      }
+    ]
+  },
+  {
+    "id": "set_ielts",
+    "type": "lesson",
+    "title": "IELTS Basics",
+    "description": "Các từ vựng cốt lõi nâng cao band điểm cho người mới ôn IELTS.",
+    "status": "published",
+    "words": [
+      {
+        "id": "word_ielts_1",
+        "setId": "set_ielts",
+        "english": "consequence",
+        "vietnamese": "hậu quả",
+        "acceptedAnswers": [
+          "consequence",
+          "outcome"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/ˈkɒnsɪkwəns/",
+        "exampleEn": "Pollution has serious consequences for health.",
+        "exampleVi": "Ô nhiễm gây ra hậu quả nghiêm trọng cho sức khỏe.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_2",
+        "setId": "set_ielts",
+        "english": "significant",
+        "vietnamese": "đáng kể",
+        "acceptedAnswers": [
+          "significant",
+          "considerable"
+        ],
+        "partOfSpeech": "adj",
+        "ipa": "/sɪɡˈnɪfɪkənt/",
+        "exampleEn": "There has been a significant increase in sales.",
+        "exampleVi": "Đã có một sự gia tăng đáng kể trong doanh số bán hàng.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_3",
+        "setId": "set_ielts",
+        "english": "implement",
+        "vietnamese": "thực thi",
+        "acceptedAnswers": [
+          "implement",
+          "execute"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/ˈɪmplɪment/",
+        "exampleEn": "The government plans to implement new policies.",
+        "exampleVi": "Chính phủ dự định thực thi các chính sách mới.",
+        "difficulty": 4,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_4",
+        "setId": "set_ielts",
+        "english": "perspective",
+        "vietnamese": "góc nhìn",
+        "acceptedAnswers": [
+          "perspective",
+          "viewpoint"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/pəˈspektɪv/",
+        "exampleEn": "Try to see the issue from another perspective.",
+        "exampleVi": "Hãy cố gắng nhìn nhận vấn đề từ góc nhìn khác.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_5",
+        "setId": "set_ielts",
+        "english": "sustainable",
+        "vietnamese": "bền vững",
+        "acceptedAnswers": [
+          "sustainable"
+        ],
+        "partOfSpeech": "adj",
+        "ipa": "/səˈsteɪnəbl/",
+        "exampleEn": "Solar power is a sustainable source of energy.",
+        "exampleVi": "Năng lượng mặt trời là một nguồn năng lượng bền vững.",
+        "difficulty": 4,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_6",
+        "setId": "set_ielts",
+        "english": "fluctuate",
+        "vietnamese": "biến động",
+        "acceptedAnswers": [
+          "fluctuate",
+          "vary"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/ˈflʌktʃueɪt/",
+        "exampleEn": "Prices fluctuate according to supply and demand.",
+        "exampleVi": "Giá cả biến động theo quy luật cung cầu.",
+        "difficulty": 4,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_7",
+        "setId": "set_ielts",
+        "english": "inevitable",
+        "vietnamese": "không thể tránh khỏi",
+        "acceptedAnswers": [
+          "inevitable",
+          "unavoidable"
+        ],
+        "partOfSpeech": "adj",
+        "ipa": "/ɪnˈevɪtəbl/",
+        "exampleEn": "Technological change is inevitable in our society.",
+        "exampleVi": "Sự thay đổi công nghệ là không thể tránh khỏi trong xã hội.",
+        "difficulty": 4,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_8",
+        "setId": "set_ielts",
+        "english": "substitute",
+        "vietnamese": "thay thế",
+        "acceptedAnswers": [
+          "substitute",
+          "replace"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/ˈsʌbstɪtjuːt/",
+        "exampleEn": "You can substitute honey for refined sugar.",
+        "exampleVi": "Bạn có thể thay thế đường tinh luyện bằng mật ong.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_9",
+        "setId": "set_ielts",
+        "english": "predominant",
+        "vietnamese": "chiếm ưu thế",
+        "acceptedAnswers": [
+          "predominant",
+          "dominant"
+        ],
+        "partOfSpeech": "adj",
+        "ipa": "/prɪˈdɒmɪnənt/",
+        "exampleEn": "Agriculture remains the predominant industry here.",
+        "exampleVi": "Nông nghiệp vẫn là ngành công nghiệp chiếm ưu thế ở đây.",
+        "difficulty": 4,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_10",
+        "setId": "set_ielts",
+        "english": "comprehensive",
+        "vietnamese": "toàn diện",
+        "acceptedAnswers": [
+          "comprehensive",
+          "thorough"
+        ],
+        "partOfSpeech": "adj",
+        "ipa": "/ˌkɒmprɪˈhensɪv/",
+        "exampleEn": "The report provides a comprehensive overview.",
+        "exampleVi": "Báo cáo cung cấp một cái nhìn tổng quan toàn diện.",
+        "difficulty": 4,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_11",
+        "setId": "set_ielts",
+        "english": "generate",
+        "vietnamese": "tạo ra",
+        "acceptedAnswers": [
+          "generate",
+          "produce"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/ˈdʒenəreɪt/",
+        "exampleEn": "Wind turbines generate clean electricity.",
+        "exampleVi": "Tua bin gió tạo ra điện sạch.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_12",
+        "setId": "set_ielts",
+        "english": "indicate",
+        "vietnamese": "chỉ ra",
+        "acceptedAnswers": [
+          "indicate",
+          "show"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/ˈɪndɪkeɪt/",
+        "exampleEn": "Studies indicate that sleep improves memory retention.",
+        "exampleVi": "Các nghiên cứu chỉ ra rằng giấc ngủ cải thiện khả năng ghi nhớ.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_13",
+        "setId": "set_ielts",
+        "english": "acquire",
+        "vietnamese": "thu nhận",
+        "acceptedAnswers": [
+          "acquire",
+          "obtain"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/əˈkwaɪə(r)/",
+        "exampleEn": "Children acquire languages naturally through immersion.",
+        "exampleVi": "Trẻ em thu nhận ngôn ngữ tự nhiên thông qua môi trường tiếp xúc.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_14",
+        "setId": "set_ielts",
+        "english": "fundamental",
+        "vietnamese": "cơ bản",
+        "acceptedAnswers": [
+          "fundamental",
+          "basic"
+        ],
+        "partOfSpeech": "adj",
+        "ipa": "/ˌfʌndəˈmentl/",
+        "exampleEn": "Water is fundamental to all forms of life.",
+        "exampleVi": "Nước là yếu tố cơ bản đối với mọi sự sống.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_15",
+        "setId": "set_ielts",
+        "english": "phenomenon",
+        "vietnamese": "hiện tượng",
+        "acceptedAnswers": [
+          "phenomenon"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/fəˈnɒmɪnən/",
+        "exampleEn": "The aurora borealis is a stunning natural phenomenon.",
+        "exampleVi": "Cực quang là một hiện tượng tự nhiên tuyệt đẹp.",
+        "difficulty": 4,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_16",
+        "setId": "set_ielts",
+        "english": "advocate",
+        "vietnamese": "ủng hộ",
+        "acceptedAnswers": [
+          "advocate",
+          "support"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/ˈædvəkeɪt/",
+        "exampleEn": "Many educators advocate for active learning games.",
+        "exampleVi": "Nhiều nhà giáo dục ủng hộ các trò chơi học tập chủ động.",
+        "difficulty": 4,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_17",
+        "setId": "set_ielts",
+        "english": "diversity",
+        "vietnamese": "đa dạng",
+        "acceptedAnswers": [
+          "diversity",
+          "variety"
+        ],
+        "partOfSpeech": "noun",
+        "ipa": "/daɪˈvɜːsəti/",
+        "exampleEn": "Cultural diversity enriches communities.",
+        "exampleVi": "Sự đa dạng văn hóa làm phong phú thêm cộng đồng.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_18",
+        "setId": "set_ielts",
+        "english": "allocate",
+        "vietnamese": "phân bổ",
+        "acceptedAnswers": [
+          "allocate",
+          "distribute"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/ˈæləkeɪt/",
+        "exampleEn": "We need to allocate more resources to education.",
+        "exampleVi": "Chúng ta cần phân bổ thêm nguồn lực cho giáo dục.",
+        "difficulty": 4,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_19",
+        "setId": "set_ielts",
+        "english": "contribute",
+        "vietnamese": "đóng góp",
+        "acceptedAnswers": [
+          "contribute"
+        ],
+        "partOfSpeech": "verb",
+        "ipa": "/kənˈtrɪbjuːt/",
+        "exampleEn": "Everyone can contribute to community projects.",
+        "exampleVi": "Mọi người đều có thể đóng góp cho các dự án cộng đồng.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      },
+      {
+        "id": "word_ielts_20",
+        "setId": "set_ielts",
+        "english": "efficient",
+        "vietnamese": "hiệu quả",
+        "acceptedAnswers": [
+          "efficient",
+          "effective"
+        ],
+        "partOfSpeech": "adj",
+        "ipa": "/ɪˈfɪʃnt/",
+        "exampleEn": "Electric cars are much more efficient.",
+        "exampleVi": "Xe điện hoạt động hiệu quả hơn nhiều.",
+        "difficulty": 3,
+        "createdAt": "2026-10-26T00:00:00Z",
+        "updatedAt": "2026-10-26T00:00:00Z"
+      }
+    ]
+  }
+]

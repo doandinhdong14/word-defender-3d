@@ -1,7 +1,8 @@
-export type UserRole = 'admin' | 'player';
+export type UserRole = 'owner' | 'admin' | 'editor' | 'moderator' | 'player';
 export type AccountStatus = 'active' | 'disabled';
 
 export interface AccountCredential {
+  permissions?: string[];
   authProvider?: 'google';
   id: string;
   email: string;
@@ -20,6 +21,8 @@ export interface AccountCredential {
 }
 
 export interface SafeAccount {
+  permissions?: string[];
+  updatedAt?: string;
   authProvider?: 'google';
   id: string;
   email: string;

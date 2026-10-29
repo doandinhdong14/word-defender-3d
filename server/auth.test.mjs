@@ -3,8 +3,11 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { OAuth2Client } from 'google-auth-library';
 import { createApp } from './app.mjs';
+import { createStore } from './store.mjs';
+import { PGlite } from '@electric-sql/pglite';
 
 async function fixture(t, options = {}) {
+  const store = await createStore({ database: new PGlite() });
   let timestamp = Date.now();
   let nonce;
   let exchanges = 0;
@@ -23,8 +26,9 @@ async function fixture(t, options = {}) {
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
   const origin = `http://127.0.0.1:${server.address().port}`;
-  server.on('request', createApp({ env: { APP_URL: origin, SESSION_SECRET: 'test-secret-with-at-least-32-characters', GOOGLE_CLIENT_ID: 'test-client', GOOGLE_CLIENT_SECRET: 'test-secret' }, oauthClient, now: () => timestamp }));
+  server.on('request', createApp({ store, env: { APP_URL: origin, SESSION_SECRET: 'test-secret-with-at-least-32-characters', GOOGLE_CLIENT_ID: 'test-client', GOOGLE_CLIENT_SECRET: 'test-secret' }, oauthClient, now: () => timestamp }));
   t.after(() => new Promise(resolve => server.close(resolve)));
+  t.after(() => store.close());
   const request = (path, init = {}) => fetch(origin + path, { redirect: 'manual', ...init });
   async function start() {
     const response = await request('/api/auth/google/start');

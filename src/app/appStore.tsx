@@ -53,7 +53,7 @@ const AppContext = createContext<AppContextValue | null>(null);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { account, isAdmin } = useAuth();
   const profileId = account?.id ?? 'guest_profile';
-  const [currentRoute, setCurrentRoute] = useState<AppRoute>(() => new URLSearchParams(window.location.search).has('auth_error') ? 'account' : 'home');
+  const [currentRoute, setCurrentRoute] = useState<AppRoute>(() => window.location.pathname === '/admin' ? 'admin' : new URLSearchParams(window.location.search).has('auth_error') ? 'account' : 'home');
   const [selectedSetId, setSelectedSetId] = useState<string>('set_everyday');
   const [selectedMode, setSelectedMode] = useState<GameMode>('copy');
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('normal');
@@ -141,8 +141,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [profileId]);
 
   const navigateTo = (route: AppRoute) => {
-    const requiresAdmin = route === 'admin';
-    setCurrentRoute(requiresAdmin && !isAdmin ? 'home' : route);
+    setCurrentRoute(route);
+    if (route === 'admin') window.history.replaceState(null, '', '/admin');
+    else if (window.location.pathname === '/admin') window.history.replaceState(null, '', '/');
     refreshUserData();
     window.scrollTo(0, 0);
   };

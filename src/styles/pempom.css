@@ -2401,3 +2401,9 @@ button:disabled {
     min-height: auto !important;
   }
 }
+.published-messages { display: grid; gap: 12px; margin-bottom: 22px; }
+.published-messages article { padding: 22px; }
+.published-messages h2 { margin: 8px 0; font-size: 1.15rem; overflow-wrap: anywhere; }
+.published-messages p { font-size: .85rem; color: var(--color-muted-ink); line-height: 1.7; }
+.published-messages details { margin-top: 12px; font-size: .85rem; }
+.published-messages summary { cursor: pointer; color: #42634a; font-weight: 700; }

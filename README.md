@@ -1,6 +1,7 @@
 # pempom
 
 Google sign-in and production server setup: [docs/google-auth.md](docs/google-auth.md).
+Administration and permissions: [docs/admin.md](docs/admin.md).
 
 Game luyện từ vựng tiếng Anh bằng cách gõ chữ để bắn quái. React 19, TypeScript, Vite và Canvas; lưu dữ liệu bằng Dexie/IndexedDB.
 

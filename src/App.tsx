@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './app/appStore';
 import { initializeDatabase } from './data/db';
+import { syncPublishedLessons } from './data/publishedContent';
 import { HomePage } from './pages/HomePage';
 import { LibraryPage } from './pages/LibraryPage';
 import { WordSetEditorPage } from './pages/WordSetEditorPage';
@@ -21,7 +22,7 @@ import { EventsPage, GiftsPage, LeaderboardPage } from './pages/CommunityPages';
 
 const AppContent: React.FC = () => {
   const { currentRoute } = useApp();
-  const { isAdmin, account } = useAuth();
+  const { account } = useAuth();
 
   if (!account && ['prepare', 'battle', 'editor', 'settings', 'wardrobe', 'review', 'progress', 'admin'].includes(currentRoute)) {
     return <AppShell><AccountPage /></AppShell>;
@@ -62,7 +63,7 @@ const AppContent: React.FC = () => {
       page = <SettingsPage />;
       break;
     case 'admin':
-      page = isAdmin ? <AdminPage /> : <HomePage />;
+      page = <AdminPage />;
       break;
     case 'account':
       page = <AccountPage />;
@@ -110,6 +111,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     let isActive = true;
     initializeDatabase()
+      .then(() => syncPublishedLessons().catch(() => {}))
       .then(() => {
         if (isActive) setDbReady(true);
       })

@@ -20,12 +20,14 @@
     "google-auth-library": "^11.3.2",
     "lucide-react": "^1.16.0",
     "papaparse": "^5.5.3",
+    "pg": "^8.23.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "serve": "^14.2.5",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.13",
     "@playwright/test": "^1.51.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",

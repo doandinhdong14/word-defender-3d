@@ -2,18 +2,22 @@ import express from 'express';
 import { createHmac, randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { OAuth2Client } from 'google-auth-library';
+import { adminRouter } from './admin.mjs';
+import { ApiError } from './permissions.mjs';
+import { publicAccount } from './store.mjs';
 
 const SESSION_MS = 12 * 60 * 60 * 1000;
 const FLOW_MS = 10 * 60 * 1000;
 
-export function createApp({ env = process.env, oauthClient, now = Date.now } = {}) {
+export function createApp({ env = process.env, oauthClient, now = Date.now, store } = {}) {
   const app = express();
   app.disable('x-powered-by');
   const production = env.NODE_ENV === 'production';
-  const origin = new URL(env.APP_URL || 'http://localhost:5173').origin;
+  const origin = new URL(env.APP_URL || 'http://127.0.0.1:5173').origin;
   if (production && (!env.SESSION_SECRET || env.SESSION_SECRET.length < 32 || !env.APP_URL?.startsWith('https://'))) {
     throw new Error('Production requires HTTPS APP_URL and SESSION_SECRET (at least 32 characters).');
   }
+  if (!store) throw new Error('A persistent user/content store is required.');
   const secret = env.SESSION_SECRET || randomBytes(48).toString('base64url');
   const secure = origin.startsWith('https:');
   const sessionName = secure ? '__Host-pempom_session' : 'pempom_session';
@@ -41,15 +45,24 @@ export function createApp({ env = process.env, oauthClient, now = Date.now } = {
     } catch { return null; }
   }
 
+  async function authenticate(req) {
+    const session = readCookie(req, sessionName, 'session');
+    const identity = session?.account;
+    if (!identity || identity.authProvider !== 'google' || !identity.id?.startsWith('google:')) return null;
+    let user = await store.user(identity.id);
+    if (!user || (env.OWNER_EMAIL && user.email.toLowerCase() === env.OWNER_EMAIL.toLowerCase() && user.role !== 'owner')) user = await store.registerIdentity(identity);
+    if (user.status !== 'active' || user.sessionVersion !== (session.sessionVersion ?? 0)) return null;
+    return user;
+  }
+
   app.use('/api', (_req, res, next) => {
     res.set({ 'Cache-Control': 'no-store', 'Pragma': 'no-cache', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff' });
     next();
   });
-  app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+  app.get('/api/health', async (_req, res) => { await store.query('SELECT 1'); res.json({ status: 'ok' }); });
   app.get('/api/auth/config', (_req, res) => res.json({ googleEnabled: configured }));
-  app.get('/api/auth/session', (req, res) => {
-    const session = readCookie(req, sessionName, 'session');
-    res.json({ account: session?.account ?? null });
+  app.get('/api/auth/session', async (req, res) => {
+    res.json({ account: publicAccount(await authenticate(req)) });
   });
   app.post('/api/auth/logout', (req, res) => {
     if (req.headers.origin !== origin) return res.status(403).json({ error: 'invalid_origin' });
@@ -95,15 +108,28 @@ export function createApp({ env = process.env, oauthClient, now = Date.now } = {
         displayName: (payload.name || payload.email.split('@')[0]).slice(0, 50),
         role: 'player', status: 'active', authProvider: 'google', createdAt: at, lastLoginAt: at,
       };
-      res.cookie(sessionName, sign({ purpose: 'session', account, expiresAt: now() + SESSION_MS }), { ...cookieOptions, maxAge: SESSION_MS });
+      const user = await store.registerIdentity(account, true);
+      res.cookie(sessionName, sign({ purpose: 'session', account: { id: user.id, email: user.email, displayName: user.displayName, authProvider: 'google' }, sessionVersion: user.sessionVersion, expiresAt: now() + SESSION_MS }), { ...cookieOptions, maxAge: SESSION_MS });
       return res.redirect(`${origin}/?auth=google`);
-    } catch {
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 403) return fail('account_disabled');
       // Never log authorization codes, provider tokens, or client credentials.
       console.error('Google authentication failed during token exchange or identity verification.');
       return fail('google_failed');
     }
   });
+  app.use('/api/admin', adminRouter({ store, authenticate, origin }));
+  app.get('/api/content', async (_req, res) => {
+    const result = await store.query(`SELECT data FROM pempom_content WHERE data->>'status'='published' ORDER BY data->>'updatedAt' DESC,id`);
+    const items = result.rows.map(({ data }) => ({ id: data.id, type: data.type, title: data.title, description: data.description, body: data.body, words: data.words, updatedAt: data.updatedAt }));
+    res.json({ items, authoritativeLessons: true });
+  });
   app.use('/api', (_req, res) => res.status(404).json({ error: 'not_found' }));
+  app.use('/api', (error, _req, res, _next) => {
+    const status = error instanceof ApiError ? error.status : error.type === 'entity.too.large' ? 413 : error instanceof SyntaxError ? 400 : 503;
+    if (status === 503) console.error('API request failed; check database availability.');
+    res.status(status).json({ error: status === 503 ? 'Máy chủ đang bận. Vui lòng thử lại.' : status === 413 ? 'Nội dung quá lớn (tối đa 2 MB).' : error instanceof SyntaxError ? 'Dữ liệu JSON không hợp lệ.' : error.message });
+  });
   if (production) {
     const build = resolve('build');
     app.use(express.static(build, { index: false, dotfiles: 'deny', setHeaders: (res, file) => {

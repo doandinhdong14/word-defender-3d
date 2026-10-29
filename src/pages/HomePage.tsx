@@ -17,6 +17,7 @@ import {
 import { useApp } from "../app/appStore";
 import { PonpiPreview } from "../components/PonpiPreview";
 import { getAssetUrl } from "../utils/assetUrl";
+import { PublishedMessages } from '../components/PublishedMessages';
 
 export const HomePage: React.FC = () => {
   const { navigateTo, inventory, profile } = useApp();
@@ -83,6 +84,7 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="lobby">
+      <PublishedMessages type="announcement" />
       <div className="lobby-heading">
         <div>
           <span className="eyebrow">MỘT CHÚT HỌC. THẬT NHIỀU VUI.</span>

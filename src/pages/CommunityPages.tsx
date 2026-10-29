@@ -16,6 +16,7 @@ import { useApp } from "../app/appStore";
 import { useAuth } from "../auth/AuthContext";
 import { db } from "../data/db";
 import { claimReward, CommunityPost, localDate } from "../data/community";
+import { PublishedMessages } from '../components/PublishedMessages';
 
 export const LeaderboardPage: React.FC = () => {
   const { account } = useAuth();
@@ -445,6 +446,7 @@ export const EventsPage: React.FC = () => {
         <h1>Chơi hết mình. Rinh quà xinh.</h1>
         <p>Nhiệm vụ khởi đầu dành cho mọi nhà thám hiểm pempom.</p>
       </div>
+      <PublishedMessages type="event" />
       {notice && (
         <p className="notice" role="status">
           {notice}

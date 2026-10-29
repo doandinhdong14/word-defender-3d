@@ -7,6 +7,7 @@ import { StickerButton } from '../components/StickerButton';
 import { ArrowLeft, Plus, Upload, Trash2, Eye, Download, Check } from 'lucide-react';
 import { generateCsvTemplate } from '../data/importExcel';
 import { useAuth } from '../auth/AuthContext';
+import { syncPublishedLessons } from '../data/publishedContent';
 
 export const LibraryPage: React.FC = () => {
   const { isAdmin, account } = useAuth();
@@ -17,6 +18,7 @@ export const LibraryPage: React.FC = () => {
   const [previewWords, setPreviewWords] = useState<VocabularyEntry[]>([]);
 
   const loadSets = async () => {
+    await syncPublishedLessons().catch(() => {});
     const allSets = await db.wordSets.toArray();
     setSets(allSets);
   };
@@ -38,6 +40,8 @@ export const LibraryPage: React.FC = () => {
 
   const handleDelete = async (setId: string, title: string) => {
     if (!isAdmin) return;
+    const set = await db.wordSets.get(setId);
+    if (set?.owner === 'builtin') { navigateTo('admin'); return; }
     if (window.confirm(`Bạn có chắc chắn muốn xóa bộ từ "${title}"?`)) {
       await db.transaction('rw', [db.wordSets, db.words], async () => {
         await db.wordSets.delete(setId);

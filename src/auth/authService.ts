@@ -102,6 +102,8 @@ function toSafeAccount(account: AccountCredential): SafeAccount {
     lastLoginAt: account.lastLoginAt,
     lockedUntil: account.lockedUntil,
     authProvider: account.authProvider,
+    permissions: account.permissions,
+    updatedAt: account.updatedAt,
   };
 }
 
@@ -263,7 +265,7 @@ async function fetchGoogleAccount(): Promise<SafeAccount | null> {
   if (!response.ok) throw new Error('Không thể kiểm tra phiên Google. Vui lòng thử lại.');
   const { account } = await response.json() as { account: SafeAccount | null };
   if (!account) return null;
-  if (account.authProvider !== 'google' || !account.id.startsWith('google:') || !account.email || account.role !== 'player') {
+  if (account.authProvider !== 'google' || !account.id.startsWith('google:') || !account.email || !['owner', 'admin', 'editor', 'moderator', 'player'].includes(account.role)) {
     throw new AuthError('Phiên Google không hợp lệ.', 'invalid_google_session');
   }
   return account;
@@ -275,9 +277,8 @@ async function syncGoogleAccount(identity: SafeAccount): Promise<SafeAccount> {
   // a verified Google identity to an existing local password account.
   await db.transaction('rw', [db.accounts, db.profiles, db.wallets, db.inventories, db.ledger, db.settings], async () => {
     const stored = await db.accounts.get(identity.id);
-    if (stored?.status === 'disabled') throw new AuthError('Tài khoản đã bị vô hiệu hóa.', 'account_disabled');
     await db.accounts.put({
-      ...identity, normalizedEmail: identity.id, role: 'player',
+      ...identity, normalizedEmail: identity.id,
       createdAt: stored?.createdAt ?? identity.createdAt, updatedAt: now,
       passwordHash: '', passwordSalt: '', passwordIterations: 0, failedLoginAttempts: 0,
     });

@@ -13,6 +13,7 @@ interface AuthContextValue {
   ready: boolean;
   hasAccounts: boolean;
   isAdmin: boolean;
+  hasPermission: (permission: string) => boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (input: { displayName: string; email: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
@@ -85,7 +86,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     account,
     ready,
     hasAccounts,
-    isAdmin: account?.role === 'admin',
+    isAdmin: account?.authProvider === 'google' ? Boolean(account.permissions?.includes('admin.access')) : account?.role === 'admin',
+    hasPermission: (permission: string) => account?.authProvider === 'google' && Boolean(account.permissions?.includes(permission)),
     login,
     register,
     logout,

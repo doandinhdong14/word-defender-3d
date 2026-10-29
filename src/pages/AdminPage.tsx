@@ -1,176 +1,62 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, CheckCircle2, Clock3, RefreshCw, ShieldCheck, ShieldOff, UserRound, UsersRound } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Activity, ArrowLeft, BookOpen, LayoutDashboard, RefreshCw, ShieldCheck, UsersRound } from 'lucide-react';
 import { useApp } from '../app/appStore';
 import { useAuth } from '../auth/AuthContext';
-import { listAccounts, listSecurityEvents, updateAccountRole, updateAccountStatus } from '../auth/authService';
-import type { SafeAccount, SecurityEvent, UserRole } from '../auth/types';
-import { PaperPanel } from '../components/PaperPanel';
-import { StickerButton } from '../components/StickerButton';
+import { adminApi, type AuditEntry, type Metadata, type Overview } from '../admin/api';
+import { AuditList, Notice, Pager, useAdminList } from '../admin/components';
+import { UsersPanel } from '../admin/UsersPanel';
+import { ContentPanel } from '../admin/ContentPanel';
 
-const EVENT_LABELS: Record<SecurityEvent['type'], string> = {
-  register: 'Đăng ký tài khoản',
-  login_success: 'Đăng nhập thành công',
-  login_failure: 'Đăng nhập thất bại',
-  account_locked: 'Tài khoản bị khóa tạm thời',
-  logout: 'Đăng xuất',
-  password_changed: 'Đổi mật khẩu',
-  role_changed: 'Thay đổi vai trò',
-  status_changed: 'Thay đổi trạng thái',
-};
+function AuditPanel() {
+  const [q, setQ] = useState(''), [page, setPage] = useState(1);
+  const result = useAdminList<AuditEntry>(`/audit?${new URLSearchParams({ q, page: String(page) })}`);
+  return <section className="adm-section"><div className="adm-section-heading"><div><h2>Nhật ký hoạt động</h2><p>Lưu người thực hiện, thời gian và thay đổi quyền / nội dung.</p></div></div>
+    <input className="adm-audit-search" aria-label="Tìm nhật ký" placeholder="Tìm email, hành động hoặc đối tượng…" value={q} onChange={e => { setQ(e.target.value); setPage(1); }} />
+    <Notice text={result.error} error />{result.loading ? <p className="adm-loading">Đang tải nhật ký…</p> : <AuditList items={result.items} />}
+    <Pager page={page} total={result.total} onPage={setPage} disabled={result.loading} />
+  </section>;
+}
 
 export const AdminPage: React.FC = () => {
   const { navigateTo } = useApp();
-  const { account: currentAccount, refreshAccount } = useAuth();
-  const [accounts, setAccounts] = useState<SafeAccount[]>([]);
-  const [events, setEvents] = useState<SecurityEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
-
+  const { account, hasPermission, refreshAccount } = useAuth();
+  const [metadata, setMetadata] = useState<Metadata | null>(null), [overview, setOverview] = useState<Overview | null>(null);
+  const [tab, setTab] = useState('overview'), [error, setError] = useState(''), [loading, setLoading] = useState(true), [version, setVersion] = useState(0);
+  const permitted = hasPermission('admin.access');
   const load = useCallback(async () => {
-    setLoading(true);
+    if (!permitted) { setLoading(false); return; }
+    setError(''); setLoading(true);
     try {
-      const [nextAccounts, nextEvents] = await Promise.all([listAccounts(), listSecurityEvents(20)]);
-      setAccounts(nextAccounts);
-      setEvents(nextEvents);
-    } catch (caught) {
-      setMessage({ kind: 'error', text: caught instanceof Error ? caught.message : 'Không thể tải dữ liệu quản trị.' });
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+      const [meta, next] = await Promise.all([adminApi<Metadata>('/metadata'), adminApi<Overview>('/overview')]);
+      setMetadata(meta); setOverview(next);
+    } catch (e) { setError(e instanceof Error ? e.message : 'Không thể tải dữ liệu quản trị.'); }
+    finally { setLoading(false); }
+  }, [permitted]);
   useEffect(() => { void load(); }, [load]);
-
-  const stats = useMemo(() => ({
-    total: accounts.length,
-    active: accounts.filter((item) => item.status === 'active').length,
-    admins: accounts.filter((item) => item.role === 'admin' && item.status === 'active').length,
-  }), [accounts]);
-
-  const runMutation = async (accountId: string, action: () => Promise<void>, success: string) => {
-    setBusyId(accountId);
-    setMessage(null);
-    try {
-      await action();
-      await refreshAccount();
-      setMessage({ kind: 'success', text: success });
-      await load();
-    } catch (caught) {
-      setMessage({ kind: 'error', text: caught instanceof Error ? caught.message : 'Không thể cập nhật tài khoản.' });
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  return (
-    <div className="admin-shell notebook-grid-bg app-page">
-      <div className="admin-wrap">
-        <div className="admin-topbar">
-          <StickerButton onClick={() => navigateTo('home')} icon={<ArrowLeft size={18} />}>Trang chủ</StickerButton>
-          <StickerButton size="sm" onClick={() => void load()} icon={<RefreshCw size={16} />}>Làm mới</StickerButton>
-        </div>
-
-        <header className="admin-heading">
-          <div className="admin-heading-icon"><ShieldCheck size={28} /></div>
-          <div>
-            <span>TRUNG TÂM QUẢN TRỊ</span>
-            <h1>Người dùng & phân quyền</h1>
-            <p>Quản lý vai trò, trạng thái tài khoản và theo dõi các sự kiện bảo mật gần đây.</p>
-          </div>
-        </header>
-
-        <div className="admin-stats" aria-label="Thống kê tài khoản">
-          <PaperPanel><UsersRound size={21} /><div><strong>{stats.total}</strong><span>Tổng tài khoản</span></div></PaperPanel>
-          <PaperPanel><CheckCircle2 size={21} /><div><strong>{stats.active}</strong><span>Đang hoạt động</span></div></PaperPanel>
-          <PaperPanel><ShieldCheck size={21} /><div><strong>{stats.admins}</strong><span>Quản trị viên</span></div></PaperPanel>
-        </div>
-
-        {message && <div className={`admin-message ${message.kind}`} role="status">{message.text}</div>}
-
-        <PaperPanel className="admin-users-panel">
-          <div className="admin-section-title">
-            <div><h2>Danh sách tài khoản</h2><p>Hệ thống luôn giữ ít nhất một quản trị viên hoạt động.</p></div>
-          </div>
-
-          {loading ? (
-            <div className="admin-empty">Đang tải dữ liệu…</div>
-          ) : (
-            <div className="admin-user-list">
-              {accounts.map((item) => {
-                const isSelf = item.id === currentAccount?.id;
-                const isBusy = busyId === item.id;
-                return (
-                  <article className={`admin-user-row ${item.status === 'disabled' ? 'disabled' : ''}`} key={item.id}>
-                    <div className="admin-user-identity">
-                      <span className="admin-user-avatar">{item.displayName.charAt(0).toLocaleUpperCase('vi-VN')}</span>
-                      <div>
-                        <div className="admin-user-name">{item.displayName} {isSelf && <em>Bạn</em>}</div>
-                        <div className="admin-user-email">{item.email}</div>
-                      </div>
-                    </div>
-                    <div className="admin-user-meta">
-                      <span className={`admin-status ${item.status}`}>{item.status === 'active' ? 'Hoạt động' : 'Vô hiệu hóa'}</span>
-                      <span>Tham gia {new Date(item.createdAt).toLocaleDateString('vi-VN')}</span>
-                    </div>
-                    <div className="admin-user-actions">
-                      <label>
-                        <span className="sr-only">Vai trò của {item.displayName}</span>
-                        <select
-                          value={item.role}
-                          disabled={isBusy || item.status === 'disabled'}
-                          onChange={(event) => {
-                            const role = event.target.value as UserRole;
-                            void runMutation(item.id, () => updateAccountRole(item.id, role), 'Đã cập nhật vai trò.');
-                          }}
-                        >
-                          <option value="player">Người chơi</option>
-                          <option value="admin">Quản trị viên</option>
-                        </select>
-                      </label>
-                      <StickerButton
-                        size="sm"
-                        variant={item.status === 'active' ? 'danger' : 'mint'}
-                        disabled={isBusy || isSelf}
-                        icon={item.status === 'active' ? <ShieldOff size={15} /> : <ShieldCheck size={15} />}
-                        onClick={() => void runMutation(
-                          item.id,
-                          () => updateAccountStatus(item.id, item.status === 'active' ? 'disabled' : 'active'),
-                          item.status === 'active' ? 'Đã vô hiệu hóa tài khoản.' : 'Đã kích hoạt tài khoản.'
-                        )}
-                      >
-                        {item.status === 'active' ? 'Vô hiệu hóa' : 'Kích hoạt'}
-                      </StickerButton>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </PaperPanel>
-
-        <PaperPanel className="admin-audit-panel">
-          <div className="admin-section-title">
-            <div><h2>Nhật ký bảo mật gần đây</h2><p>Không ghi mật khẩu hoặc token phiên vào nhật ký.</p></div>
-          </div>
-          {events.length === 0 ? (
-            <div className="admin-empty">Chưa có sự kiện.</div>
-          ) : (
-            <div className="admin-event-list">
-              {events.map((event) => {
-                const owner = accounts.find((item) => item.id === event.accountId);
-                return (
-                  <div className="admin-event" key={event.id}>
-                    <span className="admin-event-icon">{event.type === 'login_failure' || event.type === 'account_locked' ? <ShieldOff size={16} /> : <UserRound size={16} />}</span>
-                    <div><strong>{EVENT_LABELS[event.type]}</strong><small>{owner?.email || 'Tài khoản không xác định'}</small></div>
-                    <time dateTime={event.occurredAt}><Clock3 size={13} /> {new Date(event.occurredAt).toLocaleString('vi-VN')}</time>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </PaperPanel>
-      </div>
-    </div>
-  );
+  const changed = () => { void load(); };
+  const refresh = () => { void refreshAccount(); void load(); setVersion(v => v + 1); };
+  if (!permitted) return <div className="adm-shell"><section className="adm-section adm-access"><ShieldCheck size={38} /><h1>Trang quản trị</h1><p>{account?.authProvider === 'google' ? 'Tài khoản của bạn chưa được cấp quyền quản trị. Hãy liên hệ chủ quản trị.' : 'Hãy đăng nhập bằng Google với tài khoản được cấp quyền quản trị.'}</p><button className="adm-primary" onClick={() => navigateTo('account')}>Đến tài khoản</button></section></div>;
+  const tabs = [
+    { id: 'overview', label: 'Tổng quan', icon: <LayoutDashboard size={18} />, permission: 'admin.access' },
+    { id: 'users', label: 'Người dùng & quyền', icon: <UsersRound size={18} />, permission: 'users.read' },
+    { id: 'content', label: 'Nội dung', icon: <BookOpen size={18} />, permission: 'content.read' },
+    { id: 'audit', label: 'Nhật ký', icon: <Activity size={18} />, permission: 'audit.read' },
+  ].filter(t => hasPermission(t.permission));
+  const activeTab = tabs.some(t => t.id === tab) ? tab : 'overview';
+  return <div className="adm-shell">
+    <header className="adm-header"><div><span className="adm-eyebrow">PEMPOM / ADMIN WORKSPACE</span><h1>Trung tâm quản trị<span className="adm-header-dot" /></h1><p>Quản lý cộng đồng, kiến thức và trải nghiệm học.</p></div><div className="adm-header-actions"><span className="adm-admin-chip"><ShieldCheck size={17} />{metadata?.roles[account!.role]?.label || 'Quản trị'}</span><button onClick={() => navigateTo('home')}><ArrowLeft size={16} /> Về game</button><button aria-label="Làm mới quản trị" disabled={loading} onClick={refresh}><RefreshCw size={17} /></button></div></header>
+    <nav className="adm-tabs" aria-label="Mục quản trị">{tabs.map(t => <button key={t.id} aria-current={activeTab === t.id ? 'page' : undefined} className={activeTab === t.id ? 'active' : ''} onClick={() => setTab(t.id)}>{t.icon}{t.label}</button>)}</nav>
+    <Notice text={error} error />
+    {!metadata ? <p className="adm-loading">{loading ? 'Đang tải không gian quản trị…' : 'Chưa tải được dữ liệu. Nhấn làm mới để thử lại.'}</p> : <div key={version}>
+      {activeTab === 'overview' && <>
+        <div className="adm-stats">{overview?.users && <><article><UsersRound size={22} /><span>Người dùng</span><strong>{overview.users.total}</strong><small>{overview.users.active} đang hoạt động</small></article><article><ShieldCheck size={22} /><span>Quản trị viên</span><strong>{overview.users.admins}</strong><small>Gồm chủ quản trị và admin</small></article></>}{overview?.content && <><article><BookOpen size={22} /><span>Nội dung xuất bản</span><strong>{overview.content.published}</strong><small>{overview.content.total} nội dung tổng cộng</small></article><article><Activity size={22} /><span>Chờ hoàn thiện</span><strong>{overview.content.drafts}</strong><small>Bản nháp chưa công khai</small></article></>}</div>
+        <div className="adm-overview-grid"><section className="adm-section"><div className="adm-section-heading"><div><h2>Bắt đầu quản lý</h2><p>Chọn công việc bạn cần thực hiện.</p></div></div><div className="adm-shortcuts">{tabs.filter(t => t.id !== 'overview').map(t => <button key={t.id} onClick={() => setTab(t.id)}>{t.icon}<span>{t.label}</span><span>→</span></button>)}</div><p className="adm-security-note">Quyền được kiểm tra trên máy chủ. Tài khoản chủ quản trị được bảo vệ khỏi việc tự khóa hoặc bị hạ quyền.</p></section>
+          {hasPermission('audit.read') && <section className="adm-section"><div className="adm-section-heading"><h2>Hoạt động gần đây</h2><button onClick={() => setTab('audit')}>Xem tất cả</button></div><AuditList items={overview?.activity ?? []} /></section>}</div>
+      </>}
+      {activeTab === 'users' && <UsersPanel metadata={metadata} onChange={changed} />}
+      {activeTab === 'content' && <ContentPanel onChange={changed} />}
+      {activeTab === 'audit' && <AuditPanel />}
+    </div>}
+    <footer className="adm-footer"><span>pempom · Admin workspace</span><span>{account?.email}</span></footer>
+  </div>;
 };
