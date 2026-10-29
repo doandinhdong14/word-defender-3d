@@ -24,6 +24,8 @@ import {
   Delete,
   Crosshair,
   Keyboard,
+  Smartphone,
+  LayoutGrid,
 } from 'lucide-react';
 import { DefeatedWordEffect, RunSummary } from '../types/game';
 import { GameMapId, getActiveMapId, setActiveMapId, MAP_CONFIGS } from '../config/maps';
@@ -131,12 +133,15 @@ export const BattlePage: React.FC = () => {
     };
   }, []);
 
+  const [mobileKeyboardMode, setMobileKeyboardMode] = useState<'native' | 'virtual'>('native');
   const isPortrait = windowDimensions.height > windowDimensions.width;
   const isMobile = windowDimensions.width < 900;
   const isMobilePortrait = isMobile && isPortrait;
   const isShortMobile = isMobilePortrait && windowDimensions.height < 720;
   const mobileControlsHeight = isMobilePortrait
-    ? Math.min(260, Math.max(224, Math.round(windowDimensions.height * 0.3)))
+    ? (mobileKeyboardMode === 'native'
+        ? (isShortMobile ? 122 : 138)
+        : Math.min(260, Math.max(224, Math.round(windowDimensions.height * 0.3))))
     : 0;
   const mobileKeyHeight = isShortMobile ? 27 : 32;
 
@@ -522,6 +527,9 @@ export const BattlePage: React.FC = () => {
   const handleEnemyTagClick = (enemyId: string) => {
     if (engineRef.current) {
       engineRef.current.selectTarget(enemyId);
+      if (isMobilePortrait && mobileKeyboardMode === 'native') {
+        nativeInputRef.current?.focus();
+      }
     }
   };
 
@@ -609,6 +617,79 @@ export const BattlePage: React.FC = () => {
     }
   };
 
+  const nativeInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleNativeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const incoming = e.target.value;
+    if (!engineRef.current) return;
+
+    const currentBuffer = engineRef.current.typedBuffer;
+
+    if (incoming.length > currentBuffer.length) {
+      // User typed characters from their phone keyboard
+      const addedChars = incoming.slice(currentBuffer.length);
+      for (const rawChar of addedChars) {
+        // Strip Vietnamese accents if user is using Telex/VNI keyboard on their phone
+        const clean = rawChar
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/đ/g, 'd')
+          .replace(/Đ/g, 'd')
+          .toLowerCase();
+        for (const c of clean) {
+          engineRef.current.handleCharacterInput(c);
+        }
+      }
+    } else if (incoming.length < currentBuffer.length) {
+      // User pressed Backspace on phone keyboard
+      const diff = currentBuffer.length - incoming.length;
+      for (let i = 0; i < diff; i++) {
+        engineRef.current.handleBackspace();
+      }
+    } else {
+      // Same length - could be IME accent substitution (e.g., typing 's' converted 'a' to 'á')
+      const nativeEvt = e.nativeEvent as InputEvent;
+      if (nativeEvt && nativeEvt.data) {
+        const clean = nativeEvt.data
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/đ/g, 'd')
+          .replace(/Đ/g, 'd')
+          .toLowerCase();
+        for (const c of clean) {
+          engineRef.current.handleCharacterInput(c);
+        }
+      }
+    }
+
+    // Keep DOM input value synced with engine's validated buffer
+    if (nativeInputRef.current) {
+      nativeInputRef.current.value = engineRef.current.typedBuffer;
+    }
+  };
+
+  const handleNativeInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && engineRef.current?.typedBuffer.length === 0) {
+      return;
+    }
+    if (e.key === 'Escape') {
+      engineRef.current?.handleEscape();
+    } else if (e.key === 'Tab' || e.key === 'Enter') {
+      e.preventDefault();
+      engineRef.current?.cycleTargetNext();
+    }
+  };
+
+  // Keep phone native keyboard focused whenever target changes or mode is native
+  useEffect(() => {
+    if (isMobilePortrait && mobileKeyboardMode === 'native') {
+      const timer = setTimeout(() => {
+        nativeInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [engineState.selectedEnemyId, mobileKeyboardMode, isMobilePortrait]);
+
   const KEYBOARD_ROWS = [
     ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
     ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
@@ -632,43 +713,16 @@ export const BattlePage: React.FC = () => {
         userSelect: 'none',
       }}
     >
-      {/* Hidden input to capture native mobile keyboard input if user prefers */}
-      <input
-        ref={hiddenInputRef}
-        type="text"
-        autoCapitalize="none"
-        autoCorrect="off"
-        autoComplete="off"
-        spellCheck={false}
-        style={{
-          position: 'fixed',
-          top: '-100px',
-          left: '-100px',
-          opacity: 0,
-          pointerEvents: 'none',
-          width: '1px',
-          height: '1px',
-        }}
-        onChange={(e) => {
-          const val = e.target.value;
-          if (val && engineRef.current) {
-            for (const char of val) {
-              engineRef.current.handleCharacterInput(char);
-            }
-          }
-          e.target.value = '';
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Backspace') {
-            engineRef.current?.handleBackspace();
-          }
-        }}
-      />
 
       {/* The play field fills every available pixel; the renderer keeps sprites proportional. */}
       <div
         ref={containerRef}
         className="battle-viewport-container"
+        onClick={() => {
+          if (isMobilePortrait && mobileKeyboardMode === 'native') {
+            nativeInputRef.current?.focus();
+          }
+        }}
         style={{
           width: '100%',
           maxWidth: 'none',
@@ -717,12 +771,15 @@ export const BattlePage: React.FC = () => {
                 style={{
                   position: 'absolute',
                   left: isMobile
-                    ? `clamp(${enemy.isBoss ? 78 : 40}px, ${leftPct}%, calc(100% - ${enemy.isBoss ? 78 : 40}px))`
+                    ? `clamp(${enemy.isBoss ? 90 : 68}px, ${leftPct}%, calc(100% - ${enemy.isBoss ? 90 : 68}px))`
                     : `${leftPct}%`,
                   top: `${topPct + (enemy.isBoss ? 7.2 : 3.6)}%`,
                   transform: 'translate(-50%, 0)',
+                  width: 'max-content',
+                  whiteSpace: 'nowrap',
                   pointerEvents: 'auto',
                   opacity: enemy.pendingDefeat ? 0.9 : 1,
+                  zIndex: isSelected ? 25 : 10,
                 }}
               >
                 <WordTag
@@ -1187,6 +1244,11 @@ export const BattlePage: React.FC = () => {
         >
           {/* Active Target Info Card */}
           <div
+            onClick={() => {
+              if (mobileKeyboardMode === 'native') {
+                nativeInputRef.current?.focus();
+              }
+            }}
             style={{
               backgroundColor: '#FFFFFF',
               border: 'var(--border-ink)',
@@ -1197,6 +1259,7 @@ export const BattlePage: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
               marginBottom: '4px',
+              cursor: mobileKeyboardMode === 'native' ? 'text' : 'default',
             }}
           >
             {selectedEnemy ? (
@@ -1369,133 +1432,286 @@ export const BattlePage: React.FC = () => {
             })}
           </div>
 
-          {/* Mobile On-Screen Sticker Keyboard */}
-          <div
-            style={{
-              backgroundColor: '#FFFFFF',
-              border: 'var(--border-ink)',
-              borderRadius: 'var(--radius-md)',
-              padding: isShortMobile ? '3px 3px' : '4px 3px',
-              boxShadow: 'var(--shadow-sticker-sm)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '3px',
-            }}
-          >
-            {KEYBOARD_ROWS.map((row, rowIdx) => (
+          {mobileKeyboardMode === 'native' ? (
+            /* Native Phone Keyboard Typing Bar */
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: 'var(--border-ink)',
+                borderRadius: 'var(--radius-md)',
+                padding: '5px 7px',
+                boxShadow: 'var(--shadow-sticker-sm)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+              }}
+            >
               <div
-                key={rowIdx}
                 style={{
                   display: 'flex',
-                  justifyContent: 'center',
-                  gap: '2px',
+                  alignItems: 'center',
+                  color: '#2563EB',
+                  padding: '2px',
+                  flexShrink: 0,
                 }}
+                title="Đang dùng bàn phím điện thoại của bạn"
               >
-                {row.map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={(e) => handleVirtualKey(k, e)}
-                    style={{
-                      flex: 1,
-                      maxWidth: '42px',
-                      height: `${mobileKeyHeight}px`,
-                      padding: 0,
-                      backgroundColor: '#FFFFFF',
-                      color: 'var(--color-ink)',
-                      border: '1.5px solid var(--color-ink)',
-                      borderRadius: '5px',
-                      boxShadow: '1px 1.5px 0px var(--color-ink)',
-                      fontFamily: 'var(--font-english)',
-                      fontWeight: 800,
-                      fontSize: isShortMobile ? '0.88rem' : '1rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      touchAction: 'manipulation',
-                    }}
-                  >
-                    {k.toUpperCase()}
-                  </button>
-                ))}
-
-                {/* Backspace button on row 3 */}
-                {rowIdx === 2 && (
-                  <button
-                    type="button"
-                    onClick={handleVirtualBackspace}
-                    style={{
-                      flex: 1.5,
-                      maxWidth: '52px',
-                      height: `${mobileKeyHeight}px`,
-                      backgroundColor: '#FFE8E8',
-                      color: 'var(--color-danger)',
-                      border: '1.5px solid var(--color-ink)',
-                      borderRadius: '5px',
-                      boxShadow: '1px 1.5px 0px var(--color-ink)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      touchAction: 'manipulation',
-                    }}
-                  >
-                    <Delete size={18} />
-                  </button>
-                )}
+                <Smartphone size={20} />
               </div>
-            ))}
 
-            {/* Bottom Keyboard Controls: Space Bar & System Keyboard toggle */}
-            <div style={{ display: 'flex', gap: '4px', marginTop: '1px', padding: '0 3px' }}>
+              <input
+                ref={nativeInputRef}
+                type="text"
+                inputMode="text"
+                autoCapitalize="none"
+                autoCorrect="off"
+                autoComplete="off"
+                spellCheck="false"
+                lang="en"
+                enterKeyHint="next"
+                value={engineState.typedBuffer}
+                onChange={handleNativeInputChange}
+                onKeyDown={handleNativeInputKeyDown}
+                placeholder={
+                  selectedEnemy
+                    ? (engineState.wave >= 2
+                        ? `Gõ tiếng Anh (${selectedEnemy.word.length} chữ)...`
+                        : `Gõ: ${selectedEnemy.word}...`)
+                    : 'Chạm quái hoặc gõ tại đây...'
+                }
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  height: isShortMobile ? '35px' : '38px',
+                  fontSize: isShortMobile ? '0.98rem' : '1.1rem',
+                  fontWeight: 800,
+                  fontFamily: 'var(--font-english)',
+                  letterSpacing: '1px',
+                  backgroundColor: '#F8FAFC',
+                  color: '#15803D',
+                  border: '1.5px solid var(--color-ink)',
+                  borderRadius: '6px',
+                  padding: '0 8px',
+                  outline: 'none',
+                  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06)',
+                }}
+              />
+
               <button
                 type="button"
                 onClick={handleVirtualSpace}
+                title="Dấu cách (Space)"
                 style={{
-                  flex: 1,
-                  height: `${isShortMobile ? 27 : 30}px`,
-                  backgroundColor: 'var(--color-paper)',
-                  color: 'var(--color-muted-ink)',
+                  height: isShortMobile ? '35px' : '38px',
+                  padding: '0 8px',
+                  backgroundColor: '#FFFFFF',
+                  color: 'var(--color-ink)',
                   border: '1.5px solid var(--color-ink)',
-                  borderRadius: '5px',
+                  borderRadius: '6px',
                   boxShadow: '1px 1.5px 0px var(--color-ink)',
-                  fontFamily: 'var(--font-display)',
                   fontWeight: 700,
-                  fontSize: '0.8rem',
+                  fontSize: '0.74rem',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   touchAction: 'manipulation',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
-                KHOẢNG CÁCH (SPACE)
+                Space
               </button>
 
               <button
                 type="button"
-                onClick={() => hiddenInputRef.current?.focus()}
-                title="Mở bàn phím hệ thống"
+                onClick={handleVirtualBackspace}
+                title="Xóa ký tự (Backspace)"
                 style={{
-                  padding: '0 12px',
-                  height: `${isShortMobile ? 27 : 30}px`,
-                  backgroundColor: '#FFFFFF',
-                  color: 'var(--color-ink)',
+                  height: isShortMobile ? '35px' : '38px',
+                  padding: '0 7px',
+                  backgroundColor: '#FFE8E8',
+                  color: 'var(--color-danger)',
                   border: '1.5px solid var(--color-ink)',
-                  borderRadius: '5px',
+                  borderRadius: '6px',
                   boxShadow: '1px 1.5px 0px var(--color-ink)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   touchAction: 'manipulation',
+                  flexShrink: 0,
                 }}
               >
-                <Keyboard size={18} />
+                <Delete size={17} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMobileKeyboardMode('virtual')}
+                title="Đổi sang bàn phím nổi"
+                style={{
+                  height: isShortMobile ? '35px' : '38px',
+                  padding: '0 6px',
+                  backgroundColor: '#EEF2FF',
+                  color: '#4338CA',
+                  border: '1.5px solid var(--color-ink)',
+                  borderRadius: '6px',
+                  boxShadow: '1px 1.5px 0px var(--color-ink)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.62rem',
+                  fontWeight: 800,
+                  touchAction: 'manipulation',
+                  whiteSpace: 'nowrap',
+                  gap: '1px',
+                  flexShrink: 0,
+                }}
+              >
+                <Keyboard size={14} />
+                <span>Phím ảo</span>
               </button>
             </div>
-          </div>
+          ) : (
+            /* Mobile On-Screen Sticker Keyboard */
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: 'var(--border-ink)',
+                borderRadius: 'var(--radius-md)',
+                padding: isShortMobile ? '3px 3px' : '4px 3px',
+                boxShadow: 'var(--shadow-sticker-sm)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '3px',
+              }}
+            >
+              {KEYBOARD_ROWS.map((row, rowIdx) => (
+                <div
+                  key={rowIdx}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: '2px',
+                  }}
+                >
+                  {row.map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={(e) => handleVirtualKey(k, e)}
+                      style={{
+                        flex: 1,
+                        maxWidth: '42px',
+                        height: `${mobileKeyHeight}px`,
+                        padding: 0,
+                        backgroundColor: '#FFFFFF',
+                        color: 'var(--color-ink)',
+                        border: '1.5px solid var(--color-ink)',
+                        borderRadius: '5px',
+                        boxShadow: '1px 1.5px 0px var(--color-ink)',
+                        fontFamily: 'var(--font-english)',
+                        fontWeight: 800,
+                        fontSize: isShortMobile ? '0.88rem' : '1rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        touchAction: 'manipulation',
+                      }}
+                    >
+                      {k.toUpperCase()}
+                    </button>
+                  ))}
+
+                  {/* Backspace button on row 3 */}
+                  {rowIdx === 2 && (
+                    <button
+                      type="button"
+                      onClick={handleVirtualBackspace}
+                      style={{
+                        flex: 1.5,
+                        maxWidth: '52px',
+                        height: `${mobileKeyHeight}px`,
+                        backgroundColor: '#FFE8E8',
+                        color: 'var(--color-danger)',
+                        border: '1.5px solid var(--color-ink)',
+                        borderRadius: '5px',
+                        boxShadow: '1px 1.5px 0px var(--color-ink)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        touchAction: 'manipulation',
+                      }}
+                    >
+                      <Delete size={18} />
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {/* Bottom Keyboard Controls: Space Bar & Switch back to phone keyboard */}
+              <div style={{ display: 'flex', gap: '4px', marginTop: '1px', padding: '0 3px' }}>
+                <button
+                  type="button"
+                  onClick={handleVirtualSpace}
+                  style={{
+                    flex: 1,
+                    height: `${isShortMobile ? 27 : 30}px`,
+                    backgroundColor: 'var(--color-paper)',
+                    color: 'var(--color-muted-ink)',
+                    border: '1.5px solid var(--color-ink)',
+                    borderRadius: '5px',
+                    boxShadow: '1px 1.5px 0px var(--color-ink)',
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 700,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    touchAction: 'manipulation',
+                  }}
+                >
+                  KHOẢNG CÁCH (SPACE)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileKeyboardMode('native');
+                    setTimeout(() => nativeInputRef.current?.focus(), 50);
+                  }}
+                  title="Dùng bàn phím điện thoại của bạn"
+                  style={{
+                    padding: '0 10px',
+                    height: `${isShortMobile ? 27 : 30}px`,
+                    backgroundColor: '#ECFDF5',
+                    color: '#065F46',
+                    border: '1.5px solid var(--color-ink)',
+                    borderRadius: '5px',
+                    boxShadow: '1px 1.5px 0px var(--color-ink)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    touchAction: 'manipulation',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  <Smartphone size={15} />
+                  <span>Phím điện thoại</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -111,8 +111,8 @@ export const WordTag: React.FC<WordTagProps> = ({
       const englishFontSize = compact ? (isBoss ? '0.74rem' : '0.66rem') : (isBoss ? '0.9rem' : '0.8rem');
 
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
-          {/* 1. NGHĨA TIẾNG VIỆT TO RÕ - LUÔN HIỂN THỊ */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', width: '100%' }}>
+          {/* 1. NGHĨA TIẾNG VIỆT TO RÕ - LUÔN HIỂN THỊ TRÊN MỘT DÒNG KHÔNG VỠ CHỮ */}
           <div
             style={{
               fontFamily: 'var(--font-vietnamese)',
@@ -120,13 +120,17 @@ export const WordTag: React.FC<WordTagProps> = ({
               fontSize: meaningFontSize,
               color: '#0F172A',
               lineHeight: 1.2,
-              wordBreak: 'break-word',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: compact ? (isBoss ? '180px' : '140px') : (isBoss ? '260px' : '200px'),
+              padding: '0 2px',
             }}
           >
             {displayMeaning}
           </div>
 
-          {/* 2. CÁC Ô CHỮ TIẾNG ANH (GÕ CHỮ ĐÚNG SẼ ĐIỀN XANH LÁ) */}
+          {/* 2. CÁC Ô CHỮ TIẾNG ANH (GÕ CHỮ ĐÚNG SẼ ĐIỀN XANH LÁ, LUÔN NẰM NGANG KHÔNG XẾP DỌC) */}
           <div
             style={{
               fontFamily: 'var(--font-english)',
@@ -136,7 +140,10 @@ export const WordTag: React.FC<WordTagProps> = ({
               lineHeight: 1.2,
               display: 'flex',
               alignItems: 'center',
-              gap: '1px',
+              justifyContent: 'center',
+              whiteSpace: 'nowrap',
+              flexWrap: 'nowrap',
+              flexShrink: 0,
               backgroundColor: isSelected ? '#F0FDF4' : '#F8FAFC',
               padding: '1px 6px',
               borderRadius: '4px',
@@ -144,14 +151,10 @@ export const WordTag: React.FC<WordTagProps> = ({
             }}
           >
             {typedPart.length > 0 && (
-              <span style={{ color: '#16A34A', textDecoration: 'underline' }}>{typedPart}</span>
+              <span style={{ color: '#16A34A', textDecoration: 'underline', whiteSpace: 'nowrap' }}>{typedPart}</span>
             )}
-            <span style={{ color: '#94A3B8' }}>
-              {Array.from({ length: remainingSlots }).map((_, i) => (
-                <span key={i} style={{ display: 'inline-block', width: '8px', textAlign: 'center' }}>
-                  _
-                </span>
-              ))}
+            <span style={{ color: '#94A3B8', whiteSpace: 'nowrap', letterSpacing: '2px', marginLeft: typedPart.length > 0 ? '2px' : 0 }}>
+              {'_'.repeat(remainingSlots)}
             </span>
           </div>
         </div>
@@ -202,12 +205,8 @@ export const WordTag: React.FC<WordTagProps> = ({
         {typedPart.length > 0 ? (
           <span style={{ color: '#16A34A', textDecoration: 'underline' }}>{typedPart}</span>
         ) : null}
-        <span style={{ color: '#9CA3AF' }}>
-          {Array.from({ length: remainingSlots }).map((_, i) => (
-            <span key={i} style={{ display: 'inline-block', width: '10px', textAlign: 'center' }}>
-              _
-            </span>
-          ))}
+        <span style={{ color: '#9CA3AF', whiteSpace: 'nowrap', letterSpacing: '2px', marginLeft: typedPart.length > 0 ? '2px' : 0 }}>
+          {'_'.repeat(remainingSlots)}
         </span>
       </div>
     );
@@ -220,7 +219,7 @@ export const WordTag: React.FC<WordTagProps> = ({
         display: 'inline-flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: compact ? (isBoss ? '4px 8px' : '3px 6px') : (isBoss ? '7px 14px' : '4px 10px'),
+        padding: compact ? (isBoss ? '4px 8px' : '3px 7px') : (isBoss ? '7px 14px' : '4px 10px'),
         backgroundColor: '#FFFFFF',
         border: isSelected ? '3px solid var(--color-ponpi-pink)' : '2px solid var(--color-ink)',
         borderRadius: 'var(--radius-md)',
@@ -229,7 +228,10 @@ export const WordTag: React.FC<WordTagProps> = ({
           : 'var(--shadow-sticker-sm)',
         cursor: 'pointer',
         userSelect: 'none',
-        maxWidth: compact ? (isBoss ? '140px' : '90px') : (isBoss ? '240px' : '170px'),
+        width: 'max-content',
+        minWidth: compact ? (isBoss ? '110px' : '75px') : (isBoss ? '160px' : '95px'),
+        maxWidth: compact ? (isBoss ? '200px' : '155px') : (isBoss ? '280px' : '220px'),
+        boxSizing: 'border-box',
         textAlign: 'center',
         transition: 'transform 0.1s ease',
       }}
