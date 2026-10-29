@@ -21,8 +21,9 @@ import { useAuth } from "../auth/AuthContext";
 import { BASIC_MAP_ID, BASIC_MODE, getBasicSets, getBasicWords, isBasicSet } from "../config/access";
 import { buyStoreItem, buyAmmoPack } from "../economy/inventory";
 import { MonsterAlmanacModal } from "../components/MonsterAlmanacModal";
+import { getDeckProgress, DeckProgressInfo } from "../learning/sessionSelector";
 
-type ActiveModal = "hero" | "map" | "ammo" | "wordset" | "almanac" | null;
+type ActiveModal = "hero" | "map" | "ammo" | "wordset" | "almanac" | "chunk" | null;
 
 export const PreparePage: React.FC = () => {
   const { account } = useAuth();
@@ -35,6 +36,8 @@ export const PreparePage: React.FC = () => {
     setSelectedSetId,
     selectedWordCount,
     setSelectedWordCount,
+    selectedChunkIndex,
+    setSelectedChunkIndex,
     inventory,
     wallet,
     refreshUserData,
@@ -46,7 +49,14 @@ export const PreparePage: React.FC = () => {
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const [launching, setLaunching] = useState(false);
   const [error, setError] = useState("");
+  const [deckProgress, setDeckProgress] = useState<DeckProgressInfo | null>(null);
   const [busyAction, setBusyAction] = useState(false);
+
+  useEffect(() => {
+    if (selectedSetId) {
+      getDeckProgress(selectedSetId, selectedWordCount || 30).then(setDeckProgress);
+    }
+  }, [selectedSetId, selectedWordCount]);
 
   useEffect(() => {
     (isGuest ? Promise.resolve(getBasicSets()) : db.wordSets.toArray())
@@ -257,10 +267,10 @@ export const PreparePage: React.FC = () => {
           </div>
         </div>
 
-        {/* CARD 4: BỘ TỪ & SỐ TỪ THI ĐẤU */}
+        {/* CARD 4: BỘ TỪ, TIẾN ĐỘ & SỐ TỪ THI ĐẤU */}
         <div className="prepare-card">
           <div className="prepare-card-head">
-            <span className="prepare-card-tag">TÀI LIỆU & SỐ TỪ</span>
+            <span className="prepare-card-tag">TÀI LIỆU & TIẾN ĐỘ</span>
             <button className="prepare-change-btn" onClick={() => setActiveModal("wordset")}>
               <RotateCcw size={13} /> Đổi bộ từ
             </button>
@@ -269,11 +279,29 @@ export const PreparePage: React.FC = () => {
             <div className="prepare-card-thumb">
               <BookOpen size={28} color="#D35400" />
             </div>
-            <div className="prepare-card-info">
-              <strong>{activeSet?.title || "Chưa chọn bộ từ"}</strong>
-              <div className="word-count-row">
-                <span className="word-count-label">Số từ:</span>
-                {[25, 30, 40, 50].map((count) => (
+            <div className="prepare-card-info" style={{ width: '100%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <strong>{activeSet?.title || "Chưa chọn bộ từ"}</strong>
+                {deckProgress && (
+                  <span style={{ fontSize: '0.78rem', color: '#2E7D32', fontWeight: 800 }}>
+                    {deckProgress.completionPercent}% ({deckProgress.masteredWords}/{deckProgress.totalWords} từ)
+                  </span>
+                )}
+              </div>
+
+              {/* Mini Segmented Progress */}
+              {deckProgress && (
+                <div style={{ height: '6px', width: '100%', backgroundColor: '#ECEFF1', borderRadius: '3px', overflow: 'hidden', display: 'flex', margin: '4px 0 8px 0' }}>
+                  <div style={{ width: `${(deckProgress.masteredWords / deckProgress.totalWords) * 100}%`, backgroundColor: '#2E7D32' }} />
+                  <div style={{ width: `${(deckProgress.learningWords / deckProgress.totalWords) * 100}%`, backgroundColor: '#FBC02D' }} />
+                  <div style={{ width: `${(deckProgress.strugglingWords / deckProgress.totalWords) * 100}%`, backgroundColor: '#D32F2F' }} />
+                </div>
+              )}
+
+              {/* Batch Size Selector (20, 30, 40, 50) */}
+              <div className="word-count-row" style={{ marginTop: '4px' }}>
+                <span className="word-count-label">Số từ/trận:</span>
+                {[20, 30, 40, 50].map((count) => (
                   <button
                     key={count}
                     className={`count-pill ${selectedWordCount === count ? "active" : ""}`}
@@ -282,6 +310,35 @@ export const PreparePage: React.FC = () => {
                     {count} từ
                   </button>
                 ))}
+              </div>
+
+              {/* Chunk / Mode Selector button */}
+              <div style={{ marginTop: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveModal("chunk")}
+                  style={{
+                    width: '100%',
+                    padding: '6px 10px',
+                    backgroundColor: selectedChunkIndex !== null ? '#FFF8E1' : '#E8F5E9',
+                    border: `1.5px solid ${selectedChunkIndex !== null ? '#FFA000' : '#2E7D32'}`,
+                    borderRadius: '6px',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    color: selectedChunkIndex !== null ? '#E65100' : '#1B5E20',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span>
+                    {selectedChunkIndex === null
+                      ? '⚡ Tự Động Anki SRS (Ưu tiên từ cần ôn + từ mới)'
+                      : `🎯 Đang chọn: Chặng ${selectedChunkIndex + 1}`}
+                  </span>
+                  <span style={{ fontSize: '0.75rem', textDecoration: 'underline' }}>Đổi chặng</span>
+                </button>
               </div>
             </div>
           </div>
@@ -509,7 +566,66 @@ export const PreparePage: React.FC = () => {
       )}
 
       {/* ========================================================= */}
-      {/* MODAL 5: SÁCH YÊU QUÁI (MONSTER ALMANAC) */}
+      {/* MODAL 5: CHỌN CHẶNG / CHUNK SELECTION MODAL */}
+      {/* ========================================================= */}
+      {activeModal === "chunk" && (
+        <div className="compact-modal-overlay" onClick={() => setActiveModal(null)}>
+          <div className="compact-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="compact-modal-head">
+              <h3>Chọn Chặng Luyện Tập ({activeSet?.title})</h3>
+              <button className="almanac-close-btn" onClick={() => setActiveModal(null)}><X size={18} /></button>
+            </div>
+            <div className="compact-modal-scroll">
+              {/* Option 0: Auto Anki SRS */}
+              <button
+                className={`compact-item-btn ${selectedChunkIndex === null ? "selected" : ""}`}
+                onClick={() => {
+                  setSelectedChunkIndex(null);
+                  setActiveModal(null);
+                }}
+                style={{ textAlign: 'left', padding: '12px' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                  <strong>⚡ Tự Động Anki Spaced Repetition (Khuyên dùng)</strong>
+                  {selectedChunkIndex === null && <span style={{ color: "#27AE60", fontWeight: 800 }}>✓ Đang chọn</span>}
+                </div>
+                <small style={{ color: "#555", display: 'block', marginTop: '4px' }}>
+                  Hệ thống tự động ưu tiên các từ đến hạn ôn tập ({deckProgress?.dueWords || 0} từ) và từ mới tiếp theo ({selectedWordCount || 30} từ/trận).
+                </small>
+              </button>
+
+              {/* Chunks */}
+              {deckProgress?.chunks.map((chk) => {
+                const isSelected = selectedChunkIndex === chk.index;
+                return (
+                  <button
+                    key={chk.index}
+                    className={`compact-item-btn ${isSelected ? "selected" : ""}`}
+                    onClick={() => {
+                      setSelectedChunkIndex(chk.index);
+                      setActiveModal(null);
+                    }}
+                    style={{ textAlign: 'left', padding: '12px' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                      <strong>{chk.title}</strong>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '0.8rem', color: chk.isCompleted ? '#2E7D32' : '#555', fontWeight: 700 }}>
+                          {chk.mastered}/{chk.total} từ {chk.isCompleted ? '✓' : ''}
+                        </span>
+                        {isSelected && <span style={{ color: "#27AE60", fontWeight: 800 }}>✓ Chọn</span>}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 6: SÁCH YÊU QUÁI (MONSTER ALMANAC) */}
       {/* ========================================================= */}
       <MonsterAlmanacModal isOpen={activeModal === "almanac"} onClose={() => setActiveModal(null)} />
     </div>

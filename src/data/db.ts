@@ -167,11 +167,8 @@ async function seedMissingData(): Promise<void> {
       });
     }
 
-    const existingSets = await db.wordSets.bulkGet(SEED_WORD_SETS.map((set) => set.id));
-    const missingSets = SEED_WORD_SETS.filter((_, index) => !existingSets[index]);
-    if (missingSets.length > 0) {
-      await db.wordSets.bulkAdd(missingSets);
-    }
+    // Upsert builtin sets to ensure entryIds array contains all 300+ entries
+    await db.wordSets.bulkPut(SEED_WORD_SETS);
 
     const existingWords = await db.words.bulkGet(SEED_ENTRIES.map((word) => word.id));
     const missingWords = SEED_ENTRIES.filter((_, index) => !existingWords[index]);

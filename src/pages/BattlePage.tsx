@@ -40,6 +40,7 @@ export const BattlePage: React.FC = () => {
     selectedMap,
     setSelectedMap,
     selectedWordCount,
+    selectedChunkIndex,
     inventory,
     refreshUserData,
     settings,
@@ -162,17 +163,12 @@ export const BattlePage: React.FC = () => {
       const loadout = account ? inventory : createGuestInventory();
       const wordCount = selectedWordCount || 30;
 
-      // Select words matching user selection (25, 30, 40, or 50)
-      const sessionWords = account
-        ? await selectSessionWords(selectedSetId, wordCount)
-        : (() => {
-            const raw = getBasicWords(selectedSetId);
-            const res = [];
-            while (res.length < wordCount && raw.length > 0) {
-              res.push(...[...raw].sort(() => Math.random() - 0.5));
-            }
-            return res.slice(0, wordCount);
-          })();
+      // Select words with Spaced Repetition (SRS) prioritizing due and new words, avoiding mastered words
+      const sessionWords = await selectSessionWords(selectedSetId, {
+        targetCount: wordCount,
+        chunkIndex: selectedChunkIndex !== null ? selectedChunkIndex : undefined,
+        chunkSize: wordCount,
+      });
 
       if (!isMounted) return;
 

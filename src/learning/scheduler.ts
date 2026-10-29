@@ -120,3 +120,63 @@ export async function updateLearningProgress(
   await db.learningRecords.put(record);
   return record;
 }
+
+export async function batchSaveLearningProgress(
+  items: Array<{
+    entryId: string;
+    isMastered: boolean;
+    mode?: 'copy' | 'recall' | 'listen';
+    hadHint?: boolean;
+  }>
+): Promise<{ updatedCount: number; masteredCount: number; strugglingCount: number }> {
+  const profileId = getActiveProfileId();
+  const now = new Date();
+  let masteredCount = 0;
+  let strugglingCount = 0;
+
+  const recordsToPut: LearningRecord[] = [];
+
+  for (const item of items) {
+    const recordId = `${profileId}:${item.entryId}`;
+    const prev = await db.learningRecords.get(recordId);
+
+    const mode = item.mode || 'recall';
+    const isCorrect = item.isMastered;
+    const hadHint = item.hadHint ?? false;
+
+    const { stage, streak, nextDueAt } = calculateNextReview(prev, mode, isCorrect, hadHint, now);
+
+    if (stage === 'remembered') {
+      masteredCount++;
+    } else if (stage === 'struggling') {
+      strugglingCount++;
+    }
+
+    const updated: LearningRecord = {
+      profileId,
+      entryId: recordId,
+      wordId: item.entryId,
+      stage,
+      independentRecallStreak: streak,
+      easeLevel: prev?.easeLevel ?? 2.5,
+      successfulRecalls: (prev?.successfulRecalls || 0) + (isCorrect ? 1 : 0),
+      failedRecalls: (prev?.failedRecalls || 0) + (!isCorrect ? 1 : 0),
+      lastReviewedAt: now.toISOString(),
+      nextDueAt,
+      separateCopyAccuracy: prev?.separateCopyAccuracy,
+      separateListeningAccuracy: prev?.separateListeningAccuracy,
+    };
+
+    recordsToPut.push(updated);
+  }
+
+  if (recordsToPut.length > 0) {
+    await db.learningRecords.bulkPut(recordsToPut);
+  }
+
+  return {
+    updatedCount: recordsToPut.length,
+    masteredCount,
+    strugglingCount,
+  };
+}

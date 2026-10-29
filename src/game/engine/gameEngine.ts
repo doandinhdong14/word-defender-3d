@@ -9,6 +9,7 @@ import {
   Particle,
   PoseId,
   RunSummary,
+  RunWordSummary,
   SkillRuntime,
 } from '../../types/game';
 import { VocabularyEntry } from '../../types/vocabulary';
@@ -131,6 +132,7 @@ export class GameEngine {
   public targetStartTimeMs: number = 0;
   public currentTargetHadHint: boolean = false;
   public attemptedEntryIds: Set<string> = new Set();
+  public wordsSummary: Map<string, RunWordSummary> = new Map();
   public startedAt: string;
 
   private onAttempt?: GameEngineOptions['onAttempt'];
@@ -160,6 +162,22 @@ export class GameEngine {
     this.onSoundEffect = options.onSoundEffect;
     this.onAmmoConsumed = options.onAmmoConsumed;
     this.onRoundChanged = options.onRoundChanged;
+
+    // Initialize word encounter tracking
+    for (const w of this.words) {
+      this.wordsSummary.set(w.id, {
+        entryId: w.id,
+        english: w.english,
+        vietnamese: w.vietnamese,
+        ipa: w.ipa,
+        partOfSpeech: w.partOfSpeech,
+        outcome: 'wrong',
+        hadHint: false,
+        wrongKeystrokes: 0,
+        timeToAnswerMs: 0,
+        isMastered: false,
+      });
+    }
 
     // Partition vocabulary into 3 rounds
     this.partitionRounds();
@@ -619,6 +637,11 @@ export class GameEngine {
 
     // Log attempt as timeout
     this.attemptedEntryIds.add(enemy.entryId);
+    const breachSummary = this.wordsSummary.get(enemy.entryId);
+    if (breachSummary && breachSummary.outcome !== 'correct') {
+      breachSummary.outcome = 'timeout';
+      breachSummary.isMastered = false;
+    }
     this.onAttempt?.({
       runId: this.runId,
       entryId: enemy.entryId,
@@ -786,6 +809,10 @@ export class GameEngine {
       this.wrongKeystrokesCount += 1;
       this.combo = 0;
       this.onSoundEffect?.('wrong');
+      const ws = this.wordsSummary.get(currentTarget.entryId);
+      if (ws) {
+        ws.wrongKeystrokes += 1;
+      }
       return;
     }
 
@@ -822,6 +849,14 @@ export class GameEngine {
       // Immediately log learning stats & calculate combo/score
       this.completedWordsCount += 1;
       this.attemptedEntryIds.add(currentTarget.entryId);
+
+      const wordSummary = this.wordsSummary.get(currentTarget.entryId);
+      if (wordSummary) {
+        wordSummary.outcome = 'correct';
+        wordSummary.hadHint = this.currentTargetHadHint;
+        wordSummary.timeToAnswerMs = this.gameTimeMs - this.targetStartTimeMs;
+        wordSummary.isMastered = !this.currentTargetHadHint;
+      }
 
       const isIndependent = this.mode === 'recall' && !this.currentTargetHadHint;
       if (isIndependent) {
@@ -1089,6 +1124,11 @@ export class GameEngine {
     this.currentTargetHadHint = true;
     this.combo = 0; // using hint resets combo
 
+    const hintSummary = this.wordsSummary.get(target.entryId);
+    if (hintSummary) {
+      hintSummary.hadHint = true;
+    }
+
     // Reveal one next letter
     const expected = normalizeInput(target.word);
     const nextIdx = this.typedBuffer.length;
@@ -1142,6 +1182,7 @@ export class GameEngine {
       wavesCleared: result === 'win' ? 3 : Math.max(0, this.currentWave - 1),
       totalScore: this.score,
       attemptedEntryIds: Array.from(this.attemptedEntryIds),
+      wordResults: Array.from(this.wordsSummary.values()),
       startedAt: this.startedAt,
       endedAt: new Date().toISOString(),
       coinsEarned: 0,

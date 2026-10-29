@@ -122,6 +122,19 @@ export interface SkillRuntime {
   readyAtGameMs: number;
 }
 
+export interface RunWordSummary {
+  entryId: string;
+  english: string;
+  vietnamese: string;
+  ipa?: string;
+  partOfSpeech?: string;
+  outcome: 'correct' | 'wrong' | 'timeout';
+  hadHint: boolean;
+  wrongKeystrokes: number;
+  timeToAnswerMs: number;
+  isMastered: boolean;
+}
+
 export interface RunSummary {
   id: string;
   profileId?: string;
@@ -134,6 +147,7 @@ export interface RunSummary {
   wavesCleared: number;
   totalScore: number;
   attemptedEntryIds: string[];
+  wordResults?: RunWordSummary[];
   startedAt: string;
   endedAt: string;
   rewardedAt?: string;
