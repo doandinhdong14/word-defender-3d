@@ -21,59 +21,230 @@
   outline-offset: 4px;
 }
 
-.doodle-app-header {
-  width: min(1200px, calc(100% - 48px));
-  margin: 0 auto;
-  padding: 22px 0 14px;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 18px;
+.doodle-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
-.doodle-app-header button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border: 0; background: transparent; }
-.doodle-back { justify-self: start; padding: 8px 0; font-size: 17px; }
-.doodle-wordmark { color: #b52c27 !important; font: 400 47px/1.2 var(--font-english); letter-spacing: -3px; transform: rotate(-6deg); }
-.doodle-wallet { justify-self: end; padding: 8px 16px; border: 1.5px solid #302d26 !important; border-radius: 48% 52% 46% 54% / 55% 45% 55% 45%; background: #f3e3bd !important; font-size: 17px; }
-.doodle-wallet svg { color: #9b7135; }
 
-.doodle-content { flex: 1; min-width: 0; width: min(1200px, calc(100% - 48px)); margin: 24px auto 0; padding-bottom: 145px; }
-.doodle-content > .portal-page { padding-top: 0; }
-.doodle-content > .notebook-grid-bg { min-height: 0 !important; padding: 0 !important; background: transparent; }
-.doodle-content .app-page { min-height: 0; }
-
-.game-navigation {
-  position: fixed;
-  inset: auto 0 0;
-  z-index: 50;
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 8px;
-  padding: 12px max(18px, calc((100vw - 1120px) / 2)) max(12px, env(safe-area-inset-bottom));
-  border-top: 1px dashed #c9b593;
+.doodle-app-header {
+  position: sticky;
+  top: 0;
+  z-index: 95;
+  width: 100%;
   background-color: var(--color-paper);
   background-image: linear-gradient(to right, var(--color-grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--color-grid-line) 1px, transparent 1px);
   background-size: 14px 14px;
+  border-bottom: 2px solid #302d26;
+  box-shadow: 0 4px 14px rgba(48, 45, 38, 0.08);
 }
-.game-navigation button {
-  position: relative;
-  min-width: 0;
-  min-height: 80px;
+
+.doodle-header-inner {
+  width: min(1280px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 8px 0;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.doodle-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.doodle-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.doodle-app-header button { display: inline-flex; align-items: center; justify-content: center; border: 0; background: transparent; }
+
+.doodle-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid #302d26 !important;
+  border-radius: 999px;
+  background: #FFFFFF !important;
+  font-size: 14px;
+  font-weight: 700;
+  color: #302d26;
+  cursor: pointer;
+  box-shadow: 1.5px 2px 0 #302d26;
+  transition: transform 0.15s, background 0.15s;
+}
+.doodle-back:hover { background: #f3e3bd !important; transform: translateY(-1px); }
+
+.doodle-wordmark {
+  color: #b52c27 !important;
+  font: 400 32px/1 var(--font-english);
+  letter-spacing: -2px;
+  transform: rotate(-3deg);
+  cursor: pointer;
+}
+
+.doodle-wallet {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1.5px solid #302d26 !important;
+  border-radius: 48% 52% 46% 54% / 55% 45% 55% 45%;
+  background: #f3e3bd !important;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 1.5px 2px 0 #302d26;
+  white-space: nowrap;
+}
+.doodle-wallet svg { color: #9b7135; }
+
+/* Desktop Top Navigation Menu */
+.desktop-nav {
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  padding: 8px;
-  border: 1.5px solid transparent;
-  border-radius: 45% 55% 48% 52% / 54% 47% 53% 46%;
-  background: transparent;
-  font: 400 17px/1.25 var(--font-english);
-  transition: transform .16s, background .16s;
+  gap: 4px;
+  flex: 1 1 auto;
 }
-.game-navigation svg { flex-shrink: 0; color: #302d26; fill: #e9c17c; transform: rotate(-6deg); }
-.game-navigation button:nth-child(even) svg { transform: rotate(6deg); }
-.game-navigation button.active { border-color: #302d26; background: #f3e3bd; box-shadow: inset 0 0 0 3px var(--color-paper); }
-.game-navigation button:hover { background: #f3e3bd; transform: translateY(-3px); }
+
+.desktop-nav button {
+  position: relative;
+  min-width: 0;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  font: 700 14px/1.2 var(--font-english);
+  color: #302d26;
+  cursor: pointer;
+  transition: transform .15s, background .15s, border-color .15s;
+  white-space: nowrap;
+}
+
+.desktop-nav svg { flex-shrink: 0; color: #302d26; fill: #e9c17c; transform: rotate(-4deg); }
+.desktop-nav button:nth-child(even) svg { transform: rotate(4deg); }
+.desktop-nav button.active { border-color: #302d26; background: #f3e3bd; box-shadow: 1.5px 2px 0 #302d26; }
+.desktop-nav button:hover { background: #f3e3bd; transform: translateY(-2px); }
+
+/* Mobile Hamburger Button (3 sọc ☰) */
+.doodle-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #302d26 !important;
+  border-radius: 10px;
+  background: #f3e3bd !important;
+  color: #302d26;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #302d26;
+  transition: transform 0.1s ease;
+}
+.doodle-hamburger:active { transform: translateY(1px); box-shadow: 1px 1px 0 #302d26; }
+
+/* Mobile Navigation Dropdown Backdrop & Drawer */
+.mobile-nav-backdrop {
+  position: fixed;
+  inset: 0;
+  top: 56px;
+  z-index: 120;
+  background: rgba(30, 27, 24, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: fadeIn 0.18s ease-out;
+}
+
+.mobile-nav-drawer {
+  background-color: var(--color-paper);
+  background-image: linear-gradient(to right, var(--color-grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--color-grid-line) 1px, transparent 1px);
+  background-size: 14px 14px;
+  border-bottom: 3px solid #302d26;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+  padding: 14px 16px 20px;
+  animation: slideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobile-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1.5px dashed #c9b593;
+}
+
+.mobile-nav-title {
+  font-family: var(--font-english);
+  font-size: 15px;
+  font-weight: 800;
+  color: #766b59;
+}
+
+.mobile-nav-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid #302d26 !important;
+  border-radius: 8px;
+  background: #FFF !important;
+  color: #302d26;
+  cursor: pointer;
+}
+
+.mobile-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.mobile-nav-grid button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 8px 12px;
+  border: 1.5px solid #302d26;
+  border-radius: 10px;
+  background: #FFFFFF;
+  font-family: var(--font-english);
+  font-size: 14px;
+  font-weight: 800;
+  color: #302d26;
+  box-shadow: 1.5px 2px 0 #302d26;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mobile-nav-grid button.active {
+  background: #f3e3bd;
+  box-shadow: inset 0 0 0 2px #302d26, 1.5px 2px 0 #302d26;
+}
+
+.mobile-nav-grid svg { flex-shrink: 0; color: #302d26; fill: #e9c17c; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideDown { from { transform: translateY(-14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.doodle-content { flex: 1; min-width: 0; width: min(1200px, calc(100% - 32px)); margin: 18px auto 36px; padding-bottom: 40px; }
+.doodle-content > .portal-page { padding-top: 0; }
+.doodle-content > .notebook-grid-bg { min-height: 0 !important; padding: 0 !important; background: transparent; }
+.doodle-content .app-page { min-height: 0; }
 
 /* Paper surfaces, with a slightly uneven outline instead of dashboard cards. */
 .doodle-shell :is(.surface, .paper-panel, .store-item, .event-banner, .mode-card, .adm-section, .adm-stats article, .adm-editor, .settings-account-card, .settings-password-form) {
@@ -207,19 +378,18 @@
 .doodle-shell .adm-shell .adm-primary { background: #f3e3bd; color: #302d26; }
 
 @media (max-width: 900px) {
+  .desktop-nav { display: none !important; }
+  .doodle-hamburger { display: inline-flex !important; }
   .doodle-shell .store-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .doodle-shell .gift-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 700px) {
-  .doodle-app-header { width: calc(100% - 28px); gap: 8px; padding-top: 14px; }
-  .doodle-back { font-size: 14px; gap: 4px !important; }
-  .doodle-wordmark { font-size: 36px; }
-  .doodle-wallet { padding: 8px 10px; font-size: 15px; }
-  .doodle-content { width: calc(100% - 28px); margin-top: 20px; padding-bottom: calc(185px + env(safe-area-inset-bottom)); }
-  .game-navigation { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px 6px; padding: 8px 10px max(10px, env(safe-area-inset-bottom)); }
-  .game-navigation button { grid-column: span 3; min-height: 65px; padding: 5px; font-size: 13px; gap: 4px; }
-  .game-navigation button:nth-child(n + 5) { grid-column: span 4; }
-  .game-navigation svg { width: 24px; height: 24px; }
+  .doodle-header-inner { width: calc(100% - 20px); }
+  .doodle-back { font-size: 13px; padding: 5px 8px; gap: 4px !important; }
+  .doodle-back-text { display: none; }
+  .doodle-wordmark { font-size: 28px; }
+  .doodle-wallet { padding: 6px 10px; font-size: 13px; }
+  .doodle-content { width: calc(100% - 20px); margin-top: 14px; padding-bottom: 40px; }
   .doodle-shell .account-layout { grid-template-columns: 1fr; }
   .doodle-shell .profile-card { display: flex; flex-direction: column; align-items: center; }
   .doodle-shell .profile-card > :is(.large-avatar, h2, .wallet-total, .secondary-button, .tag) { grid-area: auto; margin: 0 0 12px; }
@@ -240,9 +410,9 @@
   .doodle-shell .auth-intro h1 { font-size: 36px; }
 }
 @media (max-width: 380px) {
-  .doodle-back { font-size: 0; }
-  .doodle-back svg { width: 22px; height: 22px; }
+  .doodle-back { font-size: 0; padding: 5px; }
+  .doodle-back svg { width: 20px; height: 20px; }
+  .doodle-wordmark { font-size: 24px; }
   .doodle-shell :is(.auth-tabs, .auth-form, .auth-google-section) { margin-left: 16px; margin-right: 16px; }
   .doodle-shell .auth-tabs { padding-inline: 0; }
-  .game-navigation button { font-size: 12px; }
 }
