@@ -511,17 +511,6 @@ export const BattlePage: React.FC = () => {
       ctx.restore();
     }
 
-    // 7. Wave Clear Announcement Overlay
-    if (eng.status === 'WAVE_CLEAR') {
-      ctx.save();
-      ctx.font = `900 ${Math.max(28, Math.min(48, width / 12))}px 'Mali', 'Itim', cursive, sans-serif`;
-      ctx.fillStyle = '#25232B';
-      ctx.textAlign = 'center';
-      ctx.fillText(`🎉 HOÀN THÀNH ROUND ${eng.currentWave}!`, width / 2, height / 2 - 20);
-      ctx.font = `700 ${Math.max(13, Math.min(20, width / 32))}px 'Mali', 'Comfortaa', sans-serif`;
-      ctx.fillStyle = '#4B5563';
-      ctx.restore();
-    }
   };
 
   const handleEnemyTagClick = (enemyId: string) => {
@@ -804,6 +793,59 @@ export const BattlePage: React.FC = () => {
           })}
         </div>
 
+        {/* Wave Clear / End of Round Announcement Banner */}
+        {engineState.status === 'WAVE_CLEAR' && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '26%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 42,
+              pointerEvents: 'none',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              width: 'max-content',
+              maxWidth: isMobile ? 'calc(100% - 32px)' : '440px',
+              boxSizing: 'border-box',
+              padding: isMobile ? '8px 14px' : '14px 26px',
+              background: 'linear-gradient(135deg, #15803D 0%, #16A34A 100%)',
+              color: '#FFFFFF',
+              borderRadius: isMobile ? '12px' : '16px',
+              border: isMobile ? '2px solid #FFFFFF' : '3px solid #FFFFFF',
+              boxShadow: '0 8px 24px rgba(22, 163, 74, 0.35), 0 0 0 2px var(--color-ink)',
+              textAlign: 'center',
+              animation: 'popFloatUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontWeight: 900,
+                fontSize: isMobile ? '0.92rem' : '1.35rem',
+                letterSpacing: '0.3px',
+                lineHeight: 1.25,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              🎉 HOÀN THÀNH ROUND {engineState.wave}!
+            </div>
+            <div
+              style={{
+                fontFamily: 'var(--font-vietnamese)',
+                fontWeight: 700,
+                fontSize: isMobile ? '0.72rem' : '0.88rem',
+                marginTop: '3px',
+                opacity: 0.95,
+                lineHeight: 1.2,
+              }}
+            >
+              Chuẩn bị bước vào Round tiếp theo...
+            </div>
+          </div>
+        )}
+
         {/* Round Transition Announcement Banner */}
         {roundBanner && (
           <div
@@ -817,7 +859,10 @@ export const BattlePage: React.FC = () => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              padding: isMobile ? '10px 18px' : '14px 28px',
+              width: 'max-content',
+              maxWidth: isMobile ? 'calc(100% - 32px)' : '480px',
+              boxSizing: 'border-box',
+              padding: isMobile ? '7px 12px' : '12px 24px',
               background: roundBanner.phase === 'boss'
                 ? 'linear-gradient(135deg, #7F1D1D 0%, #B91C1C 100%)'
                 : roundBanner.round === 2
@@ -826,17 +871,36 @@ export const BattlePage: React.FC = () => {
                 ? 'linear-gradient(135deg, #6B21A8 0%, #8B5CF6 100%)'
                 : 'linear-gradient(135deg, #1E293B 0%, #334155 100%)',
               color: '#FFFFFF',
-              borderRadius: '16px',
-              border: '3px solid #FFFFFF',
-              boxShadow: '0 12px 32px rgba(0,0,0,0.35), 0 0 0 3px var(--color-ink)',
+              borderRadius: isMobile ? '12px' : '16px',
+              border: isMobile ? '2px solid #FFFFFF' : '3px solid #FFFFFF',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.28), 0 0 0 2px var(--color-ink)',
               textAlign: 'center',
               animation: 'popFloatUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: isMobile ? '1.05rem' : '1.4rem', letterSpacing: '0.5px' }}>
+            <div
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontWeight: 900,
+                fontSize: isMobile ? '0.88rem' : '1.3rem',
+                letterSpacing: '0.3px',
+                lineHeight: 1.25,
+                textAlign: 'center',
+              }}
+            >
               {roundBanner.title}
             </div>
-            <div style={{ fontFamily: 'var(--font-vietnamese)', fontWeight: 700, fontSize: isMobile ? '0.78rem' : '0.95rem', marginTop: '4px', opacity: 0.95 }}>
+            <div
+              style={{
+                fontFamily: 'var(--font-vietnamese)',
+                fontWeight: 700,
+                fontSize: isMobile ? '0.7rem' : '0.88rem',
+                marginTop: '3px',
+                opacity: 0.95,
+                lineHeight: 1.25,
+                textAlign: 'center',
+              }}
+            >
               {roundBanner.subtitle}
             </div>
           </div>
