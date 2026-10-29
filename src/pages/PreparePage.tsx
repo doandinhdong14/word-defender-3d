@@ -171,22 +171,22 @@ export const PreparePage: React.FC = () => {
         <div className="round-pill r1">
           <span className="round-num-badge">1</span>
           <div className="round-desc">
-            <strong>VÒNG 1: Gõ Tiếng Anh</strong>
-            <small>Luyện từ vựng ➔ Trùm R1 tổng hợp</small>
+            <strong>VÒNG 1: Gõ Chữ Có Sẵn</strong>
+            <small>Nhìn từ tiếng Anh gõ mẫu ➔ Trùm R1</small>
           </div>
         </div>
         <div className="round-pill r2">
           <span className="round-num-badge">2</span>
           <div className="round-desc">
-            <strong>VÒNG 2: Việt ➔ Gõ Anh</strong>
-            <small>Nhớ nghĩa từ ➔ Trùm R2 tổng hợp</small>
+            <strong>VÒNG 2: Đoán Ra Mà Gõ</strong>
+            <small>Hiện nghĩa tiếng Việt ➔ Bấm tiếng Anh ➔ Trùm R2</small>
           </div>
         </div>
         <div className="round-pill r3">
           <span className="round-num-badge">3</span>
           <div className="round-desc">
-            <strong>VÒNG 3: Loạn Xạ Thử Thách</strong>
-            <small>Quái tốc độ, bắn đạn, 2-3 từ ➔ Đại Trùm</small>
+            <strong>VÒNG 3: Thử Thách & Đại Trùm</strong>
+            <small>Quái tốc độ, quái trâu ➔ Đại Trùm Alien</small>
           </div>
         </div>
       </div>

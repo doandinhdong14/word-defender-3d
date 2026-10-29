@@ -177,7 +177,7 @@ export const BattlePage: React.FC = () => {
     let isMounted = true;
 
     const initEngine = async () => {
-      if (!account && (!isBasicSet(selectedSetId) || selectedMap !== BASIC_MAP_ID || selectedMode !== BASIC_MODE)) {
+      if (!account && (!isBasicSet(selectedSetId) || selectedMap !== BASIC_MAP_ID)) {
         navigateTo('account');
         return;
       }
@@ -265,6 +265,12 @@ export const BattlePage: React.FC = () => {
       });
 
       engineRef.current = engine;
+      setRoundBanner({
+        round: 1,
+        phase: 'mobs',
+        title: '✨ VÒNG 1: GÕ THEO CHỮ CÓ SẴN',
+        subtitle: 'Nhìn tiếng Anh gõ tiếng Anh (Kèm phụ đề dịch nghĩa)',
+      });
 
       // Game Loop
       const loop = (currentTime: number) => {
@@ -906,10 +912,10 @@ export const BattlePage: React.FC = () => {
               {engineState.status === 'BOSS_PLAYING'
                 ? `🔥 TRÙM R${engineState.wave}`
                 : engineState.wave === 1
-                ? `R1: Gõ Mẫu (1/3)`
+                ? `Vòng 1: Gõ Mẫu (1/3)`
                 : engineState.wave === 2
-                ? `🔥 R2: Việt➔Anh (2/3)`
-                : `⚡ R3: Phản Xạ & Trùm (3/3)`}
+                ? `🔥 Vòng 2: Việt➔Anh (2/3)`
+                : `⚡ Vòng 3: Thử Thách & Trùm (3/3)`}
             </div>
 
             <div
@@ -1195,46 +1201,70 @@ export const BattlePage: React.FC = () => {
           >
             {selectedEnemy ? (
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '0.74rem', color: 'var(--color-muted-ink)', fontWeight: 600 }}>
-                  {selectedMode === 'copy' && 'Nấc 1 (Gõ từ): '}
-                  {selectedMode === 'recall' && 'Nấc 2 (Nhớ nghĩa): '}
-                  {selectedMode === 'listen' && 'Nấc 3 (Nghe & gõ): '}
-                  <span
-                    style={{
-                      fontWeight: 800,
-                      color: 'var(--color-ink)',
-                      fontFamily: selectedMode === 'copy' ? 'var(--font-english)' : 'var(--font-vietnamese)',
-                    }}
-                  >
-                    {selectedMode === 'copy' ? selectedEnemy.word : selectedEnemy.promptText}
-                  </span>
-                </div>
-                <div style={{ fontFamily: 'var(--font-english)', fontWeight: 800, fontSize: '1.15rem', marginTop: '2px', letterSpacing: '1px' }}>
-                  {(() => {
-                    const typedLen = Math.min(engineState.typedBuffer.length, selectedEnemy.word.length);
-                    const typedPart = selectedEnemy.word.slice(0, typedLen);
-                    const remainingPart = selectedEnemy.word.slice(typedLen);
+                {(() => {
+                  const enemyMode = selectedEnemy.mode || (engineState.wave === 1 ? 'copy' : 'recall');
+                  const isCopy = enemyMode === 'copy';
+                  const typedLen = Math.min(engineState.typedBuffer.length, selectedEnemy.word.length);
+                  const typedPart = selectedEnemy.word.slice(0, typedLen);
+                  const remainingPart = selectedEnemy.word.slice(typedLen);
+                  const remainingSlots = Math.max(0, selectedEnemy.word.length - typedLen);
 
-                    if (selectedMode === 'copy') {
-                      return (
-                        <>
-                          <span style={{ color: '#16A34A', textDecoration: 'underline' }}>{typedPart}</span>
-                          <span style={{ color: '#DC2626' }}>{remainingPart}</span>
-                        </>
-                      );
-                    }
-
-                    const remainingSlots = Math.max(0, selectedEnemy.word.length - typedLen);
-                    return (
-                      <>
-                        {typedPart.length > 0 && (
-                          <span style={{ color: '#16A34A', textDecoration: 'underline' }}>{typedPart}</span>
+                  return (
+                    <>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--color-muted-ink)', fontWeight: 600 }}>
+                        {isCopy ? (
+                          <>
+                            VÒNG 1 (Gõ chữ mẫu):{' '}
+                            <span
+                              style={{
+                                fontWeight: 800,
+                                color: 'var(--color-ink)',
+                                fontFamily: 'var(--font-english)',
+                              }}
+                            >
+                              {selectedEnemy.word}
+                            </span>
+                            {selectedEnemy.meaningText && (
+                              <span style={{ marginLeft: '6px', color: '#64748B', fontWeight: 600, fontSize: '0.72rem' }}>
+                                ({selectedEnemy.meaningText})
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            VÒNG {engineState.wave} (Hiện tiếng Việt ➔ Bấm tiếng Anh):{' '}
+                            <span
+                              style={{
+                                fontWeight: 900,
+                                color: '#B91C1C',
+                                fontFamily: 'var(--font-vietnamese)',
+                                fontSize: '0.86rem',
+                              }}
+                            >
+                              {selectedEnemy.meaningText || selectedEnemy.promptText}
+                            </span>
+                          </>
                         )}
-                        <span style={{ color: '#9CA3AF' }}>{' _'.repeat(remainingSlots)}</span>
-                      </>
-                    );
-                  })()}
-                </div>
+                      </div>
+
+                      <div style={{ fontFamily: 'var(--font-english)', fontWeight: 800, fontSize: '1.15rem', marginTop: '2px', letterSpacing: '1px' }}>
+                        {isCopy ? (
+                          <>
+                            <span style={{ color: '#16A34A', textDecoration: 'underline' }}>{typedPart}</span>
+                            <span style={{ color: '#DC2626' }}>{remainingPart}</span>
+                          </>
+                        ) : (
+                          <>
+                            {typedPart.length > 0 && (
+                              <span style={{ color: '#16A34A', textDecoration: 'underline' }}>{typedPart}</span>
+                            )}
+                            <span style={{ color: '#9CA3AF' }}>{' _'.repeat(remainingSlots)}</span>
+                          </>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             ) : (
               <div style={{ flex: 1, minWidth: 0, fontSize: isShortMobile ? '0.72rem' : '0.8rem', color: 'var(--color-muted-ink)', fontStyle: 'italic' }}>

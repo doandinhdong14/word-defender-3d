@@ -204,33 +204,24 @@ export class GameEngine {
   }
 
   public get currentRoundMode(): GameMode {
-    if (this.mode === 'recall') return 'recall';
     if (this.mode === 'listen') return 'listen';
-    // Progressive adventure structure:
-    // Round 1: Copy (Nhìn tiếng Anh gõ tiếng Anh kèm phụ đề nghĩa)
-    // Round 2: Active Recall (HIỆN TIẾNG VIỆT - BẤM TIẾNG ANH)
-    // Round 3: Active Recall Challenge & Trùm cuối (HIỆN TIẾNG VIỆT - BẤM TIẾNG ANH)
+    // Bắt buộc 1 trận đấu phải có đủ cả 3 round:
+    // Round 1: Gõ theo chữ có sẵn (nhìn tiếng Anh gõ tiếng Anh kèm phụ đề nghĩa)
+    // Round 2: Đoán ra mà gõ (HIỆN NGHĨA TIẾNG VIỆT - BẤM TIẾNG ANH)
+    // Round 3: Loạn xạ thử thách & Đại Trùm cuối (HIỆN NGHĨA TIẾNG VIỆT - BẤM TIẾNG ANH)
     if (this.currentRound === 1) return 'copy';
     if (this.currentRound === 2) return 'recall';
     return 'recall';
   }
 
   private partitionRounds(): void {
-    const total = this.words.length;
-    if (total <= 6) {
-      this.round1Words = [...this.words];
-      this.round2Words = [...this.words];
-      this.round3Words = [...this.words];
-      return;
-    }
-
-    // Partition 100% of the words cleanly across the 3 rounds
-    const r1Count = Math.ceil(total / 3);
-    const r2Count = Math.ceil((total - r1Count) / 2);
-
-    this.round1Words = this.words.slice(0, r1Count);
-    this.round2Words = this.words.slice(r1Count, r1Count + r2Count);
-    this.round3Words = this.words.slice(r1Count + r2Count);
+    // Mỗi trận đấu bao gồm đầy đủ toàn bộ từ vựng được chọn, đi qua cả 3 vòng tiến trình:
+    // Round 1: Toàn bộ từ vựng dưới dạng Gõ theo chữ có sẵn (Copy) để thuộc mặt chữ
+    // Round 2: Toàn bộ từ vựng dưới dạng Đoán nghĩa (Recall: Hiện Tiếng Việt -> Bấm Tiếng Anh)
+    // Round 3: Toàn bộ từ vựng dưới dạng Thử thách phản xạ, quái tốc độ, quái trâu & Đại Trùm
+    this.round1Words = [...this.words];
+    this.round2Words = [...this.words].sort(() => Math.random() - 0.5);
+    this.round3Words = [...this.words].sort(() => Math.random() - 0.5);
   }
 
   public prepareWave(waveNumber: number): void {
