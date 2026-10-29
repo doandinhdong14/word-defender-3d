@@ -90,6 +90,27 @@ export const BattlePage: React.FC = () => {
   const [defeatedEffects, setDefeatedEffects] = useState<DefeatedWordEffect[]>([]);
   const [runVersion, setRunVersion] = useState(0);
 
+  const [roundBanner, setRoundBanner] = useState<{
+    round: number;
+    phase: 'mobs' | 'boss';
+    title: string;
+    subtitle: string;
+  } | null>({
+    round: 1,
+    phase: 'mobs',
+    title: '✨ VÒNG 1: KHỞI ĐỘNG GÕ TỪ',
+    subtitle: 'Nhìn tiếng Anh gõ tiếng Anh (Kèm phụ đề nghĩa)',
+  });
+
+  useEffect(() => {
+    if (roundBanner) {
+      const timer = setTimeout(() => {
+        setRoundBanner(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [roundBanner]);
+
   // Responsive window tracking
   const [windowDimensions, setWindowDimensions] = useState({
     width: typeof window !== 'undefined' ? window.innerWidth : 1280,
@@ -206,6 +227,37 @@ export const BattlePage: React.FC = () => {
         onRunFinished: (summary: RunSummary) => {
           setLastRunSummary(summary);
           navigateTo('results');
+        },
+        onRoundChanged: (round, phase) => {
+          if (phase === 'boss') {
+            setRoundBanner({
+              round,
+              phase: 'boss',
+              title: round === 3 ? '💀 ĐẠI TRÙM CUỐI XUẤT HIỆN!' : `🔥 TRÙM VÒNG ${round}`,
+              subtitle: round >= 2 ? 'Gõ các từ tiếng Anh tương ứng để chém máu Trùm!' : 'Tập trung triệt hạ Trùm quái vật!',
+            });
+          } else if (round === 2) {
+            setRoundBanner({
+              round: 2,
+              phase: 'mobs',
+              title: '🔥 VÒNG 2: THỬ THÁCH NHỚ NGHĨA',
+              subtitle: 'HIỆN TIẾNG VIỆT ➔ GÕ TIẾNG ANH! (Hãy tự nhớ từ vựng)',
+            });
+          } else if (round === 3) {
+            setRoundBanner({
+              round: 3,
+              phase: 'mobs',
+              title: '⚡ VÒNG 3: ĐẠI CHIẾN PHẢN XẠ',
+              subtitle: 'Quái tốc độ & Trùm Cuối! Hiện Tiếng Việt ➔ Gõ Tiếng Anh!',
+            });
+          } else {
+            setRoundBanner({
+              round: 1,
+              phase: 'mobs',
+              title: '✨ VÒNG 1: KHỞI ĐỘNG GÕ TỪ',
+              subtitle: 'Nhìn tiếng Anh gõ tiếng Anh (Kèm phụ đề dịch nghĩa)',
+            });
+          }
         },
         onSoundEffect: (type, weaponKind, isFinishing) => {
           playSynthSound(type, weaponKind, isFinishing);
@@ -673,7 +725,7 @@ export const BattlePage: React.FC = () => {
                   meaningText={enemy.meaningText}
                   typedBuffer={currentBuffer}
                   isSelected={isSelected}
-                  mode={selectedMode}
+                  mode={enemy.mode || (engineRef.current?.currentRoundMode || selectedMode)}
                   isBoss={enemy.isBoss}
                   bossSegmentsRemaining={enemy.bossSegmentsRemaining}
                   bossMaxSegments={enemy.bossMaxSegments}
@@ -688,6 +740,44 @@ export const BattlePage: React.FC = () => {
             );
           })}
         </div>
+
+        {/* Round Transition Announcement Banner */}
+        {roundBanner && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '22%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 40,
+              pointerEvents: 'none',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              padding: isMobile ? '10px 18px' : '14px 28px',
+              background: roundBanner.phase === 'boss'
+                ? 'linear-gradient(135deg, #7F1D1D 0%, #B91C1C 100%)'
+                : roundBanner.round === 2
+                ? 'linear-gradient(135deg, #0F766E 0%, #0D9488 100%)'
+                : roundBanner.round === 3
+                ? 'linear-gradient(135deg, #6B21A8 0%, #8B5CF6 100%)'
+                : 'linear-gradient(135deg, #1E293B 0%, #334155 100%)',
+              color: '#FFFFFF',
+              borderRadius: '16px',
+              border: '3px solid #FFFFFF',
+              boxShadow: '0 12px 32px rgba(0,0,0,0.35), 0 0 0 3px var(--color-ink)',
+              textAlign: 'center',
+              animation: 'popFloatUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+          >
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: isMobile ? '1.05rem' : '1.4rem', letterSpacing: '0.5px' }}>
+              {roundBanner.title}
+            </div>
+            <div style={{ fontFamily: 'var(--font-vietnamese)', fontWeight: 700, fontSize: isMobile ? '0.78rem' : '0.95rem', marginTop: '4px', opacity: 0.95 }}>
+              {roundBanner.subtitle}
+            </div>
+          </div>
+        )}
 
         {/* Floating Defeated Word Meaning Popups */}
         <div
@@ -816,10 +906,10 @@ export const BattlePage: React.FC = () => {
               {engineState.status === 'BOSS_PLAYING'
                 ? `🔥 TRÙM R${engineState.wave}`
                 : engineState.wave === 1
-                ? `R1: Gõ Từ (1/3)`
+                ? `R1: Gõ Mẫu (1/3)`
                 : engineState.wave === 2
-                ? `R2: Việt➔Anh (2/3)`
-                : `R3: Loạn Xạ (3/3)`}
+                ? `🔥 R2: Việt➔Anh (2/3)`
+                : `⚡ R3: Phản Xạ & Trùm (3/3)`}
             </div>
 
             <div

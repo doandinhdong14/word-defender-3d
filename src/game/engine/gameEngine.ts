@@ -203,6 +203,18 @@ export class GameEngine {
     this.prepareWave(1);
   }
 
+  public get currentRoundMode(): GameMode {
+    if (this.mode === 'recall') return 'recall';
+    if (this.mode === 'listen') return 'listen';
+    // Progressive adventure structure:
+    // Round 1: Copy (Nhìn tiếng Anh gõ tiếng Anh kèm phụ đề nghĩa)
+    // Round 2: Active Recall (HIỆN TIẾNG VIỆT - BẤM TIẾNG ANH)
+    // Round 3: Active Recall Challenge & Trùm cuối (HIỆN TIẾNG VIỆT - BẤM TIẾNG ANH)
+    if (this.currentRound === 1) return 'copy';
+    if (this.currentRound === 2) return 'recall';
+    return 'recall';
+  }
+
   private partitionRounds(): void {
     const total = this.words.length;
     if (total <= 6) {
@@ -212,17 +224,13 @@ export class GameEngine {
       return;
     }
 
-    const r1Count = Math.max(3, Math.floor(total * 0.38));
-    const r2Count = Math.max(3, Math.floor(total * 0.38));
+    // Partition 100% of the words cleanly across the 3 rounds
+    const r1Count = Math.ceil(total / 3);
+    const r2Count = Math.ceil((total - r1Count) / 2);
 
     this.round1Words = this.words.slice(0, r1Count);
     this.round2Words = this.words.slice(r1Count, r1Count + r2Count);
     this.round3Words = this.words.slice(r1Count + r2Count);
-
-    if (this.round3Words.length < 3) {
-      // Pad round 3 with words from round 1 and 2
-      this.round3Words = [...this.round3Words, ...this.round1Words.slice(0, 2), ...this.round2Words.slice(0, 2)];
-    }
   }
 
   public prepareWave(waveNumber: number): void {
@@ -244,11 +252,11 @@ export class GameEngine {
       roundPool = this.round3Words;
     }
 
-    // Queue mob words (first portion of round pool)
-    const mobCount = Math.max(3, Math.ceil(roundPool.length * 0.7));
-    this.waveQueue = roundPool.slice(0, mobCount);
+    // 100% of words in this round pool are queued and spawned as mobs!
+    // No words are ever skipped or omitted!
+    this.waveQueue = [...roundPool];
     if (this.waveQueue.length === 0) {
-      this.waveQueue = [...roundPool];
+      this.waveQueue = [...this.words];
     }
 
     this.nextSpawnTimeMs = this.gameTimeMs + 600;
@@ -304,15 +312,14 @@ export class GameEngine {
 
     const chosenMeta = eligibleSpecies[Math.floor(Math.random() * eligibleSpecies.length)] || REGULAR_MONSTER_SPECIES[0];
 
-    // Determine prompt text
+    // Determine mode & prompt text
+    const roundMode = this.currentRoundMode;
     let promptText = entry.english;
-    if (this.currentRound === 1) {
-      promptText = entry.english;
-    } else if (this.currentRound === 2) {
+    if (roundMode === 'recall') {
+      // ROUND 2 & 3: HIỆN TIẾNG VIỆT, BẤM TIẾNG ANH!
       promptText = entry.vietnamese || entry.english;
     } else {
-      // Round 3: Chaotic mix
-      promptText = Math.random() > 0.45 ? (entry.vietnamese || entry.english) : entry.english;
+      promptText = entry.english;
     }
 
     // Velocity & abilities
@@ -332,7 +339,7 @@ export class GameEngine {
           entryId: extraEntry.id,
           word: extraEntry.english,
           acceptedAnswers: extraEntry.acceptedAnswers.length > 0 ? extraEntry.acceptedAnswers : [extraEntry.english],
-          promptText: Math.random() > 0.5 ? (extraEntry.vietnamese || extraEntry.english) : extraEntry.english,
+          promptText: roundMode === 'recall' ? (extraEntry.vietnamese || extraEntry.english) : extraEntry.english,
           meaningText: extraEntry.vietnamese,
         });
       }
@@ -346,6 +353,7 @@ export class GameEngine {
       acceptedAnswers: entry.acceptedAnswers.length > 0 ? entry.acceptedAnswers : [entry.english],
       promptText,
       meaningText: entry.vietnamese,
+      mode: roundMode,
       x: spawnX,
       y: 110,
       baseVelocityY: velocityY,
@@ -370,32 +378,29 @@ export class GameEngine {
 
   private spawnBoss(): void {
     // Determine boss words based on round:
-    // Round 1 Boss synthesizes all round 1 words!
-    // Round 2 Boss synthesizes all round 2 words!
-    // Round 3 Boss synthesizes round 3 words!
+    // Round 1 Boss synthesizes key round 1 words!
+    // Round 2 Boss synthesizes round 2 words in Recall mode!
+    // Round 3 Boss is the Grand Boss reviewing synthesis words!
     let bossWordsPool = this.round1Words;
-    let isRecallPrompt = false;
+    const roundMode = this.currentRoundMode;
 
     if (this.currentRound === 1) {
-      bossWordsPool = this.round1Words.length > 0 ? this.round1Words : this.words.slice(0, 8);
-      isRecallPrompt = false;
+      bossWordsPool = this.round1Words.length > 0 ? this.round1Words : this.words.slice(0, 4);
     } else if (this.currentRound === 2) {
-      bossWordsPool = this.round2Words.length > 0 ? this.round2Words : this.words.slice(0, 8);
-      isRecallPrompt = true;
+      bossWordsPool = this.round2Words.length > 0 ? this.round2Words : this.words.slice(0, 4);
     } else {
       bossWordsPool = this.round3Words.length > 0 ? this.round3Words : this.words;
-      isRecallPrompt = Math.random() > 0.5;
     }
 
-    const bossCount = bossWordsPool.length;
-    const firstWord = bossWordsPool[0] || this.words[0];
-    const bossPrompts = bossWordsPool.map((entry, idx) => ({
+    const maxSegments = this.currentRound === 3 ? Math.min(4, bossWordsPool.length) : Math.min(2, bossWordsPool.length);
+    const bossSlice = bossWordsPool.slice(0, Math.max(1, maxSegments));
+    const bossCount = bossSlice.length;
+    const firstWord = bossSlice[0] || this.words[0];
+    const bossPrompts = bossSlice.map((entry) => ({
       entryId: entry.id,
       word: entry.english,
       acceptedAnswers: entry.acceptedAnswers.length > 0 ? entry.acceptedAnswers : [entry.english],
-      promptText: (this.currentRound === 2 || (this.currentRound === 3 && idx % 2 === 1))
-        ? (entry.vietnamese || entry.english)
-        : entry.english,
+      promptText: roundMode === 'recall' ? (entry.vietnamese || entry.english) : entry.english,
       meaningText: entry.vietnamese,
     }));
 
@@ -420,6 +425,7 @@ export class GameEngine {
       acceptedAnswers: firstWord.acceptedAnswers.length > 0 ? firstWord.acceptedAnswers : [firstWord.english],
       promptText: bossPrompts[0].promptText,
       meaningText: firstWord.vietnamese,
+      mode: roundMode,
       x: GAME_BALANCE.stageWidth / 2,
       y: 130,
       baseVelocityY: bossSpeed,
@@ -858,7 +864,9 @@ export class GameEngine {
         wordSummary.isMastered = !this.currentTargetHadHint;
       }
 
-      const isIndependent = this.mode === 'recall' && !this.currentTargetHadHint;
+      const isIndependent =
+        (currentTarget.mode === 'recall' || this.currentRoundMode === 'recall' || this.mode === 'recall') &&
+        !this.currentTargetHadHint;
       if (isIndependent) {
         this.independentRecallCorrectCount += 1;
       }

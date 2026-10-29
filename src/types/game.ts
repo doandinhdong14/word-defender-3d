@@ -17,6 +17,7 @@ export interface EnemyState {
   acceptedAnswers: string[];         // all valid aliases
   promptText: string;                // text shown on WordTag
   meaningText?: string;               // Vietnamese meaning
+  mode?: GameMode;                    // Mode for this enemy: 'copy' | 'recall' | 'listen'
   x: number;
   y: number;
   baseVelocityY: number;
