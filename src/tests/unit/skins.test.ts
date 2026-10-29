@@ -153,11 +153,12 @@ describe('New Skins & Color Customization', () => {
     expect(inv?.equippedStyleId).toBe('style_purple');
   });
 
-  it('includes all new skins and purple styles in DEFAULT_INVENTORY_SEED', () => {
+  it('starts with the default hero and keeps extra skins available for purchase', () => {
     for (const skinId of brandNewSkinIds) {
-      expect(DEFAULT_INVENTORY_SEED.ownedItemIds).toContain(skinId);
+      expect(DEFAULT_INVENTORY_SEED.ownedItemIds).not.toContain(skinId);
+      expect(STORE_CATALOG.find(item => item.id === skinId)?.priceCoins).toBeGreaterThan(0);
     }
-    expect(DEFAULT_INVENTORY_SEED.ownedItemIds).toContain('style_lavender');
-    expect(DEFAULT_INVENTORY_SEED.ownedItemIds).toContain('style_purple');
+    expect(DEFAULT_INVENTORY_SEED.equippedOutfitId).toBeNull();
+    expect(DEFAULT_INVENTORY_SEED.ownedItemIds).toContain('style_yellow');
   });
 });

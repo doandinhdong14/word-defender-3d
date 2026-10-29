@@ -12,6 +12,10 @@ interface WordTagProps {
   bossSegmentsRemaining?: number;
   bossMaxSegments?: number;
   compact?: boolean;
+  isRevealed?: boolean;
+  archetype?: string;
+  hp?: number;
+  maxHp?: number;
   onClick?: () => void;
 }
 
@@ -26,12 +30,29 @@ export const WordTag: React.FC<WordTagProps> = ({
   bossSegmentsRemaining = 0,
   bossMaxSegments = 0,
   compact = false,
+  isRevealed = false,
+  archetype,
+  hp,
+  maxHp,
   onClick,
 }) => {
   const displayMeaning = meaningText || promptText;
 
   // Render content according to the 3 Tiers (Nấc 1, Nấc 2, Nấc 3)
   const renderContent = () => {
+    // If revealed by Reveal Bullet in the last 0.5s:
+    if (isRevealed) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '0.62rem', color: '#D4AC0D', fontWeight: 900 }}>👁️ SOI SÁNG (0.5s)</span>
+          <span style={{ fontFamily: 'var(--font-english)', fontWeight: 800, fontSize: '0.9rem', color: '#B45309' }}>
+            {expectedWord}
+          </span>
+          {displayMeaning && <small style={{ fontSize: '0.65rem', color: '#666' }}>{displayMeaning}</small>}
+        </div>
+      );
+    }
+
     // -----------------------------------------------------------------
     // NẤC 1: GÕ TỪ (Copy Mode)
     // Các con quái hiện lên với các chữ MÀU ĐỎ.
@@ -218,6 +239,27 @@ export const WordTag: React.FC<WordTagProps> = ({
               />
             );
           })}
+        </div>
+      )}
+
+      {/* Archetype or Tank HP badge */}
+      {archetype && archetype !== 'normal' && !isBoss && (
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '3px', alignItems: 'center' }}>
+          {archetype === 'tank' && (
+            <span style={{ fontSize: '0.62rem', fontWeight: 900, background: '#EBDEF0', color: '#7D3C98', padding: '1px 5px', borderRadius: '4px' }}>
+              🛡️ {hp || 1}/{maxHp || 2} từ
+            </span>
+          )}
+          {archetype === 'shooter' && (
+            <span style={{ fontSize: '0.62rem', fontWeight: 900, background: '#FADBD8', color: '#C0392B', padding: '1px 5px', borderRadius: '4px' }}>
+              🎯 Bắn đạn
+            </span>
+          )}
+          {archetype === 'speedster' && (
+            <span style={{ fontSize: '0.62rem', fontWeight: 900, background: '#FDEBD0', color: '#D35400', padding: '1px 5px', borderRadius: '4px' }}>
+              ⚡ Nhanh
+            </span>
+          )}
         </div>
       )}
 

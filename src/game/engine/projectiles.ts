@@ -12,8 +12,10 @@ export function createBullet(
 ): BulletState {
   let speed: number = GAME_BALANCE.typedBulletSpeedPxPerSec;
 
-  if (kind === 'slow_shot') {
-    speed = GAME_BALANCE.slowBulletSpeedPxPerSec;
+  if (kind === 'slow_shot' || kind === 'bullet_slow') {
+    speed = 520;
+  } else if (kind === 'bullet_reveal') {
+    speed = 640;
   } else if (kind === 'bullet_missile') {
     speed = 540; // High velocity rocket
   } else if (kind === 'bullet_shuriken') {
@@ -247,8 +249,14 @@ export function updateProjectiles(
           });
         }
       } else {
-        // Standard impact particles (pink candy orb or slow shot)
-        const particleColor = bullet.kind === 'slow_shot' ? '#70B9E1' : '#F58AB0';
+        // Standard impact particles (pink candy orb, slow frost, or golden reveal)
+        const bKind = bullet.kind as string;
+        const particleColor =
+          bKind === 'slow_shot' || bKind === 'bullet_slow'
+            ? '#70B9E1'
+            : bKind === 'bullet_reveal'
+            ? '#FFD54F'
+            : '#F58AB0';
         for (let i = 0; i < 6; i++) {
           const angle = Math.random() * Math.PI * 2;
           const speed = 40 + Math.random() * 80;

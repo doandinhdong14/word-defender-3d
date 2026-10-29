@@ -21,6 +21,7 @@ export interface Inventory {
   equippedBulletId?: string | null; // e.g. 'bullet_missile'
   equippedHatId?: string | null;    // backward compatibility
   equippedShirtId?: string | null;  // backward compatibility
+  ammoCounts?: Record<string, number>; // ammo inventory: e.g. bullet_slow: 1000
 }
 
 export interface Wallet {

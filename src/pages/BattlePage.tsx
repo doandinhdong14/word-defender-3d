@@ -39,7 +39,9 @@ export const BattlePage: React.FC = () => {
     selectedDifficulty,
     selectedMap,
     setSelectedMap,
+    selectedWordCount,
     inventory,
+    refreshUserData,
     settings,
     navigateTo,
     setLastRunSummary,
@@ -158,10 +160,20 @@ export const BattlePage: React.FC = () => {
         return;
       }
       const loadout = account ? inventory : createGuestInventory();
-      // Select 15 words according to spaced repetition logic
+      const wordCount = selectedWordCount || 30;
+
+      // Select words matching user selection (25, 30, 40, or 50)
       const sessionWords = account
-        ? await selectSessionWords(selectedSetId, GAME_BALANCE.sessionWords)
-        : getBasicWords(selectedSetId).sort(() => Math.random() - 0.5).slice(0, GAME_BALANCE.sessionWords);
+        ? await selectSessionWords(selectedSetId, wordCount)
+        : (() => {
+            const raw = getBasicWords(selectedSetId);
+            const res = [];
+            while (res.length < wordCount && raw.length > 0) {
+              res.push(...[...raw].sort(() => Math.random() - 0.5));
+            }
+            return res.slice(0, wordCount);
+          })();
+
       if (!isMounted) return;
 
       if (sessionWords.length === 0) {
@@ -181,7 +193,17 @@ export const BattlePage: React.FC = () => {
         equippedShirtId: loadout?.equippedShirtId || null,
         equippedStyleId: loadout?.equippedStyleId || 'style_yellow',
         equippedBulletId: loadout?.equippedBulletId || 'bullet_default',
+        ammoCounts: loadout?.ammoCounts || {},
         maxConcurrentEnemies: isMobile ? 3 : GAME_BALANCE.maxConcurrentEnemies,
+        onAmmoConsumed: (ammoId, remaining) => {
+          if (account && loadout) {
+            loadout.ammoCounts = loadout.ammoCounts || {};
+            loadout.ammoCounts[ammoId] = remaining;
+            void import('../data/db').then(({ db }) => {
+              void db.inventories.update(account.id, { ammoCounts: loadout.ammoCounts });
+            });
+          }
+        },
         onAttempt: (params) => {
           if (account) void logAttempt(params);
         },
@@ -381,9 +403,31 @@ export const BattlePage: React.FC = () => {
       });
     }
 
-    // 5. Draw Bullets (custom rocket missiles, laser, fireballs, crystals, slow shots)
+    // 5. Draw Player Bullets
     for (const bullet of eng.bullets) {
       drawBullet(ctx, bullet, mapX(bullet.x), mapY(bullet.y), visualScale, eng.gameTimeMs);
+    }
+
+    // 5b. Draw Enemy Bullets (Shooters)
+    for (const eb of eng.enemyBullets) {
+      ctx.save();
+      const bX = mapX(eb.x);
+      const bY = mapY(eb.y);
+      const bRad = 7 * visualScale;
+      // Glowing aura
+      ctx.beginPath();
+      ctx.arc(bX, bY, bRad * 1.8, 0, Math.PI * 2);
+      ctx.fillStyle = (eb.color || '#E74C3C') + '44';
+      ctx.fill();
+      // Main fireball / energy orb
+      ctx.beginPath();
+      ctx.arc(bX, bY, bRad, 0, Math.PI * 2);
+      ctx.fillStyle = eb.color || '#E74C3C';
+      ctx.strokeStyle = '#25232B';
+      ctx.lineWidth = Math.max(1.5, 2 * visualScale);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
     }
 
     // 6. Draw Particles (Paper confetti explosion)
@@ -411,13 +455,12 @@ export const BattlePage: React.FC = () => {
     // 7. Wave Clear Announcement Overlay
     if (eng.status === 'WAVE_CLEAR') {
       ctx.save();
-      ctx.font = `900 ${Math.max(28, Math.min(48, width / 12))}px 'Comic Sans MS', 'Comic Sans', 'Comic Neue', cursive, sans-serif`;
+      ctx.font = `900 ${Math.max(28, Math.min(48, width / 12))}px 'Mali', 'Itim', cursive, sans-serif`;
       ctx.fillStyle = '#25232B';
       ctx.textAlign = 'center';
-      ctx.fillText('WAVE CLEAR!', width / 2, height / 2 - 20);
-      ctx.font = `700 ${Math.max(13, Math.min(20, width / 32))}px 'Be Vietnam Pro', 'Inter', 'Segoe UI', sans-serif`;
-      ctx.fillStyle = '#6E6A72';
-      ctx.fillText('Chuẩn bị đợt quái tiếp theo...', width / 2, height / 2 + 25);
+      ctx.fillText(`🎉 HOÀN THÀNH ROUND ${eng.currentWave}!`, width / 2, height / 2 - 20);
+      ctx.font = `700 ${Math.max(13, Math.min(20, width / 32))}px 'Mali', 'Comfortaa', sans-serif`;
+      ctx.fillStyle = '#4B5563';
       ctx.restore();
     }
   };
@@ -638,6 +681,10 @@ export const BattlePage: React.FC = () => {
                   isBoss={enemy.isBoss}
                   bossSegmentsRemaining={enemy.bossSegmentsRemaining}
                   bossMaxSegments={enemy.bossMaxSegments}
+                  isRevealed={(enemy.revealedUntilGameMs || 0) > (engineRef.current?.gameTimeMs || 0)}
+                  archetype={enemy.archetype}
+                  hp={enemy.hp}
+                  maxHp={enemy.maxHp}
                   compact={isMobile}
                   onClick={() => !enemy.pendingDefeat && handleEnemyTagClick(enemy.id)}
                 />
@@ -759,7 +806,7 @@ export const BattlePage: React.FC = () => {
             <div
               style={{
                 padding: isMobile ? '3px 8px' : '4px 10px',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: engineState.status === 'BOSS_PLAYING' ? '#FEE2E2' : '#FFFFFF',
                 border: 'var(--border-ink)',
                 borderRadius: 'var(--radius-full)',
                 fontFamily: 'var(--font-display)',
@@ -767,9 +814,37 @@ export const BattlePage: React.FC = () => {
                 fontSize: isMobile ? '0.72rem' : '0.82rem',
                 boxShadow: 'var(--shadow-sticker-sm)',
                 whiteSpace: 'nowrap',
+                color: engineState.status === 'BOSS_PLAYING' ? '#B91C1C' : 'var(--color-ink)',
               }}
             >
-              {engineState.wave === 3 ? (isMobile ? 'W3: TRÙM' : 'WAVE 3: TRÙM CUỐI (BOSS)') : `${isMobile ? 'ĐỢT' : 'ĐỢT'} ${engineState.wave}/${engineState.totalWaves}`}
+              {engineState.status === 'BOSS_PLAYING'
+                ? `🔥 TRÙM R${engineState.wave}`
+                : engineState.wave === 1
+                ? `R1: Gõ Từ (1/3)`
+                : engineState.wave === 2
+                ? `R2: Việt➔Anh (2/3)`
+                : `R3: Loạn Xạ (3/3)`}
+            </div>
+
+            <div
+              style={{
+                padding: isMobile ? '3px 6px' : '4px 9px',
+                backgroundColor: '#EFF6FF',
+                border: 'var(--border-ink)',
+                borderRadius: 'var(--radius-full)',
+                fontFamily: 'var(--font-display)',
+                fontWeight: 800,
+                fontSize: isMobile ? '0.68rem' : '0.78rem',
+                boxShadow: 'var(--shadow-sticker-sm)',
+                whiteSpace: 'nowrap',
+                color: '#1D4ED8',
+              }}
+            >
+              {inventory?.equippedBulletId === 'bullet_slow'
+                ? `❄️ Băng: ${(inventory?.ammoCounts?.['bullet_slow'] ?? 0)}`
+                : inventory?.equippedBulletId === 'bullet_reveal'
+                ? `👁️ Soi: ${(inventory?.ammoCounts?.['bullet_reveal'] ?? 0)}`
+                : '✨ Vô hạn'}
             </div>
           </div>
 

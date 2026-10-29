@@ -38,6 +38,8 @@ interface AppContextValue {
   setSelectedDifficulty: (diff: Difficulty) => void;
   selectedMap: GameMapId;
   setSelectedMap: (map: GameMapId) => void;
+  selectedWordCount: number;
+  setSelectedWordCount: (count: number) => void;
   lastRunSummary: RunSummary | null;
   setLastRunSummary: (summary: RunSummary | null) => void;
   profile: UserProfile | null;
@@ -59,6 +61,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedMode, setSelectedModeState] = useState<GameMode>('copy');
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('normal');
   const [selectedMap, setSelectedMapState] = useState<GameMapId>(() => account ? getActiveMapId() : BASIC_MAP_ID);
+  const [selectedWordCount, setSelectedWordCount] = useState<number>(30);
   const [lastRunSummary, setLastRunSummary] = useState<RunSummary | null>(null);
 
   const setSelectedMap = (map: GameMapId) => {
@@ -172,6 +175,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedDifficulty,
         selectedMap,
         setSelectedMap,
+        selectedWordCount,
+        setSelectedWordCount,
         lastRunSummary,
         setLastRunSummary,
         profile,

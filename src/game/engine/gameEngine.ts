@@ -3,6 +3,7 @@ import {
   BulletState,
   DefeatedWordEffect,
   Difficulty,
+  EnemyProjectileState,
   EnemyState,
   GameMode,
   Particle,
@@ -23,7 +24,11 @@ import {
   canActivateSkill,
 } from './skills';
 import { speakEnglishWord } from '../../learning/pronunciation';
-import { REGULAR_MONSTER_SPECIES, BOSS_MONSTER_SPECIES } from '../assets/MonsterRenderer';
+import {
+  REGULAR_MONSTER_SPECIES,
+  BOSS_MONSTER_SPECIES,
+  ALL_SPECIES_META,
+} from '../assets/MonsterRenderer';
 
 export type GameStateStatus =
   | 'READY'
@@ -45,6 +50,9 @@ export interface GameEngineOptions {
   equippedShirtId?: string | null;
   equippedStyleId: string;
   equippedBulletId?: string | null;
+  ammoCounts?: Record<string, number>;
+  onAmmoConsumed?: (ammoId: string, remainingCount: number) => void;
+  onRoundChanged?: (round: number, phase: 'mobs' | 'boss') => void;
   maxConcurrentEnemies?: number;
   onAttempt?: (params: {
     runId: string;
@@ -71,7 +79,9 @@ export class GameEngine {
 
   public status: GameStateStatus = 'READY';
   public currentWave: number = 1;
-  public totalWaves: number = GAME_BALANCE.wavesPerRun;
+  public currentRound: number = 1;
+  public roundPhase: 'mobs' | 'boss' = 'mobs';
+  public totalWaves: number = 3;
   public lives: number = GAME_BALANCE.maxLives;
   public score: number = 0;
   public combo: number = 0;
@@ -79,6 +89,7 @@ export class GameEngine {
 
   public enemies: EnemyState[] = [];
   public bullets: BulletState[] = [];
+  public enemyBullets: EnemyProjectileState[] = [];
   public particles: Particle[] = [];
   public defeatedWordEffects: DefeatedWordEffect[] = [];
 
@@ -97,7 +108,13 @@ export class GameEngine {
   public equippedHatId: string | null = null;
   public equippedShirtId: string | null = null;
   public equippedStyleId: string = 'style_yellow';
-  public equippedBulletId: string = 'bullet_missile';
+  public equippedBulletId: string = 'bullet_default';
+  public ammoCounts: Record<string, number> = {};
+
+  // 3-Round Vocabulary Pools
+  public round1Words: VocabularyEntry[] = [];
+  public round2Words: VocabularyEntry[] = [];
+  public round3Words: VocabularyEntry[] = [];
 
   // Session words queues
   private wordPool: VocabularyEntry[] = [];
@@ -119,6 +136,8 @@ export class GameEngine {
   private onAttempt?: GameEngineOptions['onAttempt'];
   private onRunFinished?: GameEngineOptions['onRunFinished'];
   private onSoundEffect?: GameEngineOptions['onSoundEffect'];
+  private onAmmoConsumed?: GameEngineOptions['onAmmoConsumed'];
+  private onRoundChanged?: GameEngineOptions['onRoundChanged'];
 
   constructor(options: GameEngineOptions) {
     this.runId = `run_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -131,13 +150,19 @@ export class GameEngine {
     this.equippedHatId = options.equippedHatId ?? null;
     this.equippedShirtId = options.equippedShirtId ?? null;
     this.equippedStyleId = options.equippedStyleId || 'style_yellow';
-    this.equippedBulletId = options.equippedBulletId || 'bullet_missile';
+    this.equippedBulletId = options.equippedBulletId || 'bullet_default';
+    this.ammoCounts = { ...(options.ammoCounts || {}) };
     this.maxConcurrentEnemies = options.maxConcurrentEnemies ?? GAME_BALANCE.maxConcurrentEnemies;
     this.startedAt = new Date().toISOString();
 
     this.onAttempt = options.onAttempt;
     this.onRunFinished = options.onRunFinished;
     this.onSoundEffect = options.onSoundEffect;
+    this.onAmmoConsumed = options.onAmmoConsumed;
+    this.onRoundChanged = options.onRoundChanged;
+
+    // Partition vocabulary into 3 rounds
+    this.partitionRounds();
 
     // Initialize skill runtimes
     this.skills = options.equippedSkills.map((id) => {
@@ -158,44 +183,65 @@ export class GameEngine {
     });
 
     this.prepareWave(1);
-    this.status = 'WAVE_PLAYING';
+  }
+
+  private partitionRounds(): void {
+    const total = this.words.length;
+    if (total <= 6) {
+      this.round1Words = [...this.words];
+      this.round2Words = [...this.words];
+      this.round3Words = [...this.words];
+      return;
+    }
+
+    const r1Count = Math.max(3, Math.floor(total * 0.38));
+    const r2Count = Math.max(3, Math.floor(total * 0.38));
+
+    this.round1Words = this.words.slice(0, r1Count);
+    this.round2Words = this.words.slice(r1Count, r1Count + r2Count);
+    this.round3Words = this.words.slice(r1Count + r2Count);
+
+    if (this.round3Words.length < 3) {
+      // Pad round 3 with words from round 1 and 2
+      this.round3Words = [...this.round3Words, ...this.round1Words.slice(0, 2), ...this.round2Words.slice(0, 2)];
+    }
   }
 
   public prepareWave(waveNumber: number): void {
     this.currentWave = waveNumber;
+    this.currentRound = waveNumber;
+    this.roundPhase = 'mobs';
     this.enemies = [];
+    this.enemyBullets = [];
     this.selectedEnemyId = null;
     this.typedBuffer = '';
     this.currentPose = 'idle';
 
-    if (waveNumber < 3) {
-      // Wave 1 or 2: Regular mobs
-      const count = GAME_BALANCE.regularEnemiesPerWave[waveNumber - 1] || 6;
-      this.waveQueue = this.pickWordsForQueue(count);
-      this.nextSpawnTimeMs = this.gameTimeMs + 500;
-      this.status = 'WAVE_PLAYING';
+    let roundPool: VocabularyEntry[] = [];
+    if (waveNumber === 1) {
+      roundPool = this.round1Words;
+    } else if (waveNumber === 2) {
+      roundPool = this.round2Words;
     } else {
-      // Wave 3: Boss
-      this.status = 'BOSS_PLAYING';
-      this.spawnBoss();
+      roundPool = this.round3Words;
     }
-  }
 
-  private pickWordsForQueue(count: number): VocabularyEntry[] {
-    const queue: VocabularyEntry[] = [];
-    for (let i = 0; i < count; i++) {
-      const word = this.wordPool[(this.completedWordsCount + i) % this.wordPool.length];
-      queue.push(word);
+    // Queue mob words (first portion of round pool)
+    const mobCount = Math.max(3, Math.ceil(roundPool.length * 0.7));
+    this.waveQueue = roundPool.slice(0, mobCount);
+    if (this.waveQueue.length === 0) {
+      this.waveQueue = [...roundPool];
     }
-    return queue;
+
+    this.nextSpawnTimeMs = this.gameTimeMs + 600;
+    this.status = 'WAVE_PLAYING';
+    this.onRoundChanged?.(this.currentRound, 'mobs');
   }
 
   private spawnRegularEnemy(): void {
     if (this.waveQueue.length === 0) return;
     if (this.enemies.length >= this.maxConcurrentEnemies) return;
 
-    // Each living enemy owns one vertical lane. A lane is released only after
-    // that enemy disappears, so aliens and their word labels never overlap.
     const laneCount = 7;
     const laneMargin = 120;
     const laneSpacing = (GAME_BALANCE.stageWidth - laneMargin * 2) / (laneCount - 1);
@@ -209,8 +255,6 @@ export class GameEngine {
 
     if (availableLanes.length === 0) return;
 
-    // Prefer the lane furthest away from every living enemy. Besides preventing
-    // identical positions, this keeps labels readable on narrow phone screens.
     const candidateLanes = this.enemies.length === 0
       ? availableLanes
       : (() => {
@@ -228,20 +272,57 @@ export class GameEngine {
     const speedMult = GAME_BALANCE.speedMultiplierByDifficulty[this.difficulty] || 1.0;
     const baseSpeed = GAME_BALANCE.baseEnemySpeedPxPerSec * speedMult;
 
-    const promptText =
-      this.mode === 'recall'
-        ? entry.vietnamese
-        : this.mode === 'listen'
-        ? '🔊 [Nghe từ]'
-        : entry.english;
+    // Archetype selection based on Round:
+    // Round 1: normal monsters (copy mode: English prompt -> type English)
+    // Round 2: normal + speedsters (recall mode: Vietnamese prompt -> type English)
+    // Round 3: chaotic mix of speedsters, shooters, tanks, and normal!
+    let eligibleSpecies = REGULAR_MONSTER_SPECIES;
+    if (this.currentRound === 1) {
+      eligibleSpecies = REGULAR_MONSTER_SPECIES.filter((s) => s.archetype === 'normal');
+      if (eligibleSpecies.length === 0) eligibleSpecies = REGULAR_MONSTER_SPECIES;
+    } else if (this.currentRound === 2) {
+      eligibleSpecies = REGULAR_MONSTER_SPECIES.filter((s) => s.archetype === 'normal' || s.archetype === 'speedster');
+    }
 
-    const chosenSpecies = REGULAR_MONSTER_SPECIES[
-      Math.floor(Math.random() * REGULAR_MONSTER_SPECIES.length)
-    ]?.id || 'bat_purple';
+    const chosenMeta = eligibleSpecies[Math.floor(Math.random() * eligibleSpecies.length)] || REGULAR_MONSTER_SPECIES[0];
+
+    // Determine prompt text
+    let promptText = entry.english;
+    if (this.currentRound === 1) {
+      promptText = entry.english;
+    } else if (this.currentRound === 2) {
+      promptText = entry.vietnamese || entry.english;
+    } else {
+      // Round 3: Chaotic mix
+      promptText = Math.random() > 0.45 ? (entry.vietnamese || entry.english) : entry.english;
+    }
+
+    // Velocity & abilities
+    let velocityY = baseSpeed * (chosenMeta.speedMultiplier || 1.0);
+    let hp = 1;
+    let maxHp = 1;
+    let tankQueue: EnemyState['tankQueue'] = undefined;
+
+    if (chosenMeta.archetype === 'tank') {
+      maxHp = chosenMeta.requiredWords || 2;
+      hp = maxHp;
+      tankQueue = [];
+      // Grab extra words for tank from wordPool
+      for (let w = 1; w < maxHp; w++) {
+        const extraEntry = this.wordPool[(this.completedWordsCount + w + Math.floor(Math.random() * 6)) % this.wordPool.length];
+        tankQueue.push({
+          entryId: extraEntry.id,
+          word: extraEntry.english,
+          acceptedAnswers: extraEntry.acceptedAnswers.length > 0 ? extraEntry.acceptedAnswers : [extraEntry.english],
+          promptText: Math.random() > 0.5 ? (extraEntry.vietnamese || extraEntry.english) : extraEntry.english,
+          meaningText: extraEntry.vietnamese,
+        });
+      }
+    }
 
     const enemy: EnemyState = {
       id: `mob_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
-      speciesId: chosenSpecies,
+      speciesId: chosenMeta.id,
       entryId: entry.id,
       word: entry.english,
       acceptedAnswers: entry.acceptedAnswers.length > 0 ? entry.acceptedAnswers : [entry.english],
@@ -249,46 +330,69 @@ export class GameEngine {
       meaningText: entry.vietnamese,
       x: spawnX,
       y: 110,
-      baseVelocityY: baseSpeed,
+      baseVelocityY: velocityY,
       statusEffects: {},
       selected: false,
       spawnedAtGameMs: this.gameTimeMs,
       width: 70,
       height: 70,
+      archetype: chosenMeta.archetype,
+      hp,
+      maxHp,
+      tankQueue,
+      lastShotGameMs: chosenMeta.canShoot ? this.gameTimeMs + 2000 + Math.random() * 2000 : undefined,
     };
 
     this.enemies.push(enemy);
 
-    // In Listen mode, auto-pronounce word at spawn if supported
     if (this.mode === 'listen') {
       speakEnglishWord(entry.english, entry.audioUrl);
     }
   }
 
   private spawnBoss(): void {
-    const bossCount = GAME_BALANCE.bossRequiredWords;
-    const bossWords = this.pickWordsForQueue(bossCount);
+    // Determine boss words based on round:
+    // Round 1 Boss synthesizes all round 1 words!
+    // Round 2 Boss synthesizes all round 2 words!
+    // Round 3 Boss synthesizes round 3 words!
+    let bossWordsPool = this.round1Words;
+    let isRecallPrompt = false;
 
-    const firstWord = bossWords[0];
-    const bossPrompts = bossWords.map((entry) => ({
+    if (this.currentRound === 1) {
+      bossWordsPool = this.round1Words.length > 0 ? this.round1Words : this.words.slice(0, 8);
+      isRecallPrompt = false;
+    } else if (this.currentRound === 2) {
+      bossWordsPool = this.round2Words.length > 0 ? this.round2Words : this.words.slice(0, 8);
+      isRecallPrompt = true;
+    } else {
+      bossWordsPool = this.round3Words.length > 0 ? this.round3Words : this.words;
+      isRecallPrompt = Math.random() > 0.5;
+    }
+
+    const bossCount = bossWordsPool.length;
+    const firstWord = bossWordsPool[0] || this.words[0];
+    const bossPrompts = bossWordsPool.map((entry, idx) => ({
       entryId: entry.id,
       word: entry.english,
       acceptedAnswers: entry.acceptedAnswers.length > 0 ? entry.acceptedAnswers : [entry.english],
-      promptText:
-        this.mode === 'recall'
-          ? entry.vietnamese
-          : this.mode === 'listen'
-          ? '🔊 [Nghe từ]'
-          : entry.english,
+      promptText: (this.currentRound === 2 || (this.currentRound === 3 && idx % 2 === 1))
+        ? (entry.vietnamese || entry.english)
+        : entry.english,
       meaningText: entry.vietnamese,
     }));
 
     const speedMult = GAME_BALANCE.speedMultiplierByDifficulty[this.difficulty] || 1.0;
-    const bossSpeed = (GAME_BALANCE.baseEnemySpeedPxPerSec * speedMult) * 0.45; // slower boss
+    const bossSpeed = (GAME_BALANCE.baseEnemySpeedPxPerSec * speedMult) * 0.28; // Slower boss descent for multiple words
 
-    const chosenBoss = BOSS_MONSTER_SPECIES[
-      Math.floor(Math.random() * BOSS_MONSTER_SPECIES.length)
-    ]?.id || 'boss_magma_demon';
+    // Choose thematic boss per round
+    let chosenBoss = BOSS_MONSTER_SPECIES[0].id;
+    if (this.currentRound === 1) {
+      chosenBoss = 'boss_magma_demon';
+    } else if (this.currentRound === 2) {
+      chosenBoss = 'boss_frost_emperor';
+    } else {
+      chosenBoss = 'boss_abyssal_overlord';
+    }
 
     const bossEnemy: EnemyState = {
       id: `boss_${Date.now()}`,
@@ -307,6 +411,7 @@ export class GameEngine {
       width: 140,
       height: 140,
       isBoss: true,
+      archetype: 'boss',
       bossSegmentsRemaining: bossCount,
       bossMaxSegments: bossCount,
       bossWordQueue: bossPrompts,
@@ -330,7 +435,6 @@ export class GameEngine {
       return;
     }
 
-    // Clamp delta between 1ms and 50ms to prevent giant leaps
     const deltaMs = Math.min(Math.max(rawDeltaMs, 1), 50);
     this.gameTimeMs += deltaMs;
     const dtSec = deltaMs / 1000;
@@ -346,22 +450,40 @@ export class GameEngine {
     }
 
     // Handle Wave Spawning
-    if (this.status === 'WAVE_PLAYING') {
+    if (this.status === 'WAVE_PLAYING' && this.roundPhase === 'mobs') {
       if (this.waveQueue.length > 0 && this.gameTimeMs >= this.nextSpawnTimeMs) {
         this.spawnRegularEnemy();
         this.nextSpawnTimeMs = this.gameTimeMs + GAME_BALANCE.spawnIntervalMs;
       }
     }
 
-    // Update Enemies motion
+    // Update Enemies motion & abilities
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
       if (enemy.pendingDefeat) {
-        // Freeze dying enemy in place so it cannot breach defense line while awaiting bullet impact
         continue;
       }
       const effSpeed = calculateEffectiveSpeed(enemy, this.gameTimeMs);
       enemy.y += effSpeed * dtSec;
+
+      // Shooter firing
+      const meta = ALL_SPECIES_META[enemy.speciesId];
+      if (meta?.canShoot && enemy.archetype === 'shooter') {
+        if (!enemy.lastShotGameMs) {
+          enemy.lastShotGameMs = this.gameTimeMs + 2500 + Math.random() * 2000;
+        } else if (this.gameTimeMs >= enemy.lastShotGameMs) {
+          enemy.lastShotGameMs = this.gameTimeMs + (meta.shotIntervalMs || 4500);
+          this.enemyBullets.push({
+            id: `eb_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
+            x: enemy.x,
+            y: enemy.y + 30,
+            vy: 190,
+            speciesId: enemy.speciesId,
+            color: meta.projectileColor || '#E74C3C',
+          });
+          this.onSoundEffect?.('shoot', 'enemy_shot');
+        }
+      }
 
       // Check if enemy hit defensive line
       if (enemy.y >= GAME_BALANCE.defenseLineY) {
@@ -369,7 +491,38 @@ export class GameEngine {
       }
     }
 
-    // Update Projectiles
+    // Update Enemy Projectiles
+    for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+      const eb = this.enemyBullets[i];
+      eb.y += eb.vy * dtSec;
+
+      // Check if enemy bullet reached defense line
+      if (eb.y >= GAME_BALANCE.defenseLineY) {
+        this.enemyBullets.splice(i, 1);
+        if (this.shieldActive) {
+          this.shieldActive = false;
+          this.onSoundEffect?.('skill');
+          this.spawnExplosionParticles(eb.x, eb.y, '#A9DDC3', 10);
+        } else {
+          if (this.gameTimeMs >= this.invulnerableUntilMs) {
+            this.lives -= 1;
+            this.invulnerableUntilMs = this.gameTimeMs + GAME_BALANCE.invulnerableDurationMs;
+            this.combo = 0;
+            this.onSoundEffect?.('hurt');
+            this.spawnExplosionParticles(eb.x, eb.y, '#EF6E78', 16);
+
+            if (this.lives <= 0) {
+              this.finishRun('lose');
+              return;
+            }
+          }
+        }
+      } else if (eb.y > GAME_BALANCE.stageHeight + 40) {
+        this.enemyBullets.splice(i, 1);
+      }
+    }
+
+    // Update Player Projectiles
     const projResult = updateProjectiles(this.bullets, this.enemies, deltaMs, this.gameTimeMs);
     this.bullets = projResult.remainingBullets;
     this.particles.push(...projResult.newParticles);
@@ -381,23 +534,28 @@ export class GameEngine {
 
       enemy.lastHitGameMs = this.gameTimeMs;
 
-      if (hit.kind === 'slow_shot') {
-        applySlowEffect(enemy, this.gameTimeMs, 5000, 0.35);
+      // Special ammo effects
+      if (hit.kind === 'slow_shot' || hit.kind === 'bullet_slow') {
+        applySlowEffect(enemy, this.gameTimeMs, 1000, 0.35);
+        this.onSoundEffect?.('hit', hit.kind);
+      } else if (hit.kind === 'bullet_reveal') {
+        enemy.revealedUntilGameMs = this.gameTimeMs + 500;
         this.onSoundEffect?.('hit', hit.kind);
       } else {
         this.onSoundEffect?.('hit', hit.kind);
       }
 
-      // Enemy dies ONLY when the lethal bullet actually reaches and hits it!
-      if (hit.isFinishingBullet || enemy.pendingDefeat) {
+      // CRITICAL BUG FIX: Only the finishing lethal bullet can kill or advance enemy/boss segments!
+      // Keystroke bullets must NEVER kill or advance the enemy/boss queue.
+      if (hit.isFinishingBullet) {
         this.handleEnemyKilledByBullet(enemy, hit.matchedWord);
       }
     }
 
-    // Safety fallback: if an enemy is marked pendingDefeat but has no bullets left in flight, finish it
+    // Safety fallback: only for regular mobs awaiting lethal bullet that was lost
     for (const enemy of [...this.enemies]) {
-      if (enemy.pendingDefeat) {
-        const hasIncomingBullet = this.bullets.some((b) => b.targetEnemyId === enemy.id);
+      if (enemy.pendingDefeat && !enemy.isBoss && !(enemy.archetype === 'tank' && (enemy.hp || 0) > 1)) {
+        const hasIncomingBullet = this.bullets.some((b) => b.targetEnemyId === enemy.id && b.isFinishingBullet);
         if (!hasIncomingBullet) {
           this.handleEnemyKilledByBullet(enemy, enemy.word);
         }
@@ -422,11 +580,15 @@ export class GameEngine {
       );
     }
 
-    // Check Wave Clear condition
+    // Wave / Round progression check:
     if (this.status === 'WAVE_PLAYING' && this.waveQueue.length === 0 && this.enemies.length === 0) {
-      this.status = 'WAVE_CLEAR';
-      this.waveClearTimerMs = this.gameTimeMs + 1200;
-      this.onSoundEffect?.('clear');
+      if (this.roundPhase === 'mobs') {
+        // Mobs defeated -> Transition to Boss phase of this round!
+        this.roundPhase = 'boss';
+        this.status = 'BOSS_PLAYING';
+        this.spawnBoss();
+        this.onRoundChanged?.(this.currentRound, 'boss');
+      }
     } else if (this.status === 'WAVE_CLEAR' && this.gameTimeMs >= this.waveClearTimerMs) {
       this.prepareWave(this.currentWave + 1);
     }
@@ -638,8 +800,24 @@ export class GameEngine {
       const bullet = this.spawnNormalBullet(currentTarget.id, true, matchedAnswer);
       this.onSoundEffect?.('shoot', bullet.kind, true);
 
-      // Mark enemy as pending defeat - so it will die ONLY when the bullet hits it!
-      currentTarget.pendingDefeat = true;
+      // Target selection maintenance
+      if (currentTarget.isBoss) {
+        // Boss keeps target focus
+        currentTarget.pendingDefeat = true;
+        this.selectedEnemyId = currentTarget.id;
+        currentTarget.selected = true;
+        this.typedBuffer = '';
+      } else if (currentTarget.archetype === 'tank' && (currentTarget.hp || 0) > 1) {
+        // Tank keeps target focus for remaining words
+        currentTarget.pendingDefeat = true;
+        this.selectedEnemyId = currentTarget.id;
+        currentTarget.selected = true;
+        this.typedBuffer = '';
+      } else {
+        currentTarget.pendingDefeat = true;
+        this.selectedEnemyId = null;
+        this.typedBuffer = '';
+      }
 
       // Immediately log learning stats & calculate combo/score
       this.completedWordsCount += 1;
@@ -668,10 +846,6 @@ export class GameEngine {
         timeToAnswerMs: this.gameTimeMs - this.targetStartTimeMs,
         slowSkillUsedOnEnemy: !!currentTarget.statusEffects.slowUntilGameMs,
       });
-
-      // Clear typed buffer and selection so user can immediately type the next monster!
-      this.selectedEnemyId = null;
-      this.typedBuffer = '';
     } else {
       const bullet = this.spawnNormalBullet(currentTarget.id, false);
       this.onSoundEffect?.('shoot', bullet.kind, false);
@@ -705,7 +879,20 @@ export class GameEngine {
     const startX = GAME_BALANCE.ponpiCenterX + rig.muzzleAnchor.x;
     const startY = GAME_BALANCE.ponpiCenterY + rig.muzzleAnchor.y;
 
-    const kind = (this.equippedBulletId as any) || 'bullet_default';
+    let kind = (this.equippedBulletId as BulletKind) || 'bullet_default';
+
+    // Special ammo check & consumption
+    if (kind === 'bullet_slow' || kind === 'bullet_reveal') {
+      const remaining = this.ammoCounts[kind] || 0;
+      if (remaining > 0) {
+        this.ammoCounts[kind] = remaining - 1;
+        this.onAmmoConsumed?.(kind, this.ammoCounts[kind]);
+      } else {
+        // Fallback to infinite default ammo
+        kind = 'bullet_default';
+      }
+    }
+
     const bullet = createBullet(startX, startY, targetEnemyId, kind, this.gameTimeMs, isFinishingBullet, matchedWord);
     this.bullets.push(bullet);
     return bullet;
@@ -715,7 +902,7 @@ export class GameEngine {
     // Prevent double execution
     if (!this.enemies.some((e) => e.id === enemy.id)) return;
 
-    // Spawn floating meaning effect when monster is defeated upon bullet impact
+    // Floating meaning effect
     this.defeatedWordEffects.push({
       id: `def_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       x: enemy.x,
@@ -731,15 +918,24 @@ export class GameEngine {
       this.onSoundEffect?.('boss_hit');
 
       // Pop mini particles on boss
-      this.spawnExplosionParticles(enemy.x, enemy.y, '#C69BEC', 15);
+      this.spawnExplosionParticles(enemy.x, enemy.y, '#C69BEC', 20);
 
       if (enemy.bossSegmentsRemaining <= 0) {
         // Boss Defeated!
-        this.spawnExplosionParticles(enemy.x, enemy.y, '#FFD47D', 40);
+        this.spawnExplosionParticles(enemy.x, enemy.y, '#FFD47D', 45);
         this.removeEnemy(enemy.id);
-        this.finishRun('win');
+
+        if (this.currentWave < 3) {
+          // Wave 1 or 2 Boss defeated -> Clear wave and transition to next round!
+          this.status = 'WAVE_CLEAR';
+          this.waveClearTimerMs = this.gameTimeMs + 2000;
+          this.onSoundEffect?.('clear');
+        } else {
+          // Wave 3 Boss defeated -> VICTORY!
+          this.finishRun('win');
+        }
       } else {
-        // Advance to next boss prompt
+        // Advance to next boss prompt without skipping!
         enemy.pendingDefeat = false;
         const nextPromptIndex = enemy.bossMaxSegments! - enemy.bossSegmentsRemaining;
         const nextPrompt = enemy.bossWordQueue[nextPromptIndex];
@@ -752,20 +948,47 @@ export class GameEngine {
           this.typedBuffer = '';
           this.targetStartTimeMs = this.gameTimeMs;
           this.currentTargetHadHint = false;
+          // Keep target locked on Boss
+          this.selectedEnemyId = enemy.id;
+          enemy.selected = true;
 
           if (this.mode === 'listen') {
             speakEnglishWord(nextPrompt.word);
           }
         }
       }
-    } else {
-      // Regular Mob Defeated: Pop into paper particles upon bullet impact!
-      this.spawnExplosionParticles(enemy.x, enemy.y, '#C69BEC', 20);
-      this.removeEnemy(enemy.id);
-      if (this.selectedEnemyId === enemy.id) {
-        this.selectedEnemyId = null;
-        this.typedBuffer = '';
-      }
+      return;
+    }
+
+    // Handle Tank monster (needs 2-3 words to defeat)
+    if (enemy.archetype === 'tank' && (enemy.hp || 0) > 1 && enemy.tankQueue && enemy.tankQueue.length > 0) {
+      enemy.hp! -= 1;
+      enemy.pendingDefeat = false;
+      this.onSoundEffect?.('boss_hit');
+      // Armor crack particles
+      this.spawnExplosionParticles(enemy.x, enemy.y, '#95A5A6', 16);
+
+      const nextWord = enemy.tankQueue.shift()!;
+      enemy.entryId = nextWord.entryId;
+      enemy.word = nextWord.word;
+      enemy.acceptedAnswers = nextWord.acceptedAnswers;
+      enemy.promptText = nextWord.promptText;
+      enemy.meaningText = nextWord.meaningText;
+      this.typedBuffer = '';
+      this.targetStartTimeMs = this.gameTimeMs;
+      this.currentTargetHadHint = false;
+      // Keep target locked on Tank
+      this.selectedEnemyId = enemy.id;
+      enemy.selected = true;
+      return;
+    }
+
+    // Regular Mob Defeated: Pop into paper confetti
+    this.spawnExplosionParticles(enemy.x, enemy.y, '#C69BEC', 20);
+    this.removeEnemy(enemy.id);
+    if (this.selectedEnemyId === enemy.id) {
+      this.selectedEnemyId = null;
+      this.typedBuffer = '';
     }
   }
 
@@ -878,7 +1101,12 @@ export class GameEngine {
         const bullet = this.spawnNormalBullet(target.id, true, matchedAnswer);
         this.onSoundEffect?.('shoot', bullet.kind, true);
         target.pendingDefeat = true;
-        this.selectedEnemyId = null;
+        if (target.isBoss || (target.archetype === 'tank' && (target.hp || 0) > 1)) {
+          this.selectedEnemyId = target.id;
+          target.selected = true;
+        } else {
+          this.selectedEnemyId = null;
+        }
         this.typedBuffer = '';
       } else {
         const bullet = this.spawnNormalBullet(target.id, false);

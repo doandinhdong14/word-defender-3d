@@ -37,6 +37,27 @@ export interface EnemyState {
   }>;
   pendingDefeat?: boolean;
   lastHitGameMs?: number;
+  archetype?: 'normal' | 'speedster' | 'shooter' | 'tank' | 'boss';
+  hp?: number;
+  maxHp?: number;
+  tankQueue?: Array<{
+    entryId: string;
+    word: string;
+    acceptedAnswers: string[];
+    promptText: string;
+    meaningText?: string;
+  }>;
+  lastShotGameMs?: number;
+  revealedUntilGameMs?: number;
+}
+
+export interface EnemyProjectileState {
+  id: string;
+  x: number;
+  y: number;
+  vy: number;
+  speciesId: string;
+  color: string;
 }
 
 export interface DefeatedWordEffect {
@@ -53,6 +74,8 @@ export type BulletKind =
   | 'normal'
   | 'bullet_default'
   | 'slow_shot'
+  | 'bullet_slow'
+  | 'bullet_reveal'
   | 'freeze_pulse'
   | 'bullet_missile'
   | 'bullet_shuriken'

@@ -106,3 +106,50 @@ export async function unequipItem(category: StoreCategory, skillIdToRemove?: str
 
   await db.inventories.put(inventory);
 }
+
+export async function buyAmmoPack(
+  ammoId: string,
+  roundsCount = 1000,
+  priceCoins = 200
+): Promise<{ success: boolean; newBalance: number; newAmmoCount: number }> {
+  const profileId = getActiveProfileId();
+  return await db.transaction('rw', [db.wallets, db.inventories, db.ledger], async () => {
+    const wallet = await db.wallets.get(profileId);
+    if (!wallet) throw new Error('Không tìm thấy ví người dùng.');
+    const inventory = await db.inventories.get(profileId);
+    if (!inventory) throw new Error('Không tìm thấy kho đồ.');
+
+    if (wallet.balance < priceCoins) {
+      throw new Error(`Không đủ xu! Cần ${priceCoins} xu nhưng bạn chỉ có ${wallet.balance} xu.`);
+    }
+
+    wallet.balance -= priceCoins;
+    wallet.totalSpent += priceCoins;
+
+    inventory.ammoCounts = inventory.ammoCounts || {};
+    const current = inventory.ammoCounts[ammoId] || 0;
+    inventory.ammoCounts[ammoId] = current + roundsCount;
+
+    if (!inventory.ownedItemIds.includes(ammoId)) {
+      inventory.ownedItemIds.push(ammoId);
+    }
+
+    const now = new Date().toISOString();
+    await db.wallets.put(wallet);
+    await db.inventories.put(inventory);
+    await db.ledger.add({
+      id: `ledger_ammo_${Date.now()}_${ammoId}`,
+      profileId,
+      kind: 'spend',
+      amount: priceCoins,
+      referenceId: `ammo-${ammoId}-${roundsCount}`,
+      at: now,
+    });
+
+    return {
+      success: true,
+      newBalance: wallet.balance,
+      newAmmoCount: inventory.ammoCounts[ammoId],
+    };
+  });
+}

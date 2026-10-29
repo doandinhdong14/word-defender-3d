@@ -19,7 +19,7 @@ describe('Game Engine enemy lanes', () => {
       setId: 'set_test',
       mode: 'recall',
       difficulty: 'normal',
-      words: createWords(15),
+      words: createWords(30),
       equippedSkills: [],
       equippedHatId: null,
       equippedShirtId: null,

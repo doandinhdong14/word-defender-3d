@@ -1,8 +1,10 @@
 .doodle-home {
   --doodle-ink: #302d26;
-  min-height: 100svh;
+  height: 100dvh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -19,33 +21,36 @@
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 25px 32px 0;
-  z-index: 1;
+  padding: 14px 24px 0;
+  z-index: 2;
 }
 .doodle-utilities button {
-  min-width: 76px;
-  min-height: 58px;
-  padding: 6px;
+  min-width: 68px;
+  min-height: 48px;
+  padding: 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 3px;
   border: 0;
   border-radius: 12px;
   background: transparent;
-  font: 400 16px/1.35 var(--font-english);
+  font: 700 14px/1.2 var(--font-display);
+  cursor: pointer;
   transition: transform .18s, background .18s;
 }
-.doodle-utilities svg { width: 24px; height: 24px; stroke-width: 1.7; }
+.doodle-utilities svg { width: 22px; height: 22px; stroke-width: 1.7; }
 .doodle-utilities button:hover { background: #ecdab64d; transform: rotate(-8deg); }
 
 .doodle-scene {
   position: relative;
   width: min(100%, 960px);
-  min-height: 560px;
   flex: 1;
+  min-height: 0;
+  max-height: 100%;
   margin: 0 auto;
+  overflow: hidden;
 }
 .doodle-scene h1 {
   position: absolute;
@@ -116,60 +121,70 @@
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
-  gap: 38px;
+  gap: 28px;
   margin: 0 auto;
-  padding: 24px 45px max(36px, env(safe-area-inset-bottom));
+  padding: 8px 32px max(14px, env(safe-area-inset-bottom));
+  z-index: 2;
 }
 .doodle-bottom-nav button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  min-width: 85px;
-  min-height: 88px;
+  gap: 4px;
+  min-width: 72px;
+  min-height: 64px;
   border: 0;
   background: transparent;
-  font: 400 23px/1.35 var(--font-english);
+  font: 700 17px/1.2 var(--font-display);
+  cursor: pointer;
   transition: transform .18s;
 }
 .doodle-bottom-nav span { text-align: center; }
-.doodle-bottom-nav svg { width: 50px; height: 50px; fill: #e9c17c; stroke-width: 1.5; transform: rotate(-7deg); }
+.doodle-bottom-nav svg { width: 38px; height: 38px; fill: #e9c17c; stroke-width: 1.5; transform: rotate(-7deg); }
 .doodle-bottom-nav button:nth-child(2) svg { transform: rotate(5deg); }
 .doodle-bottom-nav button:nth-child(3) svg { transform: rotate(-12deg); }
-.doodle-bottom-nav button:hover { transform: translateY(-5px) rotate(-3deg); }
+.doodle-bottom-nav button:hover { transform: translateY(-4px) rotate(-3deg); }
 
-.doodle-modes { min-height: 100svh; padding: 32px clamp(20px, 5vw, 80px); }
-.doodle-modes .page-heading { margin-bottom: 35px; }
+.doodle-modes {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 20px clamp(16px, 4vw, 40px);
+}
+.doodle-modes .portal-page { height: 100%; display: flex; flex-direction: column; }
+.doodle-modes .page-heading { margin-bottom: 20px; }
 .doodle-modes .mode-card { border: 2px solid var(--color-ink); background: var(--color-paper); }
 .doodle-modes .mode-card.available { background: #f3e3bd; box-shadow: 3px 4px 0 #d8af68; }
 .doodle-modes .mode-card.locked { opacity: .6; }
 
 @media (min-width: 1400px) {
-  .doodle-scene { max-height: 760px; }
+  .doodle-scene { max-height: 720px; }
 }
 @media (max-width: 600px) {
-  .doodle-utilities { gap: 5px; padding: 14px 16px 0; }
-  .doodle-utilities svg { width: 21px; height: 21px; }
-  .doodle-scene { min-height: 510px; }
-  .doodle-scene h1 { top: 8%; left: 11%; font-size: clamp(68px, 19vw, 105px); letter-spacing: -5px; }
-  .doodle-ufo { width: 98px; top: 0; right: 6%; }
-  .doodle-bug-green { width: 35px; top: 0; left: 10%; }
-  .doodle-bug-blue { width: 32px; top: 43%; left: 7%; }
-  .doodle-star { width: 21px; top: 53%; right: 10%; }
-  .doodle-flight { width: 82px; bottom: 6%; right: 9%; }
-  .doodle-play-menu { top: 33%; left: 50%; transform: translateX(-50%); gap: 26px; }
-  .doodle-oval { width: 193px; min-height: 69px; font-size: 35px; }
-  .doodle-lessons { width: 171px; min-height: 59px; margin-left: 37px; font-size: 26px; }
-  .doodle-mascot { width: 210px; left: 1%; bottom: -8px; }
-  .doodle-mascot > div { transform: scale(.75); transform-origin: bottom left; width: 280px; margin-top: -65px; }
-  .doodle-platform { width: 117px; margin-top: -18px; }
-  .doodle-bottom-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 8px; padding: 24px 12px max(25px, env(safe-area-inset-bottom)); }
-  .doodle-bottom-nav button { min-width: 0; min-height: 92px; font-size: 18px; gap: 6px; }
-  .doodle-bottom-nav svg { width: 43px; height: 43px; }
+  .doodle-utilities { gap: 5px; padding: 10px 14px 0; }
+  .doodle-utilities svg { width: 19px; height: 19px; }
+  .doodle-scene { min-height: 0; flex: 1; max-height: 100%; }
+  .doodle-scene h1 { top: 5%; left: 10%; font-size: clamp(54px, 16vw, 84px); letter-spacing: -4px; }
+  .doodle-ufo { width: 84px; top: 0; right: 5%; }
+  .doodle-bug-green { width: 28px; top: 0; left: 8%; }
+  .doodle-bug-blue { width: 26px; top: 40%; left: 5%; }
+  .doodle-star { width: 18px; top: 48%; right: 8%; }
+  .doodle-flight { width: 70px; bottom: 8%; right: 7%; }
+  .doodle-play-menu { top: 32%; left: 50%; transform: translateX(-50%); gap: 16px; }
+  .doodle-oval { width: 170px; min-height: 56px; font-size: 28px; }
+  .doodle-lessons { width: 150px; min-height: 48px; margin-left: 24px; font-size: 22px; }
+  .doodle-mascot { width: 170px; left: 0; bottom: -6px; }
+  .doodle-mascot > div { transform: scale(.6); transform-origin: bottom left; width: 240px; margin-top: -65px; }
+  .doodle-platform { width: 95px; margin-top: -15px; }
+  .doodle-bottom-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 6px; padding: 6px 10px max(10px, env(safe-area-inset-bottom)); }
+  .doodle-bottom-nav button { min-width: 0; min-height: 58px; font-size: 14px; gap: 3px; }
+  .doodle-bottom-nav svg { width: 28px; height: 28px; }
   .doodle-modes .mode-grid { grid-template-columns: 1fr; }
-  .doodle-modes .mode-card { min-height: 230px; }
+  .doodle-modes .mode-card { min-height: 160px; }
 }
 @media (max-height: 650px) and (min-width: 601px) {
-  .doodle-scene { min-height: 440px; }
-  .doodle-mascot { left: 0; transform: scale(.8); transform-origin: bottom left; }
+  .doodle-scene { min-height: 0; flex: 1; }
+  .doodle-mascot { left: 0; transform: scale(.7); transform-origin: bottom left; }
 }

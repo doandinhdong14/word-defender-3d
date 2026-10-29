@@ -234,7 +234,8 @@ export function drawBullet(
       break;
     }
 
-    case 'slow_shot': {
+    case 'slow_shot':
+    case 'bullet_slow': {
       // 9. ICE FROST SLOW SHOT
       ctx.rotate(angle);
       const r = Math.max(3.5, 5.4 * visualScale);
@@ -258,6 +259,25 @@ export function drawBullet(
       ctx.beginPath();
       ctx.arc(0, 0, r * 0.4, 0, Math.PI * 2);
       ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+      break;
+    }
+
+    case 'bullet_reveal': {
+      // REVEAL GOLDEN EYE SHOT
+      ctx.rotate(angle);
+      const r = Math.max(3.8, 5.6 * visualScale);
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFD54F';
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#25232B';
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFF';
       ctx.fill();
       break;
     }

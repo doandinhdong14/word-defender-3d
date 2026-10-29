@@ -4,6 +4,8 @@
 @import './admin.css';
 @import './app-shell.css';
 @import './home.css';
+@import './almanac.css';
+@import './prepare-compact.css';
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -13,8 +15,10 @@
 
 html, body {
   width: 100%;
-  min-height: 100%;
-  overflow-x: hidden;
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
   background-color: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-body);
@@ -22,11 +26,12 @@ html, body {
   text-rendering: optimizeLegibility;
 }
 
-html { height: auto; }
-body { min-height: 100vh; height: auto; }
-
 #root {
-  min-height: 100vh;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }

@@ -24,15 +24,11 @@
   --border-ink: 2.5px solid var(--color-ink);
   --border-ink-thick: 3.5px solid var(--color-ink);
 
-  /* English Font: Comic Sans */
-  --font-english: 'Comic Sans MS', 'Comic Sans', 'Comic Neue', 'Chalkboard SE', cursive, sans-serif;
-
-  /* Vietnamese Font: Normal clean font with 100% full Vietnamese diacritic support */
-  --font-vietnamese: 'Be Vietnam Pro', 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
-
-  /* App default fonts: use clean Vietnamese-safe fonts */
-  --font-display: 'Be Vietnam Pro', 'Outfit', 'Segoe UI', -apple-system, sans-serif;
-  --font-body: 'Be Vietnam Pro', 'Inter', 'Segoe UI', -apple-system, sans-serif;
+  /* Unified cute comic-style font with 100% full Vietnamese diacritics support */
+  --font-english: 'Mali', 'Itim', 'Comic Neue', cursive, sans-serif;
+  --font-vietnamese: 'Mali', 'Itim', 'Comfortaa', 'Nunito', cursive, sans-serif;
+  --font-display: 'Mali', 'Itim', 'Comfortaa', 'Nunito', cursive, sans-serif;
+  --font-body: 'Mali', 'Itim', 'Nunito', -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
   --shadow-sticker: 0 3px 0 var(--color-ink), 0 10px 24px rgba(58, 46, 36, 0.08);

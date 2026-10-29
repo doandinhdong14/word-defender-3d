@@ -1,17 +1,19 @@
 import React, { useState } from "react";
 import {
-  ArrowLeft, ArrowRight, CalendarDays, Crosshair, Gift, LockKeyhole,
+  ArrowLeft, ArrowRight, BookOpen, CalendarDays, Crosshair, Gift, LockKeyhole,
   ShoppingBag, Sparkles, Swords, Trophy, UserRound,
 } from "lucide-react";
 import { useApp } from "../app/appStore";
 import { PonpiPreview } from "../components/PonpiPreview";
 import "../styles/doodle-home.css";
 import { useAuth } from '../auth/AuthContext';
+import { MonsterAlmanacModal } from "../components/MonsterAlmanacModal";
 
 export const HomePage: React.FC = () => {
   const { navigateTo } = useApp();
   const { account } = useAuth();
   const [modesOpen, setModesOpen] = useState(false);
+  const [almanacOpen, setAlmanacOpen] = useState(false);
 
   if (modesOpen) return (
     <main className="doodle-modes notebook-grid-bg">
@@ -47,6 +49,7 @@ export const HomePage: React.FC = () => {
   return (
     <main className="doodle-home notebook-grid-bg" aria-labelledby="doodle-title">
       <nav className="doodle-utilities" aria-label="Tiện ích">
+        <button onClick={() => setAlmanacOpen(true)}><BookOpen aria-hidden="true" /><span>Sách quái</span></button>
         <button onClick={() => navigateTo("gifts")}><Gift aria-hidden="true" /><span>Quà tặng</span></button>
         <button onClick={() => navigateTo("events")}><CalendarDays aria-hidden="true" /><span>Sự kiện</span></button>
       </nav>
@@ -105,6 +108,8 @@ export const HomePage: React.FC = () => {
         <button onClick={() => navigateTo("leaderboard")}><Trophy aria-hidden="true" /><span>Bảng xếp hạng</span></button>
         <button onClick={() => navigateTo("account")}><UserRound aria-hidden="true" /><span>Tài khoản</span></button>
       </nav>
+
+      <MonsterAlmanacModal isOpen={almanacOpen} onClose={() => setAlmanacOpen(false)} />
     </main>
   );
 };
