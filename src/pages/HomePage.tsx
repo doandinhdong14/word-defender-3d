@@ -19,14 +19,12 @@ import { useApp } from "../app/appStore";
 import { HomeBattleScene } from "../components/HomeBattleScene";
 import "../styles/doodle-home.css";
 import { useAuth } from "../auth/AuthContext";
-import { MonsterAlmanacModal } from "../components/MonsterAlmanacModal";
 import { getAssetUrl } from "../utils/assetUrl";
 
 export const HomePage: React.FC = () => {
   const { navigateTo, wallet, profile } = useApp();
   const { account } = useAuth();
   const [modesOpen, setModesOpen] = useState(false);
-  const [almanacOpen, setAlmanacOpen] = useState(false);
 
   // 1. GAME MODES SELECTION SCREEN
   if (modesOpen) {
@@ -120,10 +118,6 @@ export const HomePage: React.FC = () => {
             <button onClick={() => navigateTo("library")} className="landing-nav-pill">
               <BookOpen size={16} aria-hidden="true" />
               <span>Bài học</span>
-            </button>
-            <button onClick={() => setAlmanacOpen(true)} className="landing-nav-pill">
-              <Sparkles size={16} aria-hidden="true" />
-              <span>Sách quái</span>
             </button>
             <button onClick={() => navigateTo("store")} className="landing-nav-pill">
               <ShoppingBag size={16} aria-hidden="true" />
@@ -228,14 +222,6 @@ export const HomePage: React.FC = () => {
                   <BookOpen size={18} />
                   <span>Bài học</span>
                 </button>
-
-                <button
-                  className="plump-btn plump-secondary"
-                  onClick={() => setAlmanacOpen(true)}
-                >
-                  <Sparkles size={18} />
-                  <span>Sách quái</span>
-                </button>
               </div>
             </div>
           </div>
@@ -318,72 +304,7 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 3 BOTTOM FEATURE PORTAL CARDS */}
-      <section className="landing-bottom-cards">
-        {/* Card 1: Store */}
-        <button
-          className="feature-portal-card"
-          onClick={() => navigateTo("store")}
-        >
-          <div className="card-text-col">
-            <span className="card-tag">TRANG BỊ CÁ TÍNH</span>
-            <h3 className="card-heading">Nhỏ mà có võ.</h3>
-            <p className="card-summary">Tướng xịn, đạn chất. Nâng cấp kho vũ khí bằng xu.</p>
-            <span className="card-action-link">
-              Khám phá Store <ArrowRight size={15} />
-            </span>
-          </div>
-          <div className="card-visual-col">
-            <img
-              src={getAssetUrl("/assets/samurai/outfit_samurai_icon.png")}
-              alt="Samurai"
-              className="card-samurai-img"
-            />
-          </div>
-        </button>
 
-        {/* Card 2: Lessons */}
-        <button
-          className="feature-portal-card"
-          onClick={() => navigateTo("library")}
-        >
-          <div className="card-text-col">
-            <span className="card-tag">HÀNH TRANG TRI THỨC</span>
-            <h3 className="card-heading">Từ mới, sức mạnh mới.</h3>
-            <p className="card-summary">Kho từ vựng có sẵn hoặc tự tải file Excel/CSV của bạn.</p>
-            <span className="card-action-link">
-              Vào bài học <ArrowRight size={15} />
-            </span>
-          </div>
-          <div className="card-visual-col">
-            <div className="card-icon-art art-library">
-              <BookOpen size={42} strokeWidth={1.6} />
-              <span className="art-badge-text">Aa</span>
-            </div>
-          </div>
-        </button>
-
-        {/* Card 3: Events */}
-        <button
-          className="feature-portal-card"
-          onClick={() => navigateTo("events")}
-        >
-          <div className="card-text-col">
-            <span className="card-tag">THỬ THÁCH TRONG GAME</span>
-            <h3 className="card-heading">Chơi vui. Rinh quà.</h3>
-            <p className="card-summary">Hoàn thành nhiệm vụ mỗi ngày và săn quà tặng thú vị.</p>
-            <span className="card-action-link">
-              Xem sự kiện <ArrowRight size={15} />
-            </span>
-          </div>
-          <div className="card-visual-col">
-            <div className="card-icon-art art-events">
-              <Trophy size={42} strokeWidth={1.6} />
-              <Sparkles size={18} className="art-sparkle-icon" />
-            </div>
-          </div>
-        </button>
-      </section>
 
       {/* FOOTER */}
       <footer className="landing-footer">
@@ -423,11 +344,7 @@ export const HomePage: React.FC = () => {
         </button>
       </nav>
 
-      {/* MONSTER ALMANAC MODAL */}
-      <MonsterAlmanacModal
-        isOpen={almanacOpen}
-        onClose={() => setAlmanacOpen(false)}
-      />
+
     </main>
   );
 };

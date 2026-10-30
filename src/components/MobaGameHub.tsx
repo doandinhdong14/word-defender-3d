@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   ArrowLeft,
+  BookOpen,
   Check,
   Coins,
   CreditCard,
@@ -16,19 +17,21 @@ import { STORE_CATALOG } from '../config/catalog';
 import { StoreCategory, StoreItem } from '../types/economy';
 import { buyStoreItem, equipItem, unequipItem } from '../economy/inventory';
 import { PonpiPreview } from './PonpiPreview';
+import { MonsterAlmanacView } from './MonsterAlmanacView';
 import { getAssetUrl } from '../utils/assetUrl';
 import { playWeaponShootSound } from '../utils/soundEffects';
 import '../styles/moba-hub.css';
+import '../styles/almanac.css';
 
 interface MobaGameHubProps {
-  initialTab?: 'hero' | 'loadout' | 'store';
+  initialTab?: 'hero' | 'loadout' | 'store' | 'bestiary';
 }
 
 export const MobaGameHub: React.FC<MobaGameHubProps> = ({ initialTab = 'hero' }) => {
   const { account } = useAuth();
   const { navigateTo, inventory, wallet, refreshUserData } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'hero' | 'loadout' | 'store'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'hero' | 'loadout' | 'store' | 'bestiary'>(initialTab);
   const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
   const [gearSlot, setGearSlot] = useState<StoreCategory>('skill');
   const [subFilter, setSubFilter] = useState<string>('all');
@@ -207,6 +210,16 @@ export const MobaGameHub: React.FC<MobaGameHubProps> = ({ initialTab = 'hero' })
               <ShoppingBag size={16} />
               <span>CỬA HÀNG</span>
             </button>
+            <button
+              className={`moba-tab-btn ${activeTab === 'bestiary' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTab('bestiary');
+                setSelectedItem(null);
+              }}
+            >
+              <BookOpen size={16} />
+              <span>SÁCH QUÁI</span>
+            </button>
           </nav>
 
           {/* RIGHT WALLET DISPLAY */}
@@ -222,8 +235,13 @@ export const MobaGameHub: React.FC<MobaGameHubProps> = ({ initialTab = 'hero' })
           </div>
         )}
 
-        {/* MAIN 2-COLUMN MOBA GRID */}
-        <div className="moba-stage-grid">
+        {/* MAIN STAGE (HERO/STORE OR BESTIARY) */}
+        {activeTab === 'bestiary' ? (
+          <div className="moba-bestiary-full-stage">
+            <MonsterAlmanacView />
+          </div>
+        ) : (
+          <div className="moba-stage-grid">
           {/* LEFT: HERO SPOTLIGHT STAGE */}
           <section className="moba-hero-spotlight">
             <div className="moba-pedestal-glow" />
@@ -517,6 +535,13 @@ export const MobaGameHub: React.FC<MobaGameHubProps> = ({ initialTab = 'hero' })
                   >
                     Màu Sắc
                   </button>
+                  <button
+                    className="moba-filter-pill"
+                    style={{ borderColor: '#8E44AD', color: '#8E44AD', fontWeight: 800 }}
+                    onClick={() => setActiveTab('bestiary')}
+                  >
+                    📖 Sách Quái
+                  </button>
                 </div>
 
                 <div className="moba-cards-grid">
@@ -569,6 +594,7 @@ export const MobaGameHub: React.FC<MobaGameHubProps> = ({ initialTab = 'hero' })
             )}
           </section>
         </div>
+        )}
       </div>
     </div>
   );

@@ -186,188 +186,134 @@ export const PreparePage: React.FC = () => {
           </button>
           <h1>Đấu Thường</h1>
         </div>
-
-        <button className="prepare-almanac-btn" onClick={() => setActiveModal("almanac")}>
-          <BookOpen size={16} /> Sách Yêu Quái
-        </button>
       </div>
 
       {/* 3-Round Format Summary */}
       <div className="prepare-round-strip">
         <div className="round-pill r1">
           <span className="round-num-badge">1</span>
-          <div className="round-desc">
+          <span className="round-pill-label">Round 1</span>
+          <div className="round-tooltip">
             <strong>VÒNG 1: Gõ Chữ Có Sẵn</strong>
             <small>Nhìn từ tiếng Anh gõ mẫu ➔ Trùm R1</small>
           </div>
         </div>
         <div className="round-pill r2">
           <span className="round-num-badge">2</span>
-          <div className="round-desc">
+          <span className="round-pill-label">Round 2</span>
+          <div className="round-tooltip">
             <strong>VÒNG 2: Đoán Ra Mà Gõ</strong>
             <small>Hiện nghĩa tiếng Việt ➔ Bấm tiếng Anh ➔ Trùm R2</small>
           </div>
         </div>
         <div className="round-pill r3">
           <span className="round-num-badge">3</span>
-          <div className="round-desc">
+          <span className="round-pill-label">Round 3</span>
+          <div className="round-tooltip">
             <strong>VÒNG 3: Thử Thách & Đại Trùm</strong>
             <small>Quái tốc độ, quái trâu ➔ Đại Trùm Alien</small>
           </div>
         </div>
       </div>
 
-      {/* 4 Selection Cards (Tướng, Map, Đạn, Bộ từ & Số từ) */}
+      {/* 4 Selection Cards (Skin, Map, Đạn, Tài liệu) */}
       <div className="prepare-main-grid">
-        {/* CARD 1: TƯỚNG (HERO) */}
-        <div className="prepare-card">
-          <div className="prepare-card-head">
-            <span className="prepare-card-tag">TƯỚNG CHIẾN BINH</span>
-            <button className="prepare-change-btn" onClick={() => setActiveModal("hero")}>
-              <RotateCcw size={13} /> Đổi tướng
-            </button>
+        {/* CARD 1: SKIN */}
+        <div
+          className="prepare-card prepare-card-minimal"
+          onClick={() => setActiveModal("hero")}
+          title={activeHero?.title || "pempom nguyên bản"}
+        >
+          <div className="prepare-card-visual">
+            <img
+              src={getAssetUrl(activeHero?.iconUrl || "/assets/ponpi/ponpi_idle.png")}
+              alt=""
+              className="prepare-card-img"
+            />
           </div>
-          <div className="prepare-card-content">
-            <div className="prepare-card-thumb">
-              <img
-                src={getAssetUrl(activeHero?.iconUrl || "/assets/ponpi/ponpi_idle.png")}
-                alt=""
-              />
-            </div>
-            <div className="prepare-card-info">
-              <strong>{activeHero?.title || "pempom nguyên bản"}</strong>
-              <span>{activeHero ? `${activeHero.priceCoins} xu · Đã trang bị` : "Chiến binh khởi đầu (Miễn phí)"}</span>
-            </div>
-          </div>
+          <button
+            type="button"
+            className="prepare-card-center-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveModal("hero");
+            }}
+          >
+            Thay đổi
+          </button>
         </div>
 
-        {/* CARD 2: BẢN ĐỒ (MAP) */}
-        <div className="prepare-card">
-          <div className="prepare-card-head">
-            <span className="prepare-card-tag">BẢN ĐỒ THI ĐẤU</span>
-            <button className="prepare-change-btn" onClick={() => setActiveModal("map")}>
-              <RotateCcw size={13} /> Đổi map
-            </button>
-          </div>
-          <div className="prepare-card-content">
-            <div
-              className="prepare-card-thumb map-thumb"
-              style={{
-                backgroundColor: MAP_CONFIGS[selectedMap].previewBg,
-                backgroundImage: MAP_CONFIGS[selectedMap].previewImage
-                  ? `url(${getAssetUrl(MAP_CONFIGS[selectedMap].previewImage)})`
-                  : undefined,
-              }}
-            >
-              {!MAP_CONFIGS[selectedMap].previewImage && "✎"}
-            </div>
-            <div className="prepare-card-info">
-              <strong>{MAP_CONFIGS[selectedMap].name}</strong>
-              <span>{MAP_CONFIGS[selectedMap].badge}</span>
-            </div>
-          </div>
+        {/* CARD 2: MAP */}
+        <div
+          className="prepare-card prepare-card-minimal"
+          onClick={() => setActiveModal("map")}
+          title={MAP_CONFIGS[selectedMap].name}
+        >
+          <div
+            className="prepare-card-visual map-visual"
+            style={{
+              backgroundColor: MAP_CONFIGS[selectedMap].previewBg,
+              backgroundImage: MAP_CONFIGS[selectedMap].previewImage
+                ? `url(${getAssetUrl(MAP_CONFIGS[selectedMap].previewImage)})`
+                : undefined,
+            }}
+          />
+          <button
+            type="button"
+            className="prepare-card-center-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveModal("map");
+            }}
+          >
+            Thay đổi
+          </button>
         </div>
 
-        {/* CARD 3: LOẠI ĐẠN (AMMO) */}
-        <div className="prepare-card">
-          <div className="prepare-card-head">
-            <span className="prepare-card-tag">LOẠI ĐẠN TRANG BỊ</span>
-            <button className="prepare-change-btn" onClick={() => setActiveModal("ammo")}>
-              <RotateCcw size={13} /> Đổi / Mua đạn
-            </button>
+        {/* CARD 3: ĐẠN */}
+        <div
+          className="prepare-card prepare-card-minimal"
+          onClick={() => setActiveModal("ammo")}
+          title={activeBullet.title}
+        >
+          <div className="prepare-card-visual">
+            <img
+              src={getAssetUrl(activeBullet.iconUrl || "/assets/items/bullet_default_icon.png")}
+              alt=""
+              className="prepare-card-img bullet-img"
+            />
           </div>
-          <div className="prepare-card-content">
-            <div className="prepare-card-thumb">
-              <img src={getAssetUrl(activeBullet.iconUrl || "/assets/items/bullet_default_icon.png")} alt="" />
-            </div>
-            <div className="prepare-card-info">
-              <strong>{activeBullet.title}</strong>
-              {bullet === "bullet_default" ? (
-                <span className="ammo-badge">✓ Đạn cơ bản vô hạn (0 xu)</span>
-              ) : (
-                <span className="ammo-badge special">
-                  ⚡ Còn {(ammoCounts[bullet] || 0).toLocaleString("vi-VN")} viên
-                </span>
-              )}
-            </div>
-          </div>
+          <button
+            type="button"
+            className="prepare-card-center-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveModal("ammo");
+            }}
+          >
+            Thay đổi
+          </button>
         </div>
 
-        {/* CARD 4: BỘ TỪ, TIẾN ĐỘ & SỐ TỪ THI ĐẤU */}
-        <div className="prepare-card">
-          <div className="prepare-card-head">
-            <span className="prepare-card-tag">TÀI LIỆU & TIẾN ĐỘ</span>
-            <button className="prepare-change-btn" onClick={() => setActiveModal("wordset")}>
-              <RotateCcw size={13} /> Đổi bộ từ
-            </button>
+        {/* CARD 4: TÀI LIỆU */}
+        <div
+          className="prepare-card prepare-card-minimal"
+          onClick={() => setActiveModal("wordset")}
+          title={activeSet?.title || "Tài liệu học"}
+        >
+          <div className="prepare-card-visual book-visual">
+            <BookOpen size={74} strokeWidth={1.8} color="#D35400" />
           </div>
-          <div className="prepare-card-content">
-            <div className="prepare-card-thumb">
-              <BookOpen size={28} color="#D35400" />
-            </div>
-            <div className="prepare-card-info" style={{ width: '100%' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <strong>{activeSet?.title || "Chưa chọn bộ từ"}</strong>
-                {deckProgress && (
-                  <span style={{ fontSize: '0.78rem', color: '#2E7D32', fontWeight: 800 }}>
-                    {deckProgress.completionPercent}% ({deckProgress.masteredWords}/{deckProgress.totalWords} từ)
-                  </span>
-                )}
-              </div>
-
-              {/* Mini Segmented Progress */}
-              {deckProgress && (
-                <div style={{ height: '6px', width: '100%', backgroundColor: '#ECEFF1', borderRadius: '3px', overflow: 'hidden', display: 'flex', margin: '4px 0 8px 0' }}>
-                  <div style={{ width: `${(deckProgress.masteredWords / deckProgress.totalWords) * 100}%`, backgroundColor: '#2E7D32' }} />
-                  <div style={{ width: `${(deckProgress.learningWords / deckProgress.totalWords) * 100}%`, backgroundColor: '#FBC02D' }} />
-                  <div style={{ width: `${(deckProgress.strugglingWords / deckProgress.totalWords) * 100}%`, backgroundColor: '#D32F2F' }} />
-                </div>
-              )}
-
-              {/* Batch Size Selector (20, 30, 40, 50) */}
-              <div className="word-count-row" style={{ marginTop: '4px' }}>
-                <span className="word-count-label">Số từ/trận:</span>
-                {[20, 30, 40, 50].map((count) => (
-                  <button
-                    key={count}
-                    className={`count-pill ${selectedWordCount === count ? "active" : ""}`}
-                    onClick={() => setSelectedWordCount(count)}
-                  >
-                    {count} từ
-                  </button>
-                ))}
-              </div>
-
-              {/* Chunk / Mode Selector button */}
-              <div style={{ marginTop: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => setActiveModal("chunk")}
-                  style={{
-                    width: '100%',
-                    padding: '6px 10px',
-                    backgroundColor: selectedChunkIndex !== null ? '#FFF8E1' : '#E8F5E9',
-                    border: `1.5px solid ${selectedChunkIndex !== null ? '#FFA000' : '#2E7D32'}`,
-                    borderRadius: '6px',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                    color: selectedChunkIndex !== null ? '#E65100' : '#1B5E20',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <span>
-                    {selectedChunkIndex === null
-                      ? '⚡ Tự Động Anki SRS (Ưu tiên từ cần ôn + từ mới)'
-                      : `🎯 Đang chọn: Chặng ${selectedChunkIndex + 1}`}
-                  </span>
-                  <span style={{ fontSize: '0.75rem', textDecoration: 'underline' }}>Đổi chặng</span>
-                </button>
-              </div>
-            </div>
-          </div>
+          <button
+            type="button"
+            className="prepare-card-center-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveModal("wordset");
+            }}
+          >
+            Thay đổi
+          </button>
         </div>
       </div>
 
@@ -576,9 +522,56 @@ export const PreparePage: React.FC = () => {
         <div className="compact-modal-overlay" onClick={() => setActiveModal(null)}>
           <div className="compact-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="compact-modal-head">
-              <h3>Chọn Tài Liệu Từ Vựng</h3>
+              <h3>Tài Liệu & Tiến Độ Học</h3>
               <button className="almanac-close-btn" onClick={() => setActiveModal(null)}><X size={18} /></button>
             </div>
+
+            {/* Word count & Mode Selector inside modal */}
+            <div style={{ padding: '12px 16px', borderBottom: '1.5px solid rgba(40,38,35,0.1)', background: '#FDFBF7' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 800 }}>Số từ mỗi trận:</span>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {[20, 30, 40, 50].map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      className={`count-pill ${selectedWordCount === count ? "active" : ""}`}
+                      onClick={() => setSelectedWordCount(count)}
+                    >
+                      {count} từ
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Chunk Selector shortcut */}
+              <button
+                type="button"
+                onClick={() => setActiveModal("chunk")}
+                style={{
+                  width: '100%',
+                  padding: '6px 12px',
+                  backgroundColor: selectedChunkIndex !== null ? '#FFF8E1' : '#E8F5E9',
+                  border: `1.5px solid ${selectedChunkIndex !== null ? '#FFA000' : '#2E7D32'}`,
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  color: selectedChunkIndex !== null ? '#E65100' : '#1B5E20',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <span>
+                  {selectedChunkIndex === null
+                    ? '⚡ Tự Động Anki SRS (Ưu tiên từ cần ôn + từ mới)'
+                    : `🎯 Đang chọn: Chặng ${selectedChunkIndex + 1}`}
+                </span>
+                <span style={{ fontSize: '0.75rem', textDecoration: 'underline' }}>Đổi chặng</span>
+              </button>
+            </div>
+
             <div className="compact-modal-scroll">
               {sets.map((s) => {
                 const isSelected = selectedSetId === s.id;

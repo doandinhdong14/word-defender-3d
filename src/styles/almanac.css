@@ -38,6 +38,17 @@
   position: relative;
 }
 
+.almanac-view-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 520px;
+  max-height: 640px;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
 .almanac-header {
   display: flex;
   align-items: center;
