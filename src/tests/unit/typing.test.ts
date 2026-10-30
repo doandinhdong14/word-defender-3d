@@ -49,19 +49,20 @@ describe('Typing Engine', () => {
     expect(res2.matchedAnswer).toBe('better');
   });
 
-  it('ignores modifier keys and key repeats', () => {
+  it('ignores modifier keys while permitting repeat keystrokes for rapid double letters', () => {
     const event1 = { key: 'a', ctrlKey: true, altKey: false, metaKey: false, repeat: false } as KeyboardEvent;
     expect(cleanKey(event1)).toBeNull();
 
+    // Key repeats (e.g. typing rapid double letters in "speed", "good", "feel", "book") are preserved
     const event2 = { key: 'a', ctrlKey: false, altKey: false, metaKey: false, repeat: true } as KeyboardEvent;
-    expect(cleanKey(event2)).toBeNull();
+    expect(cleanKey(event2)).toBe('a');
 
     const event3 = { key: 'A', ctrlKey: false, altKey: false, metaKey: false, repeat: false } as KeyboardEvent;
     expect(cleanKey(event3)).toBe('a');
   });
 
-  it('normalizes Vietnamese accented characters and handles IME Process fallback', () => {
-    // Telex / VNI accents
+  it('normalizes Vietnamese accented characters and handles IME Process and physical code fallback', () => {
+    // Fallback when code is not present
     expect(cleanKey({ key: 'á' } as KeyboardEvent)).toBe('a');
     expect(cleanKey({ key: 'ê' } as KeyboardEvent)).toBe('e');
     expect(cleanKey({ key: 'đ' } as KeyboardEvent)).toBe('d');
@@ -70,5 +71,13 @@ describe('Typing Engine', () => {
 
     // Windows IME Process key with code
     expect(cleanKey({ key: 'Process', code: 'KeyC' } as KeyboardEvent)).toBe('c');
+
+    // Windows Unikey / Telex physical key recovery (e.g. as -> á produced with KeyS)
+    expect(cleanKey({ key: 'á', code: 'KeyS' } as KeyboardEvent)).toBe('s');
+    expect(cleanKey({ key: 'ê', code: 'KeyE' } as KeyboardEvent)).toBe('e');
+    expect(cleanKey({ key: 'ô', code: 'KeyO' } as KeyboardEvent)).toBe('o');
+    expect(cleanKey({ key: 'ả', code: 'KeyR' } as KeyboardEvent)).toBe('r');
+    expect(cleanKey({ key: 'ơ', code: 'KeyW' } as KeyboardEvent)).toBe('w');
+    expect(cleanKey({ key: 'đ', code: 'KeyD' } as KeyboardEvent)).toBe('d');
   });
 });

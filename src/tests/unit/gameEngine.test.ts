@@ -231,4 +231,106 @@ describe('Game Engine enemy lanes', () => {
     expect(boss.bossSegmentsRemaining).toBe(6);
     expect(boss.bossWordQueue).toHaveLength(6);
   });
+
+  it('heals synthetic IME Backspaces and seamlessly completes double-letter words like speed', () => {
+    const engine = new GameEngine({
+      setId: 'set_test',
+      mode: 'copy',
+      difficulty: 'normal',
+      words: [
+        {
+          id: 'word_speed',
+          setId: 'set_test',
+          english: 'speed',
+          vietnamese: 'tốc độ',
+          acceptedAnswers: ['speed'],
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+      equippedSkills: [],
+      equippedHatId: null,
+      equippedShirtId: null,
+      equippedStyleId: 'style_classic',
+    });
+
+    for (let i = 0; i < 15; i++) {
+      engine.update(50);
+    }
+    expect(engine.enemies).toHaveLength(1);
+
+    // Type 's', 'p', 'e'
+    engine.handleKeyDown({ key: 's', code: 'KeyS', preventDefault: () => {} } as any);
+    expect(engine.typedBuffer).toBe('s');
+    engine.handleKeyDown({ key: 'p', code: 'KeyP', preventDefault: () => {} } as any);
+    expect(engine.typedBuffer).toBe('sp');
+    engine.handleKeyDown({ key: 'e', code: 'KeyE', preventDefault: () => {} } as any);
+    expect(engine.typedBuffer).toBe('spe');
+
+    // Simulate Unikey Telex behavior: Unikey sends synthetic Backspace then 'ê' (code KeyE)
+    engine.handleKeyDown({ key: 'Backspace', code: 'Backspace', preventDefault: () => {} } as any);
+    // Buffer is temporarily sliced to 'sp'
+    expect(engine.typedBuffer).toBe('sp');
+
+    // Immediately (within < 110ms), Unikey sends the transformed key 'ê' with physical code 'KeyE'
+    engine.handleKeyDown({ key: 'ê', code: 'KeyE', preventDefault: () => {} } as any);
+
+    // Engine should heal the synthetic Backspace back to 'spe' and append 'e' -> 'spee'!
+    expect(engine.typedBuffer).toBe('spee');
+
+    // Finish with 'd'
+    engine.handleKeyDown({ key: 'd', code: 'KeyD', preventDefault: () => {} } as any);
+    expect(engine.completedWordsCount).toBe(1);
+  });
+
+  it('smartly retargets when player presses starting letter of another enemy with <= 1 char typed', () => {
+    const engine = new GameEngine({
+      setId: 'set_test',
+      mode: 'copy',
+      difficulty: 'normal',
+      words: [
+        {
+          id: 'w_cat',
+          setId: 'set_test',
+          english: 'cat',
+          vietnamese: 'con mèo',
+          acceptedAnswers: ['cat'],
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+        {
+          id: 'w_dog',
+          setId: 'set_test',
+          english: 'dog',
+          vietnamese: 'con chó',
+          acceptedAnswers: ['dog'],
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+      equippedSkills: [],
+      equippedHatId: null,
+      equippedShirtId: null,
+      equippedStyleId: 'style_classic',
+    });
+
+    for (let i = 0; i < 90; i++) {
+      engine.update(50);
+    }
+    expect(engine.enemies.length).toBeGreaterThanOrEqual(2);
+
+    // Player begins typing 'c' for 'cat'
+    engine.handleKeyDown({ key: 'c', code: 'KeyC', preventDefault: () => {} } as any);
+    expect(engine.typedBuffer).toBe('c');
+    const catTarget = engine.enemies.find((e) => e.word === 'cat')!;
+    expect(engine.selectedEnemyId).toBe(catTarget.id);
+
+    // Player switches mind or sees 'dog' approaching and presses 'd'
+    engine.handleKeyDown({ key: 'd', code: 'KeyD', preventDefault: () => {} } as any);
+
+    // Engine should switch target to 'dog' and buffer should be 'd'
+    const dogTarget = engine.enemies.find((e) => e.word === 'dog')!;
+    expect(engine.selectedEnemyId).toBe(dogTarget.id);
+    expect(engine.typedBuffer).toBe('d');
+  });
 });

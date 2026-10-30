@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useApp } from '../app/appStore';
 import { GameEngine } from '../game/engine/gameEngine';
+import { TELEX_DECODE_MAP } from '../game/engine/typing';
 import { playSoundEffect, configureSoundSettings } from '../utils/soundEffects';
 import { selectSessionWords } from '../learning/sessionSelector';
 import { logAttempt } from '../learning/attempts';
@@ -616,6 +617,11 @@ export const BattlePage: React.FC = () => {
       // User typed characters from their phone keyboard
       const addedChars = incoming.slice(currentBuffer.length);
       for (const rawChar of addedChars) {
+        const telex = TELEX_DECODE_MAP[rawChar];
+        if (telex && currentBuffer.endsWith(telex.baseChar)) {
+          engineRef.current.handleCharacterInput(telex.telexKey);
+          continue;
+        }
         // Strip Vietnamese accents if user is using Telex/VNI keyboard on their phone
         const clean = rawChar
           .normalize('NFD')
@@ -634,17 +640,28 @@ export const BattlePage: React.FC = () => {
         engineRef.current.handleBackspace();
       }
     } else {
-      // Same length - could be IME accent substitution (e.g., typing 's' converted 'a' to 'á')
-      const nativeEvt = e.nativeEvent as InputEvent;
-      if (nativeEvt && nativeEvt.data) {
-        const clean = nativeEvt.data
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/đ/g, 'd')
-          .replace(/Đ/g, 'd')
-          .toLowerCase();
-        for (const c of clean) {
-          engineRef.current.handleCharacterInput(c);
+      // Same length - IME accent substitution (e.g., typing 's' converted 'a' to 'á', or 'e' to 'ê')
+      const lastIncomingChar = incoming.slice(-1);
+      const telex = TELEX_DECODE_MAP[lastIncomingChar];
+      if (telex && currentBuffer.endsWith(telex.baseChar)) {
+        engineRef.current.handleCharacterInput(telex.telexKey);
+      } else {
+        const nativeEvt = e.nativeEvent as InputEvent;
+        if (nativeEvt && nativeEvt.data) {
+          const evtTelex = TELEX_DECODE_MAP[nativeEvt.data];
+          if (evtTelex && currentBuffer.endsWith(evtTelex.baseChar)) {
+            engineRef.current.handleCharacterInput(evtTelex.telexKey);
+          } else {
+            const clean = nativeEvt.data
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .replace(/đ/g, 'd')
+              .replace(/Đ/g, 'd')
+              .toLowerCase();
+            for (const c of clean) {
+              engineRef.current.handleCharacterInput(c);
+            }
+          }
         }
       }
     }

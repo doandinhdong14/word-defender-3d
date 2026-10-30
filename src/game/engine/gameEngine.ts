@@ -15,7 +15,7 @@ import {
 import { VocabularyEntry } from '../../types/vocabulary';
 import { GAME_BALANCE } from '../../config/balance';
 import { getPoseFromAngle, PONPI_RIG } from '../assets/ponpiRig';
-import { cleanKey, evaluateKeystroke, normalizeInput } from './typing';
+import { cleanKey, evaluateKeystroke, normalizeInput, TELEX_DECODE_MAP } from './typing';
 import { cycleTarget, findTargetByFirstChar } from './targeting';
 import { createBullet, updateProjectiles } from './projectiles';
 import {
@@ -124,6 +124,8 @@ export class GameEngine {
   private nextSpawnTimeMs: number = 0;
   private waveClearTimerMs: number = 0;
   private maxConcurrentEnemies: number;
+  private lastBackspaceTime: number = 0;
+  private lastBackspaceBuffer: string = '';
 
   // Stats
   public completedWordsCount: number = 0;
@@ -391,10 +393,12 @@ export class GameEngine {
     const index = this.enemies.findIndex((e) => e.id === parent.id);
     if (index === -1) return;
 
+    const wasSelected = this.selectedEnemyId === parent.id;
+    const preservedBuffer = this.typedBuffer;
+
     this.enemies.splice(index, 1);
-    if (this.selectedEnemyId === parent.id) {
+    if (wasSelected) {
       this.selectedEnemyId = null;
-      this.typedBuffer = '';
     }
 
     const roundMode = parent.mode || this.currentRoundMode;
@@ -443,6 +447,13 @@ export class GameEngine {
         hasSplit: true,
         scale: 0.68,
       };
+
+      // Seamless continuation: if parent was selected, child 0 preserves target and buffer
+      if (s === 0 && wasSelected) {
+        childEnemy.selected = true;
+        this.selectedEnemyId = childEnemy.id;
+        this.typedBuffer = preservedBuffer;
+      }
 
       this.enemies.push(childEnemy);
     }
@@ -880,6 +891,37 @@ export class GameEngine {
       return;
     }
 
+    // Detect synthetic Backspace from Vietnamese IME (Unikey, EVKey, Windows Telex)
+    // When Unikey converts e.g. ee -> ê, as -> á, ar -> ả, oo -> ô, ow -> ơ, dd -> đ,
+    // it sends a synthetic Backspace immediately followed by the accented letter (or KeyA-Z code) within 0-90ms.
+    const now = performance.now();
+    const isSyntheticImeBackspace =
+      this.lastBackspaceTime > 0 &&
+      now - this.lastBackspaceTime < 110 &&
+      (
+        !!TELEX_DECODE_MAP[event.key] ||
+        event.key === 'Process' ||
+        event.key === 'Dead' ||
+        (event.code && /^Key[A-Za-z]$/.test(event.code) && event.key !== event.code.slice(3).toLowerCase()) ||
+        (event.code && /^Key[A-Za-z]$/.test(event.code) && (
+          (this.lastBackspaceBuffer.endsWith('e') && event.code === 'KeyE') ||
+          (this.lastBackspaceBuffer.endsWith('o') && event.code === 'KeyO') ||
+          (this.lastBackspaceBuffer.endsWith('a') && ['KeyA', 'KeyS', 'KeyR', 'KeyF', 'KeyX', 'KeyJ', 'KeyW'].includes(event.code)) ||
+          (this.lastBackspaceBuffer.endsWith('u') && ['KeyW', 'KeyS', 'KeyR', 'KeyF', 'KeyX', 'KeyJ'].includes(event.code)) ||
+          (this.lastBackspaceBuffer.endsWith('d') && event.code === 'KeyD')
+        ))
+      );
+
+    if (isSyntheticImeBackspace && this.lastBackspaceBuffer.length > 0) {
+      // Restore the vowel/consonant that Unikey's synthetic Backspace deleted!
+      this.typedBuffer = this.lastBackspaceBuffer;
+      this.lastBackspaceTime = 0;
+      this.lastBackspaceBuffer = '';
+    } else if (now - this.lastBackspaceTime >= 110) {
+      this.lastBackspaceTime = 0;
+      this.lastBackspaceBuffer = '';
+    }
+
     // 7. Printable characters
     const char = cleanKey(event);
     if (!char) return;
@@ -916,6 +958,8 @@ export class GameEngine {
   public handleBackspace(): void {
     if (this.status === 'PAUSED' || this.status === 'VICTORY' || this.status === 'DEFEAT') return;
     if (this.typedBuffer.length > 0) {
+      this.lastBackspaceTime = performance.now();
+      this.lastBackspaceBuffer = this.typedBuffer;
       this.typedBuffer = this.typedBuffer.slice(0, -1);
     }
   }
@@ -932,36 +976,62 @@ export class GameEngine {
       ? this.enemies.find((e) => e.id === this.selectedEnemyId)
       : null;
 
+    if (currentTarget && currentTarget.pendingDefeat) {
+      currentTarget = null;
+      this.selectedEnemyId = null;
+      this.typedBuffer = '';
+    }
+
     // If no target OR (buffer is empty AND current target does not match the typed first character):
     // Dynamically auto-switch to any eligible enemy on screen that starts with char!
-    if (
-      !currentTarget ||
-      currentTarget.pendingDefeat ||
-      (this.typedBuffer === '' && !currentTarget.acceptedAnswers.some((ans) => normalizeInput(ans).startsWith(char)))
-    ) {
+    if (!currentTarget) {
       const match = findTargetByFirstChar(this.enemies, char);
       if (match) {
         this.selectTarget(match.id);
         currentTarget = match;
-      } else if (!currentTarget || currentTarget.pendingDefeat) {
-        // Soft feedback: no target
+      } else {
         this.onSoundEffect?.('wrong');
         return;
       }
-    }
-
-    if (!currentTarget || currentTarget.pendingDefeat) {
-      this.selectedEnemyId = null;
-      this.typedBuffer = '';
-      return;
+    } else if (this.typedBuffer === '') {
+      const targetMatches = currentTarget.acceptedAnswers.some((ans) =>
+        normalizeInput(ans).startsWith(char)
+      );
+      if (!targetMatches) {
+        const match = findTargetByFirstChar(this.enemies, char);
+        if (match) {
+          this.selectTarget(match.id);
+          currentTarget = match;
+        } else {
+          this.onSoundEffect?.('wrong');
+          return;
+        }
+      }
     }
 
     // Evaluate keystroke against candidate answers
-    const evalResult = evaluateKeystroke(
+    let evalResult = evaluateKeystroke(
       this.typedBuffer,
       currentTarget.acceptedAnswers,
       char
     );
+
+    // Smart retargeting when player made a typo or decides to target a closer monster:
+    // If the letter is wrong for current target, but matches the starting letter of another monster on screen,
+    // and player has typed at most 1 character, dynamically switch target so typing doesn't feel jammed/paralyzed!
+    if (evalResult.isWrong && this.typedBuffer.length <= 1) {
+      const altMatch = findTargetByFirstChar(this.enemies, char);
+      if (altMatch && altMatch.id !== currentTarget.id) {
+        this.selectTarget(altMatch.id);
+        currentTarget = altMatch;
+        this.typedBuffer = '';
+        evalResult = evaluateKeystroke(
+          '',
+          currentTarget.acceptedAnswers,
+          char
+        );
+      }
+    }
 
     if (evalResult.isWrong) {
       this.wrongKeystrokesCount += 1;
