@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   Check,
   Coins,
+  CreditCard,
   Shield,
   ShoppingBag,
   Sparkles,
@@ -89,6 +90,35 @@ export const MobaGameHub: React.FC<MobaGameHubProps> = ({ initialTab = 'hero' })
     } catch (err) {
       setNotice((err as Error).message);
     } finally {
+      setBusy(false);
+    }
+  };
+
+  const handlePayOsDirectSkinBuy = async (skinId: string) => {
+    if (!account) {
+      navigateTo('account');
+      return;
+    }
+    if (busy) return;
+    setBusy(true);
+    setNotice('Đang tạo liên kết thanh toán payOS...');
+    try {
+      const response = await fetch('/api/payments/checkout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skinId }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Chưa tạo được giao dịch PayOS.');
+      }
+      const data = await response.json();
+      if (data.checkoutUrl) {
+        window.location.assign(data.checkoutUrl);
+      }
+    } catch (err) {
+      setNotice((err as Error).message);
       setBusy(false);
     }
   };
@@ -266,23 +296,40 @@ export const MobaGameHub: React.FC<MobaGameHubProps> = ({ initialTab = 'hero' })
 
             {/* CTA BUTTON */}
             {selectedItem ? (
-              <button
-                className={`moba-hero-action-btn ${isCurrentEquipped(selectedItem) ? 'active' : 'primary'}`}
-                onClick={() => handleItemAction(selectedItem)}
-                disabled={busy || isCurrentEquipped(selectedItem)}
-              >
-                {isCurrentEquipped(selectedItem) ? (
-                  <>
-                    <Check size={18} /> Đang Dùng
-                  </>
-                ) : inventory?.ownedItemIds.includes(selectedItem.id) || selectedItem.priceCoins === 0 ? (
-                  'Trang Bị Ngay'
-                ) : (
-                  <>
-                    <Coins size={18} /> Mua ({selectedItem.priceCoins} xu)
-                  </>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                <button
+                  className={`moba-hero-action-btn ${isCurrentEquipped(selectedItem) ? 'active' : 'primary'}`}
+                  onClick={() => handleItemAction(selectedItem)}
+                  disabled={busy || isCurrentEquipped(selectedItem)}
+                >
+                  {isCurrentEquipped(selectedItem) ? (
+                    <>
+                      <Check size={18} /> Đang Dùng
+                    </>
+                  ) : inventory?.ownedItemIds.includes(selectedItem.id) || selectedItem.priceCoins === 0 ? (
+                    'Trang Bị Ngay'
+                  ) : (
+                    <>
+                      <Coins size={18} /> Mua ({selectedItem.priceCoins} xu)
+                    </>
+                  )}
+                </button>
+                {selectedItem.category === 'outfit' && selectedItem.priceVnd && !inventory?.ownedItemIds.includes(selectedItem.id) && (
+                  <button
+                    className="moba-hero-action-btn"
+                    style={{
+                      background: 'linear-gradient(135deg, #0052CC 0%, #2684FF 100%)',
+                      color: '#FFF',
+                      border: 'none',
+                      boxShadow: '0 4px 12px rgba(0, 82, 204, 0.3)',
+                    }}
+                    onClick={() => handlePayOsDirectSkinBuy(selectedItem.id)}
+                    disabled={busy}
+                  >
+                    <CreditCard size={17} /> Mua PayOS ({selectedItem.priceVnd.toLocaleString('vi-VN')}đ)
+                  </button>
                 )}
-              </button>
+              </div>
             ) : (
               <button
                 className="moba-hero-action-btn primary"
@@ -345,7 +392,10 @@ export const MobaGameHub: React.FC<MobaGameHubProps> = ({ initialTab = 'hero' })
                         ) : owned ? (
                           <span className="moba-card-badge owned">Đã Có</span>
                         ) : (
-                          <span className="moba-card-badge price">{item.priceCoins} xu</span>
+                          <span className="moba-card-badge price">
+                            {item.priceCoins} xu
+                            {item.priceVnd && <small style={{ display: 'block', fontSize: '10px', opacity: 0.9 }}>{item.priceVnd.toLocaleString('vi-VN')}đ</small>}
+                          </span>
                         )}
                       </article>
                     );
@@ -506,7 +556,10 @@ export const MobaGameHub: React.FC<MobaGameHubProps> = ({ initialTab = 'hero' })
                         ) : owned ? (
                           <span className="moba-card-badge owned">Đã Có</span>
                         ) : (
-                          <span className="moba-card-badge price">{item.priceCoins} xu</span>
+                          <span className="moba-card-badge price">
+                            {item.priceCoins} xu
+                            {item.priceVnd && <small style={{ display: 'block', fontSize: '10px', opacity: 0.9 }}>{item.priceVnd.toLocaleString('vi-VN')}đ</small>}
+                          </span>
                         )}
                       </article>
                     );

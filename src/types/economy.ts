@@ -6,6 +6,7 @@ export interface StoreItem {
   title: string;
   description: string;
   priceCoins: number;
+  priceVnd?: number;
   previewKey: string;
   effectId?: string;
   color?: string;

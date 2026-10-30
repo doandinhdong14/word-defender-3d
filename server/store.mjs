@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS pempom_content (id text PRIMARY KEY, data jsonb NOT N
 CREATE TABLE IF NOT EXISTS pempom_invitations (email text PRIMARY KEY, data jsonb NOT NULL);
 CREATE TABLE IF NOT EXISTS pempom_audit (id text PRIMARY KEY, at timestamptz NOT NULL DEFAULT now(), data jsonb NOT NULL);
 CREATE INDEX IF NOT EXISTS pempom_audit_at ON pempom_audit(at DESC);
+CREATE TABLE IF NOT EXISTS pempom_orders (id bigint PRIMARY KEY, user_id text NOT NULL, type text NOT NULL, target_id text NOT NULL, amount integer NOT NULL, coins integer NOT NULL DEFAULT 0, status text NOT NULL, data jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS pempom_orders_user_id ON pempom_orders(user_id);
 `;
 
 function repository(query) {
@@ -20,6 +22,32 @@ function repository(query) {
     async saveUser(user) { await query('INSERT INTO pempom_users(id,email,data) VALUES($1,$2,$3) ON CONFLICT(id) DO UPDATE SET email=$2,data=$3', [user.id, user.email.toLowerCase(), JSON.stringify(user)]); return user; },
     async content(id) { return (await query('SELECT data FROM pempom_content WHERE id=$1', [id])).rows[0]?.data ?? null; },
     async saveContent(content) { await query('INSERT INTO pempom_content(id,data) VALUES($1,$2) ON CONFLICT(id) DO UPDATE SET data=$2', [content.id, JSON.stringify(content)]); return content; },
+    async order(orderCode) {
+      const row = (await query('SELECT id, user_id, type, target_id, amount, coins, status, data, created_at, updated_at FROM pempom_orders WHERE id=$1', [orderCode])).rows[0];
+      if (!row) return null;
+      return {
+        orderCode: Number(row.id),
+        userId: row.user_id,
+        type: row.type,
+        targetId: row.target_id,
+        amount: Number(row.amount),
+        coins: Number(row.coins),
+        status: row.status,
+        ...row.data,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      };
+    },
+    async saveOrder(order) {
+      const { orderCode, userId, type, targetId, amount, coins = 0, status, ...rest } = order;
+      await query(
+        `INSERT INTO pempom_orders(id, user_id, type, target_id, amount, coins, status, data, updated_at)
+         VALUES($1, $2, $3, $4, $5, $6, $7, $8, now())
+         ON CONFLICT(id) DO UPDATE SET status=$7, data=$8, updated_at=now()`,
+        [orderCode, userId, type, targetId, amount, coins, status, JSON.stringify(rest)]
+      );
+      return order;
+    },
     async log(actor, action, target, detail = {}) {
       const event = { id: randomUUID(), actorId: actor.id, actorEmail: actor.email, action, target, detail, at: new Date().toISOString() };
       await query('INSERT INTO pempom_audit(id,at,data) VALUES($1,$2,$3)', [event.id, event.at, JSON.stringify(event)]);
@@ -91,7 +119,46 @@ export async function createStore({ connectionString, database, ownerEmail = '',
       return user;
     });
   }
-  return { ...repo, transaction, registerIdentity, close: () => pool ? pool.end() : database.close() };
+
+  async function fulfillOrder(orderCode, paymentInfo = {}) {
+    return transaction(async tx => {
+      const order = await tx.order(orderCode);
+      if (!order) throw new ApiError(404, 'Đơn hàng không tồn tại.');
+      if (order.status === 'PAID') {
+        return { order, alreadyFulfilled: true };
+      }
+      order.status = 'PAID';
+      order.paidAt = new Date().toISOString();
+      order.paymentInfo = paymentInfo;
+      await tx.saveOrder(order);
+
+      const user = await tx.user(order.userId);
+      if (user) {
+        user.wallet = user.wallet || { balance: 0, totalEarned: 0, totalSpent: 0 };
+        user.inventory = user.inventory || { ownedItemIds: [] };
+        if (order.coins > 0) {
+          user.wallet.balance = (user.wallet.balance || 0) + order.coins;
+          user.wallet.totalEarned = (user.wallet.totalEarned || 0) + order.coins;
+        }
+        if (order.type === 'skin' && order.targetId) {
+          if (!user.inventory.ownedItemIds.includes(order.targetId)) {
+            user.inventory.ownedItemIds.push(order.targetId);
+          }
+        }
+        user.updatedAt = new Date().toISOString();
+        await tx.saveUser(user);
+        await tx.log(user, 'payment.fulfilled', String(orderCode), {
+          type: order.type,
+          targetId: order.targetId,
+          amount: order.amount,
+          coins: order.coins,
+        });
+      }
+      return { order, user, alreadyFulfilled: false };
+    });
+  }
+
+  return { ...repo, transaction, registerIdentity, fulfillOrder, close: () => pool ? pool.end() : database.close() };
 }
 
 export function publicAccount(user) {

@@ -3,6 +3,7 @@ import { drawPonpi } from '../game/assets/PonpiRenderer';
 import { drawMonster, REGULAR_MONSTER_SPECIES, MonsterSpeciesMeta } from '../game/assets/MonsterRenderer';
 import { drawBullet } from '../game/assets/BulletRenderer';
 import { BulletState, PoseId } from '../types/game';
+import { playSoundEffect } from '../utils/soundEffects';
 
 interface FallingEnemy {
   id: string;
@@ -200,6 +201,7 @@ export const HomeBattleScene: React.FC = () => {
       const angle = Math.atan2(dy, dx);
 
       muzzleFlash = 160;
+      playSoundEffect('shoot', 'bullet_missile', false, 0.25);
       bullets.push({
         id: `click_bullet_${Date.now()}_${Math.random()}`,
         x: ponpiX,
@@ -231,8 +233,10 @@ export const HomeBattleScene: React.FC = () => {
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, width, height);
 
+      const isMobile = width < 520;
+      const ponpiScale = isMobile ? 1.08 : 1.35;
       const ponpiX = width / 2;
-      const ponpiY = Math.max(120, height - 60);
+      const ponpiY = Math.max(80, height - (isMobile ? 46 : 58));
 
       // 1. UPDATE ENEMIES
       const activeEnemies: FallingEnemy[] = [];
@@ -334,11 +338,13 @@ export const HomeBattleScene: React.FC = () => {
           hitEnemy.y -= 8; // slight recoil upward
 
           if (hitEnemy.hp <= 0) {
+            playSoundEffect('hit', undefined, true, 0.3);
             triggerHitVFX(hitEnemy.x, hitEnemy.y, hitEnemy.species.primaryColor, true);
             // Replace with a new enemy at top
             enemies = enemies.filter((e) => e.id !== hitEnemy!.id);
             enemies.push(spawnEnemy(-40));
           } else {
+            playSoundEffect('hit', undefined, false, 0.2);
             triggerHitVFX(b.x, b.y, '#FFD47D', false);
           }
         } else if (b.x >= -40 && b.x <= width + 40 && b.y >= -40 && b.y <= height + 40) {
@@ -402,20 +408,24 @@ export const HomeBattleScene: React.FC = () => {
 
       // 5. DRAW DEFENDER PLATFORM & PONPI AT BOTTOM
       // Soft defense pedestal
+      const pedW = isMobile ? 65 : 85;
+      const pedH = isMobile ? 16 : 21;
+      const pedY = ponpiY + (isMobile ? 16 : 20);
+
       ctx.save();
       ctx.fillStyle = 'rgba(175, 203, 134, 0.45)';
       ctx.strokeStyle = '#302D26';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.ellipse(ponpiX, ponpiY + 22, 90, 22, 0, 0, Math.PI * 2);
+      ctx.ellipse(ponpiX, pedY, pedW, pedH, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
       // Pedestal inner glow ring
       ctx.strokeStyle = '#AFCB86';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.ellipse(ponpiX, ponpiY + 22, 78, 16, 0, 0, Math.PI * 2);
+      ctx.ellipse(ponpiX, pedY, pedW * 0.85, pedH * 0.75, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
 
@@ -427,7 +437,7 @@ export const HomeBattleScene: React.FC = () => {
         pose: currentPose,
         styleId: 'style_yellow',
         outfitId: null,
-        scale: 1.4,
+        scale: ponpiScale,
         muzzleFlashMs: muzzleFlash,
         breathingTime: elapsed,
       });

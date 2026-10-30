@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowRight,
   Check,
@@ -6,29 +6,90 @@ import {
   CreditCard,
   LockKeyhole,
   LogOut,
+  PartyPopper,
   Settings,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
+import confetti from "canvas-confetti";
 import { useApp } from "../app/appStore";
 import { useAuth } from "../auth/AuthContext";
 import { AuthPage } from "./AuthPage";
+import { COIN_PACKS, CoinPackage } from "../config/catalog";
+import { db } from "../data/db";
+import { getActiveProfileId } from "../auth/authService";
 
-const PACKS = [
-  { id: "pocket", coins: 200, price: 20000, name: "Túi xu nhỏ" },
-  { id: "adventure", coins: 550, price: 50000, name: "Túi phiêu lưu" },
-  { id: "treasure", coins: 1200, price: 100000, name: "Rương kho báu" },
-];
 export const AccountPage: React.FC = () => {
   const { account, logout, isAdmin } = useAuth();
-  const { wallet, profile, navigateTo } = useApp();
-  const [pack, setPack] = useState(PACKS[1]);
-  const [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
-  const paymentApi = import.meta.env.VITE_PAYMENT_API_URL as string | undefined;
+  const { wallet, profile, navigateTo, refreshUserData } = useApp();
+  const [pack, setPack] = useState<CoinPackage>(COIN_PACKS[1]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const paymentApi = (import.meta.env.VITE_PAYMENT_API_URL as string | undefined) || "/api/payments";
+
+  // Check PayOS return callbacks
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get("payment");
+    const orderCode = params.get("orderCode");
+
+    if (paymentStatus === "success" && orderCode) {
+      setBusy(true);
+      fetch(`${paymentApi.replace(/\/$/, "")}/order/${orderCode}`, { credentials: "include" })
+        .then((res) => res.json())
+        .then(async (data) => {
+          if (data.status === "PAID") {
+            const activeId = getActiveProfileId();
+            if (data.type === "pack" && data.coins > 0) {
+              const w = await db.wallets.get(activeId);
+              if (w) {
+                w.balance = (w.balance || 0) + data.coins;
+                w.totalEarned = (w.totalEarned || 0) + data.coins;
+                await db.wallets.put(w);
+              }
+              const existingLedger = await db.ledger.get(`ledger_payos_${orderCode}`);
+              if (!existingLedger) {
+                await db.ledger.add({
+                  id: `ledger_payos_${orderCode}`,
+                  profileId: activeId,
+                  kind: "earn",
+                  amount: data.coins,
+                  referenceId: `payos_pack_${orderCode}`,
+                  at: new Date().toISOString(),
+                });
+              }
+              setSuccessMessage(`🎉 Thanh toán thành công! Bạn đã nhận được +${data.coins.toLocaleString("vi-VN")} xu.`);
+            } else if (data.type === "skin" && data.targetId) {
+              const inv = await db.inventories.get(activeId);
+              if (inv && !inv.ownedItemIds.includes(data.targetId)) {
+                inv.ownedItemIds.push(data.targetId);
+                await db.inventories.put(inv);
+              }
+              setSuccessMessage("🎉 Thanh toán thành công! Skin đã được mở khóa vào kho đồ của bạn.");
+            }
+            confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+            await refreshUserData();
+          }
+        })
+        .catch(() => {
+          setError("Không thể xác thực giao dịch từ máy chủ. Vui lòng kiểm tra lại số dư.");
+        })
+        .finally(() => {
+          setBusy(false);
+          window.history.replaceState(null, "", window.location.pathname);
+        });
+    } else if (paymentStatus === "cancelled") {
+      setError("Giao dịch thanh toán đã bị hủy hoặc chưa hoàn tất.");
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, [paymentApi, refreshUserData]);
+
   const pay = async () => {
     if (!paymentApi || !account || busy) return;
     setBusy(true);
     setError("");
+    setSuccessMessage("");
     try {
       const response = await fetch(
         `${paymentApi.replace(/\/$/, "")}/checkout`,
@@ -42,7 +103,7 @@ export const AccountPage: React.FC = () => {
       if (!response.ok)
         throw new Error(
           response.status === 401
-            ? "Cần đăng nhập tài khoản thanh toán trên máy chủ."
+            ? "Cần đăng nhập tài khoản trước khi thanh toán."
             : "Chưa tạo được giao dịch. Vui lòng thử lại.",
         );
       const result = await response.json();
@@ -114,14 +175,14 @@ export const AccountPage: React.FC = () => {
           </div>
           <p>Chọn một gói xu để sắm trang bị yêu thích.</p>
           <div className="coin-packs">
-            {PACKS.map((p) => (
+            {COIN_PACKS.map((p) => (
               <button
                 className={`coin-pack ${pack.id === p.id ? "selected" : ""}`}
                 onClick={() => setPack(p)}
                 key={p.id}
                 aria-pressed={pack.id === p.id}
               >
-                {p.id === "adventure" && (
+                {p.popular && (
                   <span className="pack-popular">ĐƯỢC ĐỀ XUẤT</span>
                 )}
                 <Coins size={34} />
@@ -129,6 +190,7 @@ export const AccountPage: React.FC = () => {
                   {p.coins.toLocaleString("vi-VN")} <small>xu</small>
                 </strong>
                 <span>{p.name}</span>
+                {p.bonus && <small style={{ color: "var(--color-primary-dark, #D35400)", fontWeight: 700 }}>{p.bonus}</small>}
                 <b>{p.price.toLocaleString("vi-VN")}đ</b>
                 {pack.id === p.id && <Check size={16} className="pack-check" />}
               </button>
@@ -143,7 +205,7 @@ export const AccountPage: React.FC = () => {
             <div>
               <span>Phương thức</span>
               <strong className="payos-brand">
-                pay<span>OS</span> <small>Chuyển khoản / QR</small>
+                pay<span>OS</span> <small>Chuyển khoản / VietQR</small>
               </strong>
             </div>
             <div className="checkout-total">
@@ -151,6 +213,11 @@ export const AccountPage: React.FC = () => {
               <strong>{pack.price.toLocaleString("vi-VN")}đ</strong>
             </div>
           </div>
+          {successMessage && (
+            <p className="notice success" style={{ background: "#E8F8F5", color: "#117A65", border: "1.5px solid #A2D9CE", padding: "10px 14px", borderRadius: "10px", fontWeight: 600 }}>
+              <PartyPopper size={18} /> {successMessage}
+            </p>
+          )}
           {!paymentApi && (
             <p className="notice">
               <LockKeyhole size={17} /> Cổng thanh toán đang được thiết lập.

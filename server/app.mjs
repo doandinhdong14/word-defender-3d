@@ -3,13 +3,14 @@ import { createHmac, randomBytes, timingSafeEqual, createHash } from 'node:crypt
 import { resolve } from 'node:path';
 import { OAuth2Client } from 'google-auth-library';
 import { adminRouter } from './admin.mjs';
+import { paymentsRouter } from './payments.mjs';
 import { ApiError } from './permissions.mjs';
 import { publicAccount } from './store.mjs';
 
 const SESSION_MS = 12 * 60 * 60 * 1000;
 const FLOW_MS = 10 * 60 * 1000;
 
-export function createApp({ env = process.env, oauthClient, now = Date.now, store } = {}) {
+export function createApp({ env = process.env, oauthClient, payOSClient, now = Date.now, store } = {}) {
   const app = express();
   app.disable('x-powered-by');
   const production = env.NODE_ENV === 'production';
@@ -119,6 +120,7 @@ export function createApp({ env = process.env, oauthClient, now = Date.now, stor
     }
   });
   app.use('/api/admin', adminRouter({ store, authenticate, origin }));
+  app.use('/api/payments', paymentsRouter({ store, authenticate, origin, env, payOSClient }));
   app.get('/api/content', async (_req, res) => {
     const result = await store.query(`SELECT data FROM pempom_content WHERE data->>'status'='published' ORDER BY data->>'updatedAt' DESC,id`);
     const items = result.rows.map(({ data }) => ({ id: data.id, type: data.type, title: data.title, description: data.description, body: data.body, words: data.words, updatedAt: data.updatedAt }));

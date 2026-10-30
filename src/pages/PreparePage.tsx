@@ -99,6 +99,32 @@ export const PreparePage: React.FC = () => {
     }
   };
 
+  const handlePayOsBuyHero = async (heroId: string) => {
+    if (isGuest) { navigateTo('account'); return; }
+    if (busyAction) return;
+    setBusyAction(true);
+    setError("");
+    try {
+      const response = await fetch('/api/payments/checkout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skinId: heroId }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Chưa tạo được liên kết PayOS.');
+      }
+      const data = await response.json();
+      if (data.checkoutUrl) {
+        window.location.assign(data.checkoutUrl);
+      }
+    } catch (e: any) {
+      setError(e.message || "Không thể tạo liên kết thanh toán PayOS.");
+      setBusyAction(false);
+    }
+  };
+
   const handleBuyAmmo = async (ammoId: string) => {
     if (isGuest) { navigateTo('account'); return; }
     if (busyAction) return;
@@ -397,7 +423,9 @@ export const PreparePage: React.FC = () => {
                       <img src={getAssetUrl(h.iconUrl!)} alt={h.title} />
                     </div>
                     <strong>{h.title}</strong>
-                    <small>{h.priceCoins} xu</small>
+                    <small>
+                      {h.priceCoins} xu {h.priceVnd ? `· ${h.priceVnd.toLocaleString("vi-VN")}đ` : ""}
+                    </small>
 
                     {isOwned ? (
                       <button
@@ -411,13 +439,25 @@ export const PreparePage: React.FC = () => {
                         {isSelected ? "✓ Đang chọn" : "Trang bị"}
                       </button>
                     ) : (
-                      <button
-                        className="compact-buy-btn"
-                        onClick={() => handleBuyHero(h.id)}
-                        disabled={busyAction}
-                      >
-                        {isGuest ? 'Đăng nhập Google' : `Mua (${h.priceCoins} xu)`}
-                      </button>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px", width: "100%" }}>
+                        <button
+                          className="compact-buy-btn"
+                          onClick={() => handleBuyHero(h.id)}
+                          disabled={busyAction}
+                        >
+                          {isGuest ? 'Đăng nhập Google' : `Mua (${h.priceCoins} xu)`}
+                        </button>
+                        {!isGuest && h.priceVnd && (
+                          <button
+                            className="compact-buy-btn"
+                            style={{ background: "#0052CC", color: "#FFF" }}
+                            onClick={() => handlePayOsBuyHero(h.id)}
+                            disabled={busyAction}
+                          >
+                            PayOS ({h.priceVnd.toLocaleString("vi-VN")}đ)
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 );
