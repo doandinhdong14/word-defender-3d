@@ -263,25 +263,51 @@
 .doodle-shell :is(.section-heading h2, .gift-grid h2, .store-preview h3, .profile-card h2) { font-size: 25px; }
 .doodle-shell :is(.surface > p, .store-preview > p, .profile-card > p, .event-banner p, .mission p, .empty-state p, .forum-post p, .saved-idea p) { color: #766b59; font-size: 15px; line-height: 1.6; }
 
-/* Oval paper buttons and handwritten tabs. */
+/* Rounded paper buttons and handwritten tabs. */
 .doodle-shell :is(.primary-button, .secondary-button, .sticker-btn, .auth-google-button, .adm-shell button) {
-  min-height: 42px;
+  min-height: 46px;
   border: 2px solid #302d26;
-  border-radius: 46% 54% 48% 52% / 52% 45% 55% 48%;
+  border-radius: var(--radius-pill);
   background: #f3e3bd;
-  box-shadow: inset 0 0 0 3px #fffaf0, 1px 2px 0 #d8af68;
-  padding: 10px 20px;
+  box-shadow: 0 4px 0 #302d26, 0 8px 16px rgba(48, 45, 38, 0.08);
+  padding: 10px 24px;
   color: #302d26;
-  font: 400 17px/1.4 var(--font-english);
-  transition: background .16s, transform .16s;
+  font: 700 16px/1.4 var(--font-display);
+  transition: background .16s, transform .16s, box-shadow .16s;
 }
-.doodle-shell :is(.primary-button, .secondary-button, .sticker-btn, .auth-google-button, .adm-shell button):hover:not(:disabled) { background: #edcf8e; color: #302d26; transform: translateY(-2px); }
+.doodle-shell :is(.primary-button, .secondary-button, .sticker-btn, .auth-google-button, .adm-shell button):hover:not(:disabled) {
+  background: #edcf8e;
+  color: #302d26;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #302d26, 0 10px 20px rgba(48, 45, 38, 0.12);
+}
+.doodle-shell :is(.primary-button, .secondary-button, .sticker-btn, .auth-google-button, .adm-shell button):active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #302d26;
+}
 .doodle-shell :is(.secondary-button, .sticker-btn-blue, .auth-google-button) { background: #fffaf0; }
 .doodle-shell :is(.sticker-btn-danger, .adm-shell .adm-danger) { color: #a2332d; background: #f8e3d8; }
-.doodle-shell .text-button { color: #805630; font-size: 16px; }
+.doodle-shell .text-button { color: #805630; font-size: 16px; font-weight: 700; }
 .doodle-shell :is(.pill-tabs, .step-tabs, .adm-tabs) { display: flex; flex-wrap: wrap; gap: 10px; border: 0; background: transparent; box-shadow: none; padding: 0 0 16px; }
-.doodle-shell :is(.pill-tabs button, .step-tabs button, .auth-tabs button, .adm-tabs button) { min-height: 44px; padding: 9px 18px; border: 1.5px solid #302d26; border-radius: 46% 54% 48% 52% / 52% 45% 55% 48%; background: #fffaf0; color: #766b59; box-shadow: none; font: 400 17px/1.4 var(--font-english); }
-.doodle-shell :is(.pill-tabs button.active, .step-tabs button.active, .auth-tabs button.active, .adm-tabs button.active) { background: #f3e3bd; color: #302d26; box-shadow: inset 0 0 0 3px #fffaf0; }
+.doodle-shell :is(.pill-tabs button, .step-tabs button, .auth-tabs button, .adm-tabs button) {
+  min-height: 44px;
+  padding: 9px 22px;
+  border: 2px solid #302d26;
+  border-radius: var(--radius-pill);
+  background: #fffaf0;
+  color: #766b59;
+  box-shadow: 0 3px 0 #302d26;
+  font: 700 15px/1.4 var(--font-display);
+  transition: transform .15s ease, background .15s ease;
+}
+.doodle-shell :is(.pill-tabs button:hover, .step-tabs button:hover, .auth-tabs button:hover, .adm-tabs button:hover) {
+  transform: translateY(-1px);
+}
+.doodle-shell :is(.pill-tabs button.active, .step-tabs button.active, .auth-tabs button.active, .adm-tabs button.active) {
+  background: #f3e3bd;
+  color: #302d26;
+  box-shadow: 0 3px 0 #302d26, inset 0 0 0 2px #d8af68;
+}
 .doodle-shell .step-tabs button > span { background: transparent; color: inherit; }
 .doodle-toolbar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
 .doodle-toolbar > div { display: flex; flex-wrap: wrap; gap: 10px; }

@@ -109,14 +109,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 20px;
+  min-height: 44px;
+  padding: 11px 24px;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1rem;
   color: var(--color-ink);
   background-color: #FFFFFF;
   border: var(--border-ink);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   box-shadow: var(--shadow-sticker);
   cursor: pointer;
   transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease, color .16s ease;
@@ -175,16 +176,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 
 .sticker-btn-sm {
-  padding: 6px 12px;
+  min-height: 36px;
+  padding: 7px 18px;
   font-size: 0.85rem;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   box-shadow: var(--shadow-sticker-sm);
 }
 
 .sticker-btn-lg {
-  padding: 14px 28px;
+  min-height: 54px;
+  padding: 15px 32px;
   font-size: 1.25rem;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-pill);
   box-shadow: var(--shadow-sticker-lg);
 }
 
