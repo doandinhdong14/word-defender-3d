@@ -98,6 +98,7 @@ export class GameEngine {
   public typedBuffer: string = '';
   public currentPose: PoseId = 'idle';
   public muzzleFlashMs: number = 0;
+  public round1SpeedstersSpawned: number = 0;
 
   public gameTimeMs: number = 0;
   public invulnerableUntilMs: number = 0;
@@ -233,6 +234,9 @@ export class GameEngine {
     this.selectedEnemyId = null;
     this.typedBuffer = '';
     this.currentPose = 'idle';
+    if (waveNumber === 1) {
+      this.round1SpeedstersSpawned = 0;
+    }
 
     let roundPool: VocabularyEntry[] = [];
     if (waveNumber === 1) {
@@ -290,18 +294,27 @@ export class GameEngine {
     const baseSpeed = GAME_BALANCE.baseEnemySpeedPxPerSec * speedMult;
 
     // Archetype selection based on Round:
-    // Round 1: tense mix of normal and fast speedsters right from the start!
-    // Round 2: normal + speedsters + shooters
-    // Round 3: chaotic mix of speedsters, shooters, tanks, and normal!
-    let eligibleSpecies = REGULAR_MONSTER_SPECIES;
+    // Round 1: Start gentle! Chỉ cho quái normal, tối đa 1-2 con nhanh (speedster), không bắn, không tách.
+    // Round 2: normal + speedsters + shooters + splitting monsters
+    // Round 3: chaotic mix of speedsters, shooters, tanks, normal, and splitters!
+    let chosenMeta: typeof REGULAR_MONSTER_SPECIES[0];
     if (this.currentRound === 1) {
-      eligibleSpecies = REGULAR_MONSTER_SPECIES.filter((s) => s.archetype === 'normal' || s.archetype === 'speedster');
-      if (eligibleSpecies.length === 0) eligibleSpecies = REGULAR_MONSTER_SPECIES;
-    } else if (this.currentRound === 2) {
-      eligibleSpecies = REGULAR_MONSTER_SPECIES.filter((s) => s.archetype === 'normal' || s.archetype === 'speedster' || s.archetype === 'shooter');
-    }
+      const normalSpecies = REGULAR_MONSTER_SPECIES.filter((s) => s.archetype === 'normal');
+      const speedsterSpecies = REGULAR_MONSTER_SPECIES.filter((s) => s.archetype === 'speedster');
 
-    const chosenMeta = eligibleSpecies[Math.floor(Math.random() * eligibleSpecies.length)] || REGULAR_MONSTER_SPECIES[0];
+      // Tối đa 1-2 con nhanh trong cả Round 1
+      if (this.round1SpeedstersSpawned < 2 && Math.random() < 0.25 && speedsterSpecies.length > 0) {
+        chosenMeta = speedsterSpecies[Math.floor(Math.random() * speedsterSpecies.length)];
+        this.round1SpeedstersSpawned++;
+      } else {
+        chosenMeta = normalSpecies[Math.floor(Math.random() * normalSpecies.length)] || REGULAR_MONSTER_SPECIES[0];
+      }
+    } else if (this.currentRound === 2) {
+      const eligibleSpecies = REGULAR_MONSTER_SPECIES.filter((s) => s.archetype === 'normal' || s.archetype === 'speedster' || s.archetype === 'shooter');
+      chosenMeta = eligibleSpecies[Math.floor(Math.random() * eligibleSpecies.length)] || REGULAR_MONSTER_SPECIES[0];
+    } else {
+      chosenMeta = REGULAR_MONSTER_SPECIES[Math.floor(Math.random() * REGULAR_MONSTER_SPECIES.length)] || REGULAR_MONSTER_SPECIES[0];
+    }
 
     // Determine mode & prompt text
     const roundMode = this.currentRoundMode;
@@ -314,7 +327,8 @@ export class GameEngine {
     }
 
     // Velocity & abilities
-    let velocityY = baseSpeed * (chosenMeta.speedMultiplier || 1.0);
+    const roundSpeedFactor = this.currentRound === 1 ? 0.88 : 1.0;
+    let velocityY = baseSpeed * (chosenMeta.speedMultiplier || 1.0) * roundSpeedFactor;
     let hp = 1;
     let maxHp = 1;
     let tankQueue: EnemyState['tankQueue'] = undefined;
@@ -336,8 +350,8 @@ export class GameEngine {
       }
     }
 
-    // Chance to be a splitting monster (splitting into 3 at mid-screen)
-    const canSplit = !chosenMeta.isBoss && chosenMeta.archetype !== 'tank' && Math.random() < 0.35;
+    // Chance to be a splitting monster (CHỈ Ở ROUND 2 & ROUND 3, ROUND 1 KHÔNG TÁCH)
+    const canSplit = this.currentRound > 1 && !chosenMeta.isBoss && chosenMeta.archetype !== 'tank' && Math.random() < 0.35;
 
     const enemy: EnemyState = {
       id: `mob_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
@@ -591,12 +605,14 @@ export class GameEngine {
         }
       }
 
-      // Boss firing: Boss shoots energy spheres with fair interval
+      // Boss firing: Boss shoots energy spheres
       if (enemy.isBoss) {
         if (!enemy.lastShotGameMs) {
-          enemy.lastShotGameMs = this.gameTimeMs + 3500;
+          // Round 1 Boss bắn rất ít (chờ 12s mới bắn phát đầu)
+          enemy.lastShotGameMs = this.gameTimeMs + (this.currentRound === 1 ? 12000 : 4500);
         } else if (this.gameTimeMs >= enemy.lastShotGameMs) {
-          enemy.lastShotGameMs = this.gameTimeMs + 7500;
+          // Round 1 Boss cách 16s mới bắn 1 phát (hiếm khi bắn > 1 lần), round sau 7.5s
+          enemy.lastShotGameMs = this.gameTimeMs + (this.currentRound === 1 ? 16000 : 7500);
           const targetX = GAME_BALANCE.ponpiCenterX;
           const targetY = GAME_BALANCE.ponpiCenterY;
           const startX = enemy.x;
@@ -604,7 +620,8 @@ export class GameEngine {
           const dx = targetX - startX;
           const dy = targetY - startY;
           const dist = Math.hypot(dx, dy) || 1;
-          const speed = 200;
+          // Đạn boss round 1 bay chậm (120 px/s)
+          const speed = this.currentRound === 1 ? 120 : 200;
 
           this.enemyBullets.push({
             id: `eb_boss_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,

@@ -84,8 +84,8 @@ export const HomeBattleScene: React.FC = () => {
       if (!container || !canvas) return;
       const rect = container.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const w = Math.max(320, Math.floor(rect.width));
-      const h = Math.max(340, Math.floor(rect.height));
+      const w = Math.max(180, Math.floor(rect.width));
+      const h = Math.max(160, Math.floor(rect.height));
 
       if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
         canvas.width = w * dpr;
@@ -97,6 +97,13 @@ export const HomeBattleScene: React.FC = () => {
 
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateCanvasSize();
+    });
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
 
     // Helper: spawn one falling enemy
     const spawnEnemy = (yOffset = -50): FallingEnemy => {
@@ -225,7 +232,7 @@ export const HomeBattleScene: React.FC = () => {
       ctx.clearRect(0, 0, width, height);
 
       const ponpiX = width / 2;
-      const ponpiY = height - 68;
+      const ponpiY = Math.max(120, height - 60);
 
       // 1. UPDATE ENEMIES
       const activeEnemies: FallingEnemy[] = [];
@@ -482,6 +489,7 @@ export const HomeBattleScene: React.FC = () => {
 
     return () => {
       cancelAnimationFrame(animId);
+      resizeObserver.disconnect();
       window.removeEventListener('resize', updateCanvasSize);
       canvas.removeEventListener('mousedown', handleCanvasPointer);
       canvas.removeEventListener('touchstart', handleCanvasPointer);
@@ -496,8 +504,6 @@ export const HomeBattleScene: React.FC = () => {
         position: 'relative',
         width: '100%',
         height: '100%',
-        minHeight: '320px',
-        maxHeight: '480px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

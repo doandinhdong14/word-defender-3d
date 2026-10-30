@@ -47,60 +47,121 @@ export const HomePage: React.FC = () => {
 
   return (
     <main className="doodle-home notebook-grid-bg" aria-labelledby="doodle-title">
-      {/* Top Utilities (Icon + 1 word) */}
-      <nav className="doodle-utilities" aria-label="Tiện ích">
-        <button onClick={() => setAlmanacOpen(true)}>
-          <BookOpen aria-hidden="true" />
-          <span>Sách quái</span>
-        </button>
-        <button onClick={() => navigateTo("gifts")}>
-          <Gift aria-hidden="true" />
-          <span>Quà</span>
-        </button>
-        <button onClick={() => navigateTo("events")}>
-          <CalendarDays aria-hidden="true" />
-          <span>Sự kiện</span>
-        </button>
-      </nav>
-
-      {/* Main Interactive Battle Stage */}
-      <div className="doodle-scene">
-        {/* Title Header */}
-        <div className="doodle-header-title">
+      {/* 1. TOP HEADER BAR (Desktop & Mobile Portrait) */}
+      <header className="doodle-top-bar">
+        {/* Brand Logo & Tagline */}
+        <div className="doodle-brand">
           <h1 id="doodle-title">pempom</h1>
           <span className="doodle-subtitle-badge">Arcade Typing</span>
         </div>
 
-        {/* Real-time motion battle scene: Ponpi shooting falling monsters */}
-        <div className="doodle-battle-wrapper">
-          <HomeBattleScene />
-        </div>
+        {/* Top Navigation & Utility Pills */}
+        <nav className="doodle-header-nav" aria-label="Tiện ích & Menu">
+          <button onClick={() => setAlmanacOpen(true)} className="doodle-pill-btn">
+            <BookOpen size={16} aria-hidden="true" />
+            <span>Sách quái</span>
+          </button>
+          <button onClick={() => navigateTo("gifts")} className="doodle-pill-btn">
+            <Gift size={16} aria-hidden="true" />
+            <span>Quà</span>
+          </button>
+          <button onClick={() => navigateTo("events")} className="doodle-pill-btn">
+            <CalendarDays size={16} aria-hidden="true" />
+            <span>Sự kiện</span>
+          </button>
 
-        {/* Action Buttons (Plump, Rounded, Minimal Text) */}
-        <nav className="doodle-play-menu" aria-label="Bắt đầu">
-          <button className="doodle-oval doodle-play" onClick={() => setModesOpen(true)}>
-            <Swords size={26} />
-            <span>Chơi</span>
-          </button>
-          <button className="doodle-oval doodle-lessons" onClick={() => navigateTo("library")}>
-            <BookOpen size={20} />
-            <span>Bài học</span>
-          </button>
+          {/* Desktop Direct Hub Links */}
+          <div className="doodle-desktop-hub">
+            <button onClick={() => navigateTo("store")} className="doodle-pill-btn">
+              <ShoppingBag size={16} aria-hidden="true" />
+              <span>Store</span>
+            </button>
+            <button onClick={() => navigateTo("leaderboard")} className="doodle-pill-btn">
+              <Trophy size={16} aria-hidden="true" />
+              <span>BXH</span>
+            </button>
+            <button onClick={() => navigateTo("account")} className="doodle-pill-btn account-pill">
+              <UserRound size={16} aria-hidden="true" />
+              <span>{account ? 'Tài khoản' : 'Đăng nhập'}</span>
+            </button>
+          </div>
         </nav>
+      </header>
+
+      {/* 2. MAIN LAYOUT STAGE */}
+      <div className="doodle-main-stage">
+        {/* Mobile Landscape Side Panel (Only visible in Landscape orientation) */}
+        <aside className="doodle-landscape-panel" aria-label="Bảng điều khiển ngang">
+          <div className="landscape-brand">
+            <h2>pempom</h2>
+            <span className="doodle-subtitle-badge">Arcade</span>
+          </div>
+
+          <div className="landscape-primary-actions">
+            <button className="doodle-oval doodle-play" onClick={() => setModesOpen(true)}>
+              <Swords size={22} />
+              <span>Chơi</span>
+            </button>
+            <button className="doodle-oval doodle-lessons" onClick={() => navigateTo("library")}>
+              <BookOpen size={18} />
+              <span>Bài học</span>
+            </button>
+          </div>
+
+          <nav className="landscape-grid-nav" aria-label="Phím tắt">
+            <button onClick={() => setAlmanacOpen(true)} title="Sách quái">
+              <BookOpen size={15} />
+              <span>Sách</span>
+            </button>
+            <button onClick={() => navigateTo("gifts")} title="Quà">
+              <Gift size={15} />
+              <span>Quà</span>
+            </button>
+            <button onClick={() => navigateTo("store")} title="Store">
+              <ShoppingBag size={15} />
+              <span>Store</span>
+            </button>
+            <button onClick={() => navigateTo("leaderboard")} title="BXH">
+              <Trophy size={15} />
+              <span>BXH</span>
+            </button>
+            <button onClick={() => navigateTo("account")} title="Tài khoản">
+              <UserRound size={15} />
+              <span>TK</span>
+            </button>
+          </nav>
+        </aside>
+
+        {/* Real-time Battle Motion Arena */}
+        <div className="doodle-arena-box">
+          <HomeBattleScene />
+
+          {/* Action CTAs (Desktop and Mobile Portrait) */}
+          <nav className="doodle-action-row" aria-label="Bắt đầu chơi">
+            <button className="doodle-oval doodle-play" onClick={() => setModesOpen(true)}>
+              <Swords size={26} />
+              <span>Chơi</span>
+            </button>
+            <button className="doodle-oval doodle-lessons" onClick={() => navigateTo("library")}>
+              <BookOpen size={20} />
+              <span>Bài học</span>
+            </button>
+          </nav>
+        </div>
       </div>
 
-      {/* Bottom Dock Navigation (Icon + 1 word) */}
-      <nav className="doodle-bottom-nav" aria-label="Khám phá">
+      {/* 3. BOTTOM DOCK (Mobile Portrait only) */}
+      <nav className="doodle-bottom-dock" aria-label="Điều hướng chính">
         <button onClick={() => navigateTo("store")}>
-          <ShoppingBag aria-hidden="true" />
+          <ShoppingBag size={19} aria-hidden="true" />
           <span>Store</span>
         </button>
         <button onClick={() => navigateTo("leaderboard")}>
-          <Trophy aria-hidden="true" />
+          <Trophy size={19} aria-hidden="true" />
           <span>BXH</span>
         </button>
         <button onClick={() => navigateTo("account")}>
-          <UserRound aria-hidden="true" />
+          <UserRound size={19} aria-hidden="true" />
           <span>Tài khoản</span>
         </button>
       </nav>
