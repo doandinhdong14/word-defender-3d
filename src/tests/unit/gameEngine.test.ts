@@ -151,4 +151,83 @@ describe('Game Engine enemy lanes', () => {
     expect(engine.selectedEnemyId).toBeNull();
     expect(engine.status).toBe('WAVE_PLAYING');
   });
+
+  it('spawns a missed answer effect showing word & meaning when enemy breaches defense line', () => {
+    const engine = new GameEngine({
+      setId: 'set_test',
+      mode: 'copy',
+      difficulty: 'normal',
+      words: [
+        {
+          id: 'word_dog',
+          setId: 'set_test',
+          english: 'dog',
+          vietnamese: 'con chó',
+          acceptedAnswers: ['dog'],
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+        {
+          id: 'word_cat',
+          setId: 'set_test',
+          english: 'cat',
+          vietnamese: 'con mèo',
+          acceptedAnswers: ['cat'],
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+      equippedSkills: [],
+      equippedHatId: null,
+      equippedShirtId: null,
+      equippedStyleId: 'style_classic',
+    });
+
+    for (let i = 0; i < 15; i++) {
+      engine.update(50);
+    }
+    expect(engine.enemies.length).toBeGreaterThan(0);
+    const enemy = engine.enemies[0];
+    const enemyId = enemy.id;
+
+    // Force enemy to defense line
+    enemy.y = 650;
+    engine.update(50);
+
+    // Enemy should be removed, life lost, and missed effect spawned
+    expect(engine.enemies.some((e) => e.id === enemyId)).toBe(false);
+    expect(engine.lives).toBe(2);
+    expect(engine.defeatedWordEffects).toHaveLength(1);
+    expect(engine.defeatedWordEffects[0].isMissed).toBe(true);
+    expect(engine.defeatedWordEffects[0].word).toBe('dog');
+    expect(engine.defeatedWordEffects[0].meaning).toBe('con chó');
+  });
+
+  it('ensures Boss includes 100% of the words from the round', () => {
+    const words = createWords(6);
+    const engine = new GameEngine({
+      setId: 'set_test',
+      mode: 'copy',
+      difficulty: 'normal',
+      words,
+      equippedSkills: [],
+      equippedHatId: null,
+      equippedShirtId: null,
+      equippedStyleId: 'style_classic',
+    });
+
+    // Clear wave queue and defeat any spawned mob to trigger boss phase
+    engine['waveQueue'] = [];
+    engine.enemies = [];
+    engine.update(50);
+
+    expect(engine.status).toBe('BOSS_PLAYING');
+    expect(engine.enemies).toHaveLength(1);
+    const boss = engine.enemies[0];
+    expect(boss.isBoss).toBe(true);
+    // Boss must have all 6 words, not just 2!
+    expect(boss.bossMaxSegments).toBe(6);
+    expect(boss.bossSegmentsRemaining).toBe(6);
+    expect(boss.bossWordQueue).toHaveLength(6);
+  });
 });

@@ -56,6 +56,7 @@ export interface EnemyProjectileState {
   id: string;
   x: number;
   y: number;
+  vx?: number;
   vy: number;
   speciesId: string;
   color: string;
@@ -67,6 +68,7 @@ export interface DefeatedWordEffect {
   y: number;
   word: string;
   meaning: string;
+  isMissed?: boolean;
   createdAtGameMs: number;
   expiresAtGameMs: number;
 }

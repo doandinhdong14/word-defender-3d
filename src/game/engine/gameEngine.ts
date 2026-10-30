@@ -372,19 +372,19 @@ export class GameEngine {
     // Round 1 Boss synthesizes key round 1 words!
     // Round 2 Boss synthesizes round 2 words in Recall mode!
     // Round 3 Boss is the Grand Boss reviewing synthesis words!
-    let bossWordsPool = this.round1Words;
+    let bossWordsPool: VocabularyEntry[] = [];
     const roundMode = this.currentRoundMode;
 
     if (this.currentRound === 1) {
-      bossWordsPool = this.round1Words.length > 0 ? this.round1Words : this.words.slice(0, 4);
+      bossWordsPool = this.round1Words.length > 0 ? this.round1Words : this.words;
     } else if (this.currentRound === 2) {
-      bossWordsPool = this.round2Words.length > 0 ? this.round2Words : this.words.slice(0, 4);
+      bossWordsPool = this.round2Words.length > 0 ? this.round2Words : this.words;
     } else {
       bossWordsPool = this.round3Words.length > 0 ? this.round3Words : this.words;
     }
 
-    const maxSegments = this.currentRound === 3 ? Math.min(4, bossWordsPool.length) : Math.min(2, bossWordsPool.length);
-    const bossSlice = bossWordsPool.slice(0, Math.max(1, maxSegments));
+    // Boss must be strong and require ALL words from the entire round!
+    const bossSlice = [...bossWordsPool];
     const bossCount = bossSlice.length;
     const firstWord = bossSlice[0] || this.words[0];
     const bossPrompts = bossSlice.map((entry) => ({
@@ -396,7 +396,8 @@ export class GameEngine {
     }));
 
     const speedMult = GAME_BALANCE.speedMultiplierByDifficulty[this.difficulty] || 1.0;
-    const bossSpeed = (GAME_BALANCE.baseEnemySpeedPxPerSec * speedMult) * 0.28; // Slower boss descent for multiple words
+    // Slower boss descent scaled to the number of words, giving ample intense typing time for all words
+    const bossSpeed = Math.max(6, (GAME_BALANCE.baseEnemySpeedPxPerSec * speedMult) * (3.0 / Math.max(3, bossCount)));
 
     // Choose thematic boss per round
     let chosenBoss = BOSS_MONSTER_SPECIES[0].id;
@@ -481,20 +482,58 @@ export class GameEngine {
       const effSpeed = calculateEffectiveSpeed(enemy, this.gameTimeMs);
       enemy.y += effSpeed * dtSec;
 
-      // Shooter firing
+      // Shooter firing: Shoots directly AT Ponpi (the player character)
       const meta = ALL_SPECIES_META[enemy.speciesId];
       if (meta?.canShoot && enemy.archetype === 'shooter') {
         if (!enemy.lastShotGameMs) {
           enemy.lastShotGameMs = this.gameTimeMs + 2500 + Math.random() * 2000;
         } else if (this.gameTimeMs >= enemy.lastShotGameMs) {
           enemy.lastShotGameMs = this.gameTimeMs + (meta.shotIntervalMs || 4500);
+          const targetX = GAME_BALANCE.ponpiCenterX;
+          const targetY = GAME_BALANCE.ponpiCenterY;
+          const startX = enemy.x;
+          const startY = enemy.y + 30;
+          const dx = targetX - startX;
+          const dy = targetY - startY;
+          const dist = Math.hypot(dx, dy) || 1;
+          const speed = 250;
+
           this.enemyBullets.push({
             id: `eb_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
-            x: enemy.x,
-            y: enemy.y + 30,
-            vy: 190,
+            x: startX,
+            y: startY,
+            vx: (dx / dist) * speed,
+            vy: (dy / dist) * speed,
             speciesId: enemy.speciesId,
             color: meta.projectileColor || '#E74C3C',
+          });
+          this.onSoundEffect?.('shoot', 'enemy_shot');
+        }
+      }
+
+      // Boss firing: Boss shoots powerful energy spheres directly at the player character Ponpi!
+      if (enemy.isBoss) {
+        if (!enemy.lastShotGameMs) {
+          enemy.lastShotGameMs = this.gameTimeMs + 2200;
+        } else if (this.gameTimeMs >= enemy.lastShotGameMs) {
+          enemy.lastShotGameMs = this.gameTimeMs + (this.currentRound === 3 ? 3200 : 4200);
+          const targetX = GAME_BALANCE.ponpiCenterX;
+          const targetY = GAME_BALANCE.ponpiCenterY;
+          const startX = enemy.x;
+          const startY = enemy.y + 45;
+          const dx = targetX - startX;
+          const dy = targetY - startY;
+          const dist = Math.hypot(dx, dy) || 1;
+          const speed = 240;
+
+          this.enemyBullets.push({
+            id: `eb_boss_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
+            x: startX,
+            y: startY,
+            vx: (dx / dist) * speed,
+            vy: (dy / dist) * speed,
+            speciesId: enemy.speciesId,
+            color: '#A855F7',
           });
           this.onSoundEffect?.('shoot', 'enemy_shot');
         }
@@ -506,25 +545,29 @@ export class GameEngine {
       }
     }
 
-    // Update Enemy Projectiles
+    // Update Enemy Projectiles directed at the player
     for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
       const eb = this.enemyBullets[i];
+      const vx = eb.vx !== undefined ? eb.vx : 0;
+      eb.x += vx * dtSec;
       eb.y += eb.vy * dtSec;
 
-      // Check if enemy bullet reached defense line
-      if (eb.y >= GAME_BALANCE.defenseLineY) {
+      // Check collision with Ponpi (player character) or defense line
+      const distToPonpi = Math.hypot(eb.x - GAME_BALANCE.ponpiCenterX, eb.y - GAME_BALANCE.ponpiCenterY);
+
+      if (distToPonpi <= 44 || eb.y >= GAME_BALANCE.defenseLineY) {
         this.enemyBullets.splice(i, 1);
         if (this.shieldActive) {
           this.shieldActive = false;
           this.onSoundEffect?.('skill');
-          this.spawnExplosionParticles(eb.x, eb.y, '#A9DDC3', 10);
+          this.spawnExplosionParticles(eb.x, eb.y, '#A9DDC3', 12);
         } else {
           if (this.gameTimeMs >= this.invulnerableUntilMs) {
             this.lives -= 1;
             this.invulnerableUntilMs = this.gameTimeMs + GAME_BALANCE.invulnerableDurationMs;
             this.combo = 0;
             this.onSoundEffect?.('hurt');
-            this.spawnExplosionParticles(eb.x, eb.y, '#EF6E78', 16);
+            this.spawnExplosionParticles(eb.x, eb.y, '#EF6E78', 18);
 
             if (this.lives <= 0) {
               this.finishRun('lose');
@@ -532,7 +575,7 @@ export class GameEngine {
             }
           }
         }
-      } else if (eb.y > GAME_BALANCE.stageHeight + 40) {
+      } else if (eb.y > GAME_BALANCE.stageHeight + 60 || eb.x < -60 || eb.x > GAME_BALANCE.stageWidth + 60) {
         this.enemyBullets.splice(i, 1);
       }
     }
@@ -649,6 +692,18 @@ export class GameEngine {
       hadHint: this.selectedEnemyId === enemy.id ? this.currentTargetHadHint : false,
       wrongKeystrokes: 0,
       timeToAnswerMs: this.gameTimeMs - enemy.spawnedAtGameMs,
+    });
+
+    // Floating missed answer effect: Reveals correct English word and Vietnamese meaning!
+    this.defeatedWordEffects.push({
+      id: `miss_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      x: enemy.x,
+      y: Math.min(enemy.y, GAME_BALANCE.defenseLineY - 30),
+      word: enemy.word,
+      meaning: enemy.meaningText || '',
+      isMissed: true,
+      createdAtGameMs: this.gameTimeMs,
+      expiresAtGameMs: this.gameTimeMs + 3200,
     });
 
     // Despawn enemy
@@ -776,20 +831,29 @@ export class GameEngine {
     const char = inputChar.toLowerCase();
     if (!/^[a-zA-Z '-]$/.test(char)) return;
 
-    // If no target currently selected, acquire target by first char
-    if (!this.selectedEnemyId) {
+    let currentTarget = this.selectedEnemyId
+      ? this.enemies.find((e) => e.id === this.selectedEnemyId)
+      : null;
+
+    // If no target OR (buffer is empty AND current target does not match the typed first character):
+    // Dynamically auto-switch to any eligible enemy on screen that starts with char!
+    if (
+      !currentTarget ||
+      currentTarget.pendingDefeat ||
+      (this.typedBuffer === '' && !currentTarget.acceptedAnswers.some((ans) => normalizeInput(ans).startsWith(char)))
+    ) {
       const match = findTargetByFirstChar(this.enemies, char);
       if (match) {
         this.selectTarget(match.id);
-      } else {
+        currentTarget = match;
+      } else if (!currentTarget || currentTarget.pendingDefeat) {
         // Soft feedback: no target
         this.onSoundEffect?.('wrong');
         return;
       }
     }
 
-    const currentTarget = this.enemies.find((e) => e.id === this.selectedEnemyId);
-    if (!currentTarget) {
+    if (!currentTarget || currentTarget.pendingDefeat) {
       this.selectedEnemyId = null;
       this.typedBuffer = '';
       return;
@@ -824,19 +888,50 @@ export class GameEngine {
       const bullet = this.spawnNormalBullet(currentTarget.id, true, matchedAnswer);
       this.onSoundEffect?.('shoot', bullet.kind, true);
 
-      // Target selection maintenance
+      // Target selection maintenance & instant segment advancement to prevent key jams
       if (currentTarget.isBoss) {
-        // Boss keeps target focus
-        currentTarget.pendingDefeat = true;
+        if (currentTarget.bossSegmentsRemaining && currentTarget.bossSegmentsRemaining > 1) {
+          currentTarget.bossSegmentsRemaining -= 1;
+          const nextPromptIndex = currentTarget.bossMaxSegments! - currentTarget.bossSegmentsRemaining;
+          const nextPrompt = currentTarget.bossWordQueue?.[nextPromptIndex];
+          if (nextPrompt) {
+            currentTarget.entryId = nextPrompt.entryId;
+            currentTarget.word = nextPrompt.word;
+            currentTarget.acceptedAnswers = nextPrompt.acceptedAnswers;
+            currentTarget.promptText = nextPrompt.promptText;
+            currentTarget.meaningText = nextPrompt.meaningText;
+            if (this.mode === 'listen') {
+              speakEnglishWord(nextPrompt.word);
+            }
+          }
+          currentTarget.pendingDefeat = false;
+          this.selectedEnemyId = currentTarget.id;
+          currentTarget.selected = true;
+          this.typedBuffer = '';
+          this.targetStartTimeMs = this.gameTimeMs;
+          this.currentTargetHadHint = false;
+        } else {
+          // Final boss word finished!
+          currentTarget.bossSegmentsRemaining = 0;
+          currentTarget.pendingDefeat = true;
+          this.selectedEnemyId = null;
+          this.typedBuffer = '';
+        }
+      } else if (currentTarget.archetype === 'tank' && (currentTarget.hp || 0) > 1 && currentTarget.tankQueue?.length) {
+        currentTarget.hp = (currentTarget.hp || 1) - 1;
+        const nextWord = currentTarget.tankQueue.shift()!;
+        currentTarget.entryId = nextWord.entryId;
+        currentTarget.word = nextWord.word;
+        currentTarget.acceptedAnswers = nextWord.acceptedAnswers;
+        currentTarget.promptText = nextWord.promptText;
+        currentTarget.meaningText = nextWord.meaningText;
+
+        currentTarget.pendingDefeat = false;
         this.selectedEnemyId = currentTarget.id;
         currentTarget.selected = true;
         this.typedBuffer = '';
-      } else if (currentTarget.archetype === 'tank' && (currentTarget.hp || 0) > 1) {
-        // Tank keeps target focus for remaining words
-        currentTarget.pendingDefeat = true;
-        this.selectedEnemyId = currentTarget.id;
-        currentTarget.selected = true;
-        this.typedBuffer = '';
+        this.targetStartTimeMs = this.gameTimeMs;
+        this.currentTargetHadHint = false;
       } else {
         currentTarget.pendingDefeat = true;
         this.selectedEnemyId = null;
@@ -947,14 +1042,12 @@ export class GameEngine {
       expiresAtGameMs: this.gameTimeMs + 2200,
     });
 
-    if (enemy.isBoss && enemy.bossWordQueue && enemy.bossSegmentsRemaining) {
-      enemy.bossSegmentsRemaining -= 1;
+    if (enemy.isBoss) {
       this.onSoundEffect?.('boss_hit');
-
-      // Pop mini particles on boss
+      // Pop mini particles on boss hit
       this.spawnExplosionParticles(enemy.x, enemy.y, '#C69BEC', 20);
 
-      if (enemy.bossSegmentsRemaining <= 0) {
+      if ((enemy.bossSegmentsRemaining || 0) <= 0) {
         // Boss Defeated!
         this.spawnExplosionParticles(enemy.x, enemy.y, '#FFD47D', 45);
         this.removeEnemy(enemy.id);
@@ -968,53 +1061,23 @@ export class GameEngine {
           // Wave 3 Boss defeated -> VICTORY!
           this.finishRun('win');
         }
-      } else {
-        // Advance to next boss prompt without skipping!
-        enemy.pendingDefeat = false;
-        const nextPromptIndex = enemy.bossMaxSegments! - enemy.bossSegmentsRemaining;
-        const nextPrompt = enemy.bossWordQueue[nextPromptIndex];
-        if (nextPrompt) {
-          enemy.entryId = nextPrompt.entryId;
-          enemy.word = nextPrompt.word;
-          enemy.acceptedAnswers = nextPrompt.acceptedAnswers;
-          enemy.promptText = nextPrompt.promptText;
-          enemy.meaningText = nextPrompt.meaningText;
-          this.typedBuffer = '';
-          this.targetStartTimeMs = this.gameTimeMs;
-          this.currentTargetHadHint = false;
-          // Keep target locked on Boss
-          this.selectedEnemyId = enemy.id;
-          enemy.selected = true;
-
-          if (this.mode === 'listen') {
-            speakEnglishWord(nextPrompt.word);
-          }
-        }
       }
       return;
     }
 
-    // Handle Tank monster (needs 2-3 words to defeat)
-    if (enemy.archetype === 'tank' && (enemy.hp || 0) > 1 && enemy.tankQueue && enemy.tankQueue.length > 0) {
-      enemy.hp! -= 1;
-      enemy.pendingDefeat = false;
+    // Handle Tank monster
+    if (enemy.archetype === 'tank' && (enemy.hp || 0) > 0) {
       this.onSoundEffect?.('boss_hit');
-      // Armor crack particles
       this.spawnExplosionParticles(enemy.x, enemy.y, '#95A5A6', 16);
-
-      const nextWord = enemy.tankQueue.shift()!;
-      enemy.entryId = nextWord.entryId;
-      enemy.word = nextWord.word;
-      enemy.acceptedAnswers = nextWord.acceptedAnswers;
-      enemy.promptText = nextWord.promptText;
-      enemy.meaningText = nextWord.meaningText;
-      this.typedBuffer = '';
-      this.targetStartTimeMs = this.gameTimeMs;
-      this.currentTargetHadHint = false;
-      // Keep target locked on Tank
-      this.selectedEnemyId = enemy.id;
-      enemy.selected = true;
       return;
+    }
+
+    // Regular Mob Defeated: Pop into paper confetti
+    this.spawnExplosionParticles(enemy.x, enemy.y, '#C69BEC', 20);
+    this.removeEnemy(enemy.id);
+    if (this.selectedEnemyId === enemy.id) {
+      this.selectedEnemyId = null;
+      this.typedBuffer = '';
     }
 
     // Regular Mob Defeated: Pop into paper confetti

@@ -59,4 +59,16 @@ describe('Typing Engine', () => {
     const event3 = { key: 'A', ctrlKey: false, altKey: false, metaKey: false, repeat: false } as KeyboardEvent;
     expect(cleanKey(event3)).toBe('a');
   });
+
+  it('normalizes Vietnamese accented characters and handles IME Process fallback', () => {
+    // Telex / VNI accents
+    expect(cleanKey({ key: 'á' } as KeyboardEvent)).toBe('a');
+    expect(cleanKey({ key: 'ê' } as KeyboardEvent)).toBe('e');
+    expect(cleanKey({ key: 'đ' } as KeyboardEvent)).toBe('d');
+    expect(cleanKey({ key: 'ư' } as KeyboardEvent)).toBe('u');
+    expect(cleanKey({ key: 'ơ' } as KeyboardEvent)).toBe('o');
+
+    // Windows IME Process key with code
+    expect(cleanKey({ key: 'Process', code: 'KeyC' } as KeyboardEvent)).toBe('c');
+  });
 });

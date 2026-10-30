@@ -238,29 +238,15 @@ export const BattlePage: React.FC = () => {
             setRoundBanner({
               round,
               phase: 'boss',
-              title: round === 3 ? '💀 ĐẠI TRÙM CUỐI XUẤT HIỆN!' : `🔥 TRÙM VÒNG ${round}`,
-              subtitle: round >= 2 ? 'Gõ các từ tiếng Anh tương ứng để chém máu Trùm!' : 'Tập trung triệt hạ Trùm quái vật!',
-            });
-          } else if (round === 2) {
-            setRoundBanner({
-              round: 2,
-              phase: 'mobs',
-              title: '🔥 VÒNG 2: THỬ THÁCH NHỚ NGHĨA',
-              subtitle: 'HIỆN TIẾNG VIỆT ➔ GÕ TIẾNG ANH! (Hãy tự nhớ từ vựng)',
-            });
-          } else if (round === 3) {
-            setRoundBanner({
-              round: 3,
-              phase: 'mobs',
-              title: '⚡ VÒNG 3: ĐẠI CHIẾN PHẢN XẠ',
-              subtitle: 'Quái tốc độ & Trùm Cuối! Hiện Tiếng Việt ➔ Gõ Tiếng Anh!',
+              title: round === 3 ? '💀 FINAL BOSS' : `💀 BOSS R${round}`,
+              subtitle: '',
             });
           } else {
             setRoundBanner({
-              round: 1,
+              round,
               phase: 'mobs',
-              title: '✨ VÒNG 1: KHỞI ĐỘNG GÕ TỪ',
-              subtitle: 'Nhìn tiếng Anh gõ tiếng Anh (Kèm phụ đề dịch nghĩa)',
+              title: `ROUND ${round}`,
+              subtitle: '',
             });
           }
         },
@@ -273,8 +259,8 @@ export const BattlePage: React.FC = () => {
       setRoundBanner({
         round: 1,
         phase: 'mobs',
-        title: '✨ VÒNG 1: GÕ THEO CHỮ CÓ SẴN',
-        subtitle: 'Nhìn tiếng Anh gõ tiếng Anh (Kèm phụ đề dịch nghĩa)',
+        title: 'ROUND 1',
+        subtitle: '',
       });
 
       // Game Loop
@@ -793,60 +779,36 @@ export const BattlePage: React.FC = () => {
           })}
         </div>
 
-        {/* Wave Clear / End of Round Announcement Banner */}
+        {/* Wave Clear Announcement */}
         {engineState.status === 'WAVE_CLEAR' && (
           <div
             style={{
               position: 'absolute',
-              top: '26%',
+              top: '24%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
               zIndex: 42,
               pointerEvents: 'none',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              width: 'max-content',
-              maxWidth: isMobile ? 'calc(100% - 32px)' : '440px',
-              boxSizing: 'border-box',
-              padding: isMobile ? '8px 14px' : '14px 26px',
-              background: 'linear-gradient(135deg, #15803D 0%, #16A34A 100%)',
+              padding: isMobile ? '6px 16px' : '10px 24px',
+              background: '#15803D',
               color: '#FFFFFF',
-              borderRadius: isMobile ? '12px' : '16px',
-              border: isMobile ? '2px solid #FFFFFF' : '3px solid #FFFFFF',
-              boxShadow: '0 8px 24px rgba(22, 163, 74, 0.35), 0 0 0 2px var(--color-ink)',
+              borderRadius: '999px',
+              border: '2px solid #FFFFFF',
+              boxShadow: '0 8px 24px rgba(22, 163, 74, 0.35)',
               textAlign: 'center',
               animation: 'popFloatUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+              fontFamily: 'var(--font-display)',
+              fontWeight: 900,
+              fontSize: isMobile ? '0.9rem' : '1.25rem',
+              letterSpacing: '1px',
+              whiteSpace: 'nowrap',
             }}
           >
-            <div
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontWeight: 900,
-                fontSize: isMobile ? '0.92rem' : '1.35rem',
-                letterSpacing: '0.3px',
-                lineHeight: 1.25,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              🎉 HOÀN THÀNH ROUND {engineState.wave}!
-            </div>
-            <div
-              style={{
-                fontFamily: 'var(--font-vietnamese)',
-                fontWeight: 700,
-                fontSize: isMobile ? '0.72rem' : '0.88rem',
-                marginTop: '3px',
-                opacity: 0.95,
-                lineHeight: 1.2,
-              }}
-            >
-              Chuẩn bị bước vào Round tiếp theo...
-            </div>
+            ✓ CLEAR • ROUND {engineState.wave}
           </div>
         )}
 
-        {/* Round Transition Announcement Banner */}
+        {/* Round Transition Announcement */}
         {roundBanner && (
           <div
             style={{
@@ -856,57 +818,32 @@ export const BattlePage: React.FC = () => {
               transform: 'translate(-50%, -50%)',
               zIndex: 40,
               pointerEvents: 'none',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              width: 'max-content',
-              maxWidth: isMobile ? 'calc(100% - 32px)' : '480px',
-              boxSizing: 'border-box',
-              padding: isMobile ? '7px 12px' : '12px 24px',
+              padding: isMobile ? '6px 16px' : '10px 24px',
               background: roundBanner.phase === 'boss'
-                ? 'linear-gradient(135deg, #7F1D1D 0%, #B91C1C 100%)'
+                ? '#B91C1C'
                 : roundBanner.round === 2
-                ? 'linear-gradient(135deg, #0F766E 0%, #0D9488 100%)'
+                ? '#0D9488'
                 : roundBanner.round === 3
-                ? 'linear-gradient(135deg, #6B21A8 0%, #8B5CF6 100%)'
-                : 'linear-gradient(135deg, #1E293B 0%, #334155 100%)',
+                ? '#7C3AED'
+                : '#1E293B',
               color: '#FFFFFF',
-              borderRadius: isMobile ? '12px' : '16px',
-              border: isMobile ? '2px solid #FFFFFF' : '3px solid #FFFFFF',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.28), 0 0 0 2px var(--color-ink)',
+              borderRadius: '999px',
+              border: '2px solid #FFFFFF',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
               textAlign: 'center',
               animation: 'popFloatUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+              fontFamily: 'var(--font-display)',
+              fontWeight: 900,
+              fontSize: isMobile ? '0.9rem' : '1.3rem',
+              letterSpacing: '1px',
+              whiteSpace: 'nowrap',
             }}
           >
-            <div
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontWeight: 900,
-                fontSize: isMobile ? '0.88rem' : '1.3rem',
-                letterSpacing: '0.3px',
-                lineHeight: 1.25,
-                textAlign: 'center',
-              }}
-            >
-              {roundBanner.title}
-            </div>
-            <div
-              style={{
-                fontFamily: 'var(--font-vietnamese)',
-                fontWeight: 700,
-                fontSize: isMobile ? '0.7rem' : '0.88rem',
-                marginTop: '3px',
-                opacity: 0.95,
-                lineHeight: 1.25,
-                textAlign: 'center',
-              }}
-            >
-              {roundBanner.subtitle}
-            </div>
+            {roundBanner.title}
           </div>
         )}
 
-        {/* Floating Defeated Word Meaning Popups */}
+        {/* Floating Word Popups (Defeated / Missed Answer) */}
         <div
           style={{
             position: 'absolute',
@@ -921,6 +858,7 @@ export const BattlePage: React.FC = () => {
           {defeatedEffects.map((effect) => {
             const leftPct = (effect.x / GAME_BALANCE.stageWidth) * 100;
             const topPct = (effect.y / GAME_BALANCE.stageHeight) * 100;
+            const isMissed = effect.isMissed;
 
             return (
               <div
@@ -928,33 +866,39 @@ export const BattlePage: React.FC = () => {
                 style={{
                   position: 'absolute',
                   left: isMobile
-                    ? `clamp(65px, ${leftPct}%, calc(100% - 65px))`
+                    ? `clamp(75px, ${leftPct}%, calc(100% - 75px))`
                     : `${leftPct}%`,
                   top: `${topPct}%`,
                   transform: 'translate(-50%, -50%)',
                   pointerEvents: 'none',
-                  animation: 'popFloatUp 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                  animation: 'popFloatUp 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   gap: '2px',
-                  backgroundColor: '#FFFFFF',
-                  border: '2.5px solid var(--color-ink)',
-                  borderRadius: '12px',
-                  boxShadow: '0 6px 16px rgba(0,0,0,0.2), 3px 3px 0 var(--color-ink)',
-                  padding: isMobile ? '4px 10px' : '6px 14px',
+                  backgroundColor: isMissed ? '#FEF2F2' : '#FFFFFF',
+                  border: isMissed ? '2px solid #EF4444' : '2px solid var(--color-ink)',
+                  borderRadius: '10px',
+                  boxShadow: isMissed
+                    ? '0 6px 18px rgba(239, 68, 68, 0.4), 2px 2px 0 #DC2626'
+                    : '0 6px 16px rgba(0,0,0,0.15), 2px 2px 0 var(--color-ink)',
+                  padding: isMobile ? '4px 10px' : '5px 12px',
                   textAlign: 'center',
                   whiteSpace: 'nowrap',
+                  zIndex: isMissed ? 50 : 35,
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <span style={{ color: '#16A34A', fontWeight: 900, fontSize: '0.85rem' }}>✓</span>
+                  <span style={{ color: isMissed ? '#DC2626' : '#16A34A', fontWeight: 900, fontSize: '0.85rem' }}>
+                    {isMissed ? '✕' : '✓'}
+                  </span>
                   <span
                     style={{
                       fontFamily: 'var(--font-english)',
-                      fontWeight: 800,
-                      color: '#16A34A',
-                      fontSize: isMobile ? '0.82rem' : '0.96rem',
+                      fontWeight: 900,
+                      color: isMissed ? '#DC2626' : '#16A34A',
+                      fontSize: isMobile ? '0.85rem' : '0.98rem',
+                      letterSpacing: '0.5px',
                     }}
                   >
                     {effect.word}
@@ -964,9 +908,9 @@ export const BattlePage: React.FC = () => {
                   <div
                     style={{
                       fontFamily: 'var(--font-vietnamese)',
-                      fontWeight: 800,
-                      color: 'var(--color-ink)',
-                      fontSize: isMobile ? '0.76rem' : '0.88rem',
+                      fontWeight: 700,
+                      color: isMissed ? '#991B1B' : 'var(--color-ink)',
+                      fontSize: isMobile ? '0.74rem' : '0.84rem',
                       lineHeight: 1.2,
                     }}
                   >
@@ -978,7 +922,7 @@ export const BattlePage: React.FC = () => {
           })}
         </div>
 
-        {/* HUD Top Bar (Lives, Waves, Score, Pause) */}
+        {/* HUD Top Bar (Lives, Wave, Ammo, Score, Pause) */}
         <div
           style={{
             position: 'absolute',
@@ -992,125 +936,132 @@ export const BattlePage: React.FC = () => {
             zIndex: 10,
           }}
         >
-          {/* Left: Hearts & Lives + Wave indicator */}
+          {/* Left: Lives + Wave + Ammo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '4px' : '6px' }}>
+            {/* Lives */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '3px',
-                padding: isMobile ? '3px 7px' : '4px 10px',
+                gap: '2px',
+                padding: isMobile ? '3px 6px' : '4px 8px',
                 backgroundColor: '#FFFFFF',
-                border: 'var(--border-ink)',
-                borderRadius: 'var(--radius-full)',
-                boxShadow: 'var(--shadow-sticker-sm)',
+                border: '1.5px solid var(--color-ink)',
+                borderRadius: '999px',
+                boxShadow: '1px 1.5px 0px var(--color-ink)',
               }}
             >
               {Array.from({ length: 3 }).map((_, i) => (
                 <Heart
                   key={i}
-                  size={isMobile ? 14 : 18}
-                  fill={i < engineState.lives ? 'var(--color-danger)' : '#E0E0E0'}
-                  color={i < engineState.lives ? 'var(--color-danger)' : 'var(--color-muted-ink)'}
+                  size={isMobile ? 13 : 16}
+                  fill={i < engineState.lives ? '#EF4444' : '#E2E8F0'}
+                  color={i < engineState.lives ? '#EF4444' : '#94A3B8'}
                 />
               ))}
             </div>
 
+            {/* Wave / Boss indicator */}
             <div
               style={{
-                padding: isMobile ? '3px 8px' : '4px 10px',
-                backgroundColor: engineState.status === 'BOSS_PLAYING' ? '#FEE2E2' : '#FFFFFF',
-                border: 'var(--border-ink)',
-                borderRadius: 'var(--radius-full)',
+                padding: isMobile ? '3px 7px' : '4px 10px',
+                backgroundColor: engineState.status === 'BOSS_PLAYING' ? '#FEF2F2' : '#FFFFFF',
+                border: '1.5px solid var(--color-ink)',
+                borderRadius: '999px',
                 fontFamily: 'var(--font-display)',
-                fontWeight: 800,
-                fontSize: isMobile ? '0.72rem' : '0.82rem',
-                boxShadow: 'var(--shadow-sticker-sm)',
+                fontWeight: 900,
+                fontSize: isMobile ? '0.72rem' : '0.8rem',
+                boxShadow: '1px 1.5px 0px var(--color-ink)',
                 whiteSpace: 'nowrap',
-                color: engineState.status === 'BOSS_PLAYING' ? '#B91C1C' : 'var(--color-ink)',
+                color: engineState.status === 'BOSS_PLAYING' ? '#DC2626' : 'var(--color-ink)',
+                letterSpacing: '0.5px',
               }}
             >
-              {engineState.status === 'BOSS_PLAYING'
-                ? `🔥 TRÙM R${engineState.wave}`
-                : engineState.wave === 1
-                ? `Vòng 1: Gõ Mẫu (1/3)`
-                : engineState.wave === 2
-                ? `🔥 Vòng 2: Việt➔Anh (2/3)`
-                : `⚡ Vòng 3: Thử Thách & Trùm (3/3)`}
+              {engineState.status === 'BOSS_PLAYING' ? `💀 BOSS` : `R${engineState.wave}`}
             </div>
 
+            {/* Ammo */}
             <div
               style={{
-                padding: isMobile ? '3px 6px' : '4px 9px',
+                padding: isMobile ? '3px 6px' : '4px 8px',
                 backgroundColor: '#EFF6FF',
-                border: 'var(--border-ink)',
-                borderRadius: 'var(--radius-full)',
+                border: '1.5px solid var(--color-ink)',
+                borderRadius: '999px',
                 fontFamily: 'var(--font-display)',
                 fontWeight: 800,
-                fontSize: isMobile ? '0.68rem' : '0.78rem',
-                boxShadow: 'var(--shadow-sticker-sm)',
+                fontSize: isMobile ? '0.7rem' : '0.76rem',
+                boxShadow: '1px 1.5px 0px var(--color-ink)',
                 whiteSpace: 'nowrap',
-                color: '#1D4ED8',
+                color: '#2563EB',
               }}
             >
               {inventory?.equippedBulletId === 'bullet_slow'
-                ? `❄️ Băng: ${(inventory?.ammoCounts?.['bullet_slow'] ?? 0)}`
+                ? `❄️ ${(inventory?.ammoCounts?.['bullet_slow'] ?? 0)}`
                 : inventory?.equippedBulletId === 'bullet_reveal'
-                ? `👁️ Soi: ${(inventory?.ammoCounts?.['bullet_reveal'] ?? 0)}`
-                : '✨ Vô hạn'}
+                ? `👁️ ${(inventory?.ammoCounts?.['bullet_reveal'] ?? 0)}`
+                : '✨ ∞'}
             </div>
           </div>
 
           {/* Center: Score & Combo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <div
               style={{
-                padding: isMobile ? '3px 8px' : '4px 14px',
-                backgroundColor: '#FFF9E6',
-                border: 'var(--border-ink)',
-                borderRadius: 'var(--radius-full)',
+                padding: isMobile ? '3px 8px' : '4px 12px',
+                backgroundColor: '#FFFFFF',
+                border: '1.5px solid var(--color-ink)',
+                borderRadius: '999px',
                 fontFamily: 'var(--font-display)',
                 fontWeight: 900,
-                fontSize: isMobile ? '0.78rem' : '1rem',
-                boxShadow: 'var(--shadow-sticker-sm)',
+                fontSize: isMobile ? '0.78rem' : '0.95rem',
+                boxShadow: '1px 1.5px 0px var(--color-ink)',
                 whiteSpace: 'nowrap',
+                letterSpacing: '0.5px',
               }}
             >
-              {isMobile ? engineState.score.toLocaleString() : `Điểm: ${engineState.score.toLocaleString()}`}
+              {engineState.score.toLocaleString()}
             </div>
 
             {engineState.combo > 1 && (
               <div
                 style={{
-                  padding: isMobile ? '3px 6px' : '4px 10px',
-                  backgroundColor: 'var(--color-accent-yellow)',
-                  border: 'var(--border-ink)',
-                  borderRadius: 'var(--radius-full)',
+                  padding: isMobile ? '3px 6px' : '4px 8px',
+                  backgroundColor: '#FEF08A',
+                  border: '1.5px solid var(--color-ink)',
+                  borderRadius: '999px',
                   fontFamily: 'var(--font-display)',
                   fontWeight: 900,
-                  fontSize: isMobile ? '0.7rem' : '0.8rem',
-                  boxShadow: 'var(--shadow-sticker-sm)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '3px',
+                  fontSize: isMobile ? '0.7rem' : '0.78rem',
+                  boxShadow: '1px 1.5px 0px var(--color-ink)',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <Sparkles size={isMobile ? 12 : 16} /> x{engineState.combo}!
+                🔥x{engineState.combo}
               </div>
             )}
           </div>
 
-          {/* Right: Pause Button */}
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <StickerButton
-              size="sm"
-              onClick={handleTogglePause}
-              icon={<Pause size={isMobile ? 14 : 16} />}
-              style={isMobile ? { padding: '4px 8px', fontSize: '0.75rem' } : undefined}
-            >
-              {isMobile ? 'Dừng' : 'Tạm Dừng [Esc]'}
-            </StickerButton>
-          </div>
+          {/* Right: Pause */}
+          <button
+            type="button"
+            onClick={handleTogglePause}
+            aria-label="Pause"
+            style={{
+              width: isMobile ? '28px' : '34px',
+              height: isMobile ? '28px' : '34px',
+              borderRadius: '999px',
+              backgroundColor: '#FFFFFF',
+              border: '1.5px solid var(--color-ink)',
+              boxShadow: '1px 1.5px 0px var(--color-ink)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+            }}
+          >
+            <Pause size={isMobile ? 13 : 16} />
+          </button>
         </div>
 
         {/* Desktop/Landscape HUD Bottom Bar (Skills & Actions) */}
@@ -1128,71 +1079,90 @@ export const BattlePage: React.FC = () => {
               zIndex: 10,
             }}
           >
-            {/* Skill Slots (Hotkeys 1, 2, 3) */}
-            <div style={{ display: 'flex', gap: '8px' }}>
+            {/* Skill Slots */}
+            <div style={{ display: 'flex', gap: '6px' }}>
               {skillsRuntime.map((skill, index) => {
                 const hotkey = index + 1;
                 const hasCharges = skill.remainingCharges > 0;
                 const isCoolingDown = (engineRef.current?.gameTimeMs || 0) < skill.readyAtGameMs;
 
-                let icon = <Snowflake size={18} />;
-                if (skill.itemId === 'skill_shield_bubble') icon = <Shield size={18} />;
+                let icon = <Snowflake size={15} />;
+                if (skill.itemId === 'skill_shield_bubble') icon = <Shield size={15} />;
 
                 return (
-                  <div
+                  <button
                     key={skill.itemId}
+                    type="button"
                     onClick={() => handleActivateSkill(index)}
+                    disabled={!hasCharges || isCoolingDown}
                     style={{
-                      padding: '5px 10px',
-                      backgroundColor: hasCharges && !isCoolingDown ? '#FFFFFF' : '#EAEAEA',
-                      border: 'var(--border-ink)',
-                      borderRadius: 'var(--radius-md)',
-                      boxShadow: hasCharges && !isCoolingDown ? 'var(--shadow-sticker)' : 'none',
+                      padding: '4px 8px',
+                      backgroundColor: hasCharges && !isCoolingDown ? '#FFFFFF' : '#E2E8F0',
+                      border: '1.5px solid var(--color-ink)',
+                      borderRadius: '8px',
+                      boxShadow: hasCharges && !isCoolingDown ? '1.5px 2px 0px var(--color-ink)' : 'none',
                       cursor: hasCharges && !isCoolingDown ? 'pointer' : 'not-allowed',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '6px',
-                      opacity: hasCharges && !isCoolingDown ? 1 : 0.6,
+                      gap: '5px',
+                      opacity: hasCharges && !isCoolingDown ? 1 : 0.5,
+                      fontFamily: 'var(--font-display)',
+                      fontWeight: 800,
+                      fontSize: '0.74rem',
                     }}
                   >
-                    <div
-                      style={{
-                        width: '21px',
-                        height: '21px',
-                        borderRadius: '4px',
-                        backgroundColor: 'var(--color-accent-yellow)',
-                        border: '1.5px solid var(--color-ink)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 900,
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.75rem',
-                      }}
-                    >
-                      {hotkey}
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: '0.76rem' }}>{skill.title}</div>
-                      <div style={{ fontSize: '0.68rem', color: 'var(--color-muted-ink)' }}>
-                        {hasCharges ? `${skill.remainingCharges} lượt` : 'Hết lượt'}
-                      </div>
-                    </div>
-                  </div>
+                    <span style={{ opacity: 0.5 }}>{hotkey}</span>
+                    {icon}
+                    <span>{skill.remainingCharges}</span>
+                  </button>
                 );
               })}
             </div>
 
             {/* Hint & Listen mode replay */}
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '6px' }}>
               {selectedMode === 'listen' && (
-                <StickerButton size="sm" onClick={handleReplayAudio} icon={<Volume2 size={16} />}>
-                  Nghe Lại [R]
-                </StickerButton>
+                <button
+                  type="button"
+                  onClick={handleReplayAudio}
+                  title="Nghe lại [R]"
+                  style={{
+                    padding: '5px 9px',
+                    borderRadius: '8px',
+                    border: '1.5px solid var(--color-ink)',
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '1.5px 2px 0px var(--color-ink)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                  }}
+                >
+                  <Volume2 size={15} /> R
+                </button>
               )}
-              <StickerButton size="sm" onClick={handleHintClick} icon={<HelpCircle size={16} />}>
-                Gợi Ý [H]
-              </StickerButton>
+              <button
+                type="button"
+                onClick={handleHintClick}
+                title="Gợi ý [H]"
+                style={{
+                  padding: '5px 9px',
+                  borderRadius: '8px',
+                  border: '1.5px solid var(--color-ink)',
+                  backgroundColor: '#FFF9E6',
+                  boxShadow: '1.5px 2px 0px var(--color-ink)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                }}
+              >
+                <HelpCircle size={15} /> H
+              </button>
             </div>
           </div>
         )}
@@ -1206,7 +1176,7 @@ export const BattlePage: React.FC = () => {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: 'rgba(37, 35, 43, 0.7)',
+              backgroundColor: 'rgba(15, 23, 42, 0.65)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1216,74 +1186,38 @@ export const BattlePage: React.FC = () => {
             <div
               style={{
                 backgroundColor: '#FFFFFF',
-                border: 'var(--border-ink)',
-                borderRadius: 'var(--radius-lg)',
-                boxShadow: 'var(--shadow-sticker-lg)',
-                padding: 'clamp(20px, 4vw, 30px)',
-                width: '90%',
-                maxWidth: '380px',
+                border: '2px solid var(--color-ink)',
+                borderRadius: '16px',
+                boxShadow: '4px 6px 0px var(--color-ink)',
+                padding: '24px 28px',
+                width: '88%',
+                maxWidth: '320px',
                 textAlign: 'center',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '12px',
+                gap: '10px',
               }}
             >
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 900 }}>
-                TẠM DỪNG
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 900, margin: '0 0 6px 0' }}>
+                PAUSE
               </h2>
-              <p style={{ color: 'var(--color-muted-ink)', fontSize: '0.9rem' }}>
-                Trò chơi đang dừng. Quái và kỹ năng được giữ nguyên.
-              </p>
 
               <StickerButton
                 variant="primary"
-                size="lg"
+                size="md"
                 onClick={handleTogglePause}
-                icon={<Play fill="var(--color-ink)" size={20} />}
+                icon={<Play fill="var(--color-ink)" size={16} />}
               >
-                Tiếp Tục Chơi [Esc]
+                Tiếp Tục [Esc]
               </StickerButton>
 
-              <StickerButton onClick={handleRestart} icon={<RotateCcw size={18} />}>
-                Chơi Lại Trận Này
+              <StickerButton size="md" onClick={handleRestart} icon={<RotateCcw size={16} />}>
+                Chơi Lại
               </StickerButton>
 
-              <StickerButton variant="danger" onClick={handleQuit} icon={<Home size={18} />}>
-                Thoát Về Trang Chủ
+              <StickerButton size="md" variant="danger" onClick={handleQuit} icon={<Home size={16} />}>
+                Về Trang Chủ
               </StickerButton>
-
-              {/* Developer Map Preview Switcher */}
-              <div
-                style={{
-                  marginTop: '6px',
-                  paddingTop: '8px',
-                  borderTop: '1px dashed var(--color-border)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                <div style={{ fontSize: '0.74rem', color: 'var(--color-muted-ink)' }}>
-                  Chủ đề Map: <strong>{selectedMap === 'forest-mountain' ? 'Phong Cảnh Núi Rừng' : 'Tập Vở Ô Ly (Mặc định)'}</strong>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleToggleMap(selectedMap === 'forest-mountain' ? 'default' : 'forest-mountain')}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--color-ink)',
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    textDecoration: 'underline',
-                    cursor: 'pointer',
-                    padding: '3px 6px',
-                  }}
-                >
-                  {!account ? 'Đăng nhập Google để mở thêm map' : selectedMap === 'forest-mountain' ? '↺ Chuyển về Map Mặc Định' : '🌲 Thử nghiệm Map: Phong Cảnh Núi Rừng'}
-                </button>
-              </div>
             </div>
           </div>
         )}
@@ -1338,43 +1272,25 @@ export const BattlePage: React.FC = () => {
 
                   return (
                     <>
-                      <div style={{ fontSize: '0.74rem', color: 'var(--color-muted-ink)', fontWeight: 600 }}>
-                        {isCopy ? (
-                          <>
-                            VÒNG 1 (Gõ chữ mẫu):{' '}
-                            <span
-                              style={{
-                                fontWeight: 800,
-                                color: 'var(--color-ink)',
-                                fontFamily: 'var(--font-english)',
-                              }}
-                            >
-                              {selectedEnemy.word}
-                            </span>
-                            {selectedEnemy.meaningText && (
-                              <span style={{ marginLeft: '6px', color: '#64748B', fontWeight: 600, fontSize: '0.72rem' }}>
-                                ({selectedEnemy.meaningText})
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            VÒNG {engineState.wave} (Hiện tiếng Việt ➔ Bấm tiếng Anh):{' '}
-                            <span
-                              style={{
-                                fontWeight: 900,
-                                color: '#B91C1C',
-                                fontFamily: 'var(--font-vietnamese)',
-                                fontSize: '0.86rem',
-                              }}
-                            >
-                              {selectedEnemy.meaningText || selectedEnemy.promptText}
-                            </span>
-                          </>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span
+                          style={{
+                            fontWeight: 800,
+                            color: isCopy ? '#15803D' : '#B91C1C',
+                            fontFamily: isCopy ? 'var(--font-english)' : 'var(--font-vietnamese)',
+                            fontSize: '0.82rem',
+                          }}
+                        >
+                          {isCopy ? selectedEnemy.word : (selectedEnemy.meaningText || selectedEnemy.promptText)}
+                        </span>
+                        {isCopy && selectedEnemy.meaningText && (
+                          <span style={{ color: '#64748B', fontWeight: 600, fontSize: '0.74rem' }}>
+                            ({selectedEnemy.meaningText})
+                          </span>
                         )}
                       </div>
 
-                      <div style={{ fontFamily: 'var(--font-english)', fontWeight: 800, fontSize: '1.15rem', marginTop: '2px', letterSpacing: '1px' }}>
+                      <div style={{ fontFamily: 'var(--font-english)', fontWeight: 800, fontSize: '1.1rem', marginTop: '2px', letterSpacing: '1px' }}>
                         {isCopy ? (
                           <>
                             <span style={{ color: '#16A34A', textDecoration: 'underline' }}>{typedPart}</span>
@@ -1394,8 +1310,8 @@ export const BattlePage: React.FC = () => {
                 })()}
               </div>
             ) : (
-              <div style={{ flex: 1, minWidth: 0, fontSize: isShortMobile ? '0.72rem' : '0.8rem', color: 'var(--color-muted-ink)', fontStyle: 'italic' }}>
-                {isShortMobile ? 'Chạm quái để chọn mục tiêu' : 'Chạm vào quái hoặc gõ ký tự để nhắm bắn!'}
+              <div style={{ flex: 1, minWidth: 0, fontSize: '0.78rem', color: 'var(--color-muted-ink)' }}>
+                {engineState.status === 'BOSS_PLAYING' ? '💀 BOSS' : 'Chạm quái để nhắm'}
               </div>
             )}
 
@@ -1470,27 +1386,21 @@ export const BattlePage: React.FC = () => {
                   onClick={() => handleActivateSkill(index)}
                   disabled={!hasCharges || isCoolingDown}
                   style={{
-                    padding: isShortMobile ? '3px 2px' : '4px 3px',
-                    backgroundColor: hasCharges && !isCoolingDown ? '#FFFFFF' : '#EAEAEA',
+                    padding: isShortMobile ? '4px 3px' : '5px 4px',
+                    backgroundColor: hasCharges && !isCoolingDown ? '#FFFFFF' : '#E2E8F0',
                     border: '1.5px solid var(--color-ink)',
-                    borderRadius: 'var(--radius-sm)',
+                    borderRadius: '8px',
                     boxShadow: hasCharges && !isCoolingDown ? '1.5px 2px 0px var(--color-ink)' : 'none',
                     cursor: hasCharges && !isCoolingDown ? 'pointer' : 'not-allowed',
                     display: 'flex',
-                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '2px',
-                    opacity: hasCharges && !isCoolingDown ? 1 : 0.6,
+                    gap: '5px',
+                    opacity: hasCharges && !isCoolingDown ? 1 : 0.5,
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {icon}
-                    <span style={{ fontWeight: 800, fontSize: '0.72rem' }}>{skill.title}</span>
-                  </div>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--color-muted-ink)' }}>
-                    {hasCharges ? `${skill.remainingCharges} lượt` : 'Hết lượt'}
-                  </span>
+                  {icon}
+                  <span style={{ fontWeight: 800, fontSize: '0.75rem' }}>{skill.remainingCharges}</span>
                 </button>
               );
             })}
@@ -1666,6 +1576,10 @@ export const BattlePage: React.FC = () => {
                     <button
                       key={k}
                       type="button"
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        handleVirtualKey(k, e);
+                      }}
                       onClick={(e) => handleVirtualKey(k, e)}
                       style={{
                         flex: 1,
@@ -1695,6 +1609,10 @@ export const BattlePage: React.FC = () => {
                   {rowIdx === 2 && (
                     <button
                       type="button"
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        handleVirtualBackspace(e);
+                      }}
                       onClick={handleVirtualBackspace}
                       style={{
                         flex: 1.5,
@@ -1722,6 +1640,10 @@ export const BattlePage: React.FC = () => {
               <div style={{ display: 'flex', gap: '4px', marginTop: '1px', padding: '0 3px' }}>
                 <button
                   type="button"
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    handleVirtualSpace(e);
+                  }}
                   onClick={handleVirtualSpace}
                   style={{
                     flex: 1,
@@ -1739,9 +1661,10 @@ export const BattlePage: React.FC = () => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     touchAction: 'manipulation',
+                    letterSpacing: '0.5px',
                   }}
                 >
-                  KHOẢNG CÁCH (SPACE)
+                  SPACE
                 </button>
 
                 <button
@@ -1771,7 +1694,6 @@ export const BattlePage: React.FC = () => {
                   }}
                 >
                   <Smartphone size={15} />
-                  <span>Phím điện thoại</span>
                 </button>
               </div>
             </div>

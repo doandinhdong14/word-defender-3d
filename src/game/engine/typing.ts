@@ -14,8 +14,24 @@ export function cleanKey(event: KeyboardEvent): string | null {
   if (event.ctrlKey || event.altKey || event.metaKey || event.repeat) {
     return null;
   }
+  let key = event.key;
+  if (!key) return null;
+
+  // Normalize Vietnamese diacritics (Unikey, EVKey, Windows Telex/VNI IME)
+  if (key.length === 1) {
+    key = key
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D');
+  }
+
+  // Fallback for IME Process or dead keys when typing on Windows
+  if ((key === 'Process' || key === 'Dead' || key.length !== 1) && event.code && /^Key[A-Z]$/.test(event.code)) {
+    key = event.code.slice(3).toLowerCase();
+  }
+
   // Allow letters, space, apostrophe, hyphen
-  const key = event.key;
   if (/^[a-zA-Z '-]$/.test(key)) {
     return key.toLowerCase();
   }
