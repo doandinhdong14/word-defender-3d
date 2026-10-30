@@ -224,11 +224,12 @@ export const PreparePage: React.FC = () => {
           onClick={() => setActiveModal("hero")}
           title={activeHero?.title || "pempom nguyên bản"}
         >
-          <div className="prepare-card-visual">
+          <div className="prepare-card-visual skin-visual">
+            <div className="stage-aura-ring" aria-hidden="true" />
             <img
               src={getAssetUrl(activeHero?.iconUrl || "/assets/ponpi/ponpi_idle.png")}
               alt=""
-              className="prepare-card-img"
+              className="prepare-card-img skin-img"
             />
           </div>
           <button
@@ -250,14 +251,22 @@ export const PreparePage: React.FC = () => {
           title={MAP_CONFIGS[selectedMap].name}
         >
           <div
-            className="prepare-card-visual map-visual"
+            className={`prepare-card-visual map-visual ${selectedMap === 'default' ? 'map-default-notebook' : ''}`}
             style={{
               backgroundColor: MAP_CONFIGS[selectedMap].previewBg,
               backgroundImage: MAP_CONFIGS[selectedMap].previewImage
                 ? `url(${getAssetUrl(MAP_CONFIGS[selectedMap].previewImage)})`
                 : undefined,
             }}
-          />
+          >
+            {selectedMap === 'default' && (
+              <div className="default-map-watermark">
+                <span className="default-map-icon">📝</span>
+                <span className="default-map-grid-text">TẬP VỞ Ô LY</span>
+              </div>
+            )}
+            <div className="map-bottom-shade" />
+          </div>
           <button
             type="button"
             className="prepare-card-center-btn"
@@ -276,7 +285,8 @@ export const PreparePage: React.FC = () => {
           onClick={() => setActiveModal("ammo")}
           title={activeBullet.title}
         >
-          <div className="prepare-card-visual">
+          <div className="prepare-card-visual bullet-visual">
+            <div className="bullet-energy-ring" aria-hidden="true" />
             <img
               src={getAssetUrl(activeBullet.iconUrl || "/assets/items/bullet_default_icon.png")}
               alt=""
@@ -302,7 +312,15 @@ export const PreparePage: React.FC = () => {
           title={activeSet?.title || "Tài liệu học"}
         >
           <div className="prepare-card-visual book-visual">
-            <BookOpen size={74} strokeWidth={1.8} color="#D35400" />
+            <div className="book-doodle-bg" aria-hidden="true">
+              <span className="doodle-letter d1">Aa</span>
+              <span className="doodle-letter d2">✦</span>
+              <span className="doodle-letter d3">Bb</span>
+              <span className="doodle-letter d4">✎</span>
+            </div>
+            <div className="book-hero-icon">
+              <BookOpen size={92} strokeWidth={2} color="#C0392B" />
+            </div>
           </div>
           <button
             type="button"
