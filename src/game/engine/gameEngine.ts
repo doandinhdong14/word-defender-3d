@@ -290,15 +290,15 @@ export class GameEngine {
     const baseSpeed = GAME_BALANCE.baseEnemySpeedPxPerSec * speedMult;
 
     // Archetype selection based on Round:
-    // Round 1: normal monsters (copy mode: English prompt -> type English)
-    // Round 2: normal + speedsters (recall mode: Vietnamese prompt -> type English)
+    // Round 1: tense mix of normal and fast speedsters right from the start!
+    // Round 2: normal + speedsters + shooters
     // Round 3: chaotic mix of speedsters, shooters, tanks, and normal!
     let eligibleSpecies = REGULAR_MONSTER_SPECIES;
     if (this.currentRound === 1) {
-      eligibleSpecies = REGULAR_MONSTER_SPECIES.filter((s) => s.archetype === 'normal');
+      eligibleSpecies = REGULAR_MONSTER_SPECIES.filter((s) => s.archetype === 'normal' || s.archetype === 'speedster');
       if (eligibleSpecies.length === 0) eligibleSpecies = REGULAR_MONSTER_SPECIES;
     } else if (this.currentRound === 2) {
-      eligibleSpecies = REGULAR_MONSTER_SPECIES.filter((s) => s.archetype === 'normal' || s.archetype === 'speedster');
+      eligibleSpecies = REGULAR_MONSTER_SPECIES.filter((s) => s.archetype === 'normal' || s.archetype === 'speedster' || s.archetype === 'shooter');
     }
 
     const chosenMeta = eligibleSpecies[Math.floor(Math.random() * eligibleSpecies.length)] || REGULAR_MONSTER_SPECIES[0];
@@ -336,6 +336,9 @@ export class GameEngine {
       }
     }
 
+    // Chance to be a splitting monster (splitting into 3 at mid-screen)
+    const canSplit = !chosenMeta.isBoss && chosenMeta.archetype !== 'tank' && Math.random() < 0.35;
+
     const enemy: EnemyState = {
       id: `mob_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
       speciesId: chosenMeta.id,
@@ -357,7 +360,10 @@ export class GameEngine {
       hp,
       maxHp,
       tankQueue,
-      lastShotGameMs: chosenMeta.canShoot ? this.gameTimeMs + 2000 + Math.random() * 2000 : undefined,
+      lastShotGameMs: chosenMeta.canShoot ? this.gameTimeMs + 4000 + Math.random() * 1500 : undefined,
+      canSplit,
+      hasSplit: false,
+      scale: 1.0,
     };
 
     this.enemies.push(enemy);
@@ -365,6 +371,69 @@ export class GameEngine {
     if (this.mode === 'listen') {
       speakEnglishWord(entry.english, entry.audioUrl);
     }
+  }
+
+  private splitEnemyIntoThree(parent: EnemyState): void {
+    const index = this.enemies.findIndex((e) => e.id === parent.id);
+    if (index === -1) return;
+
+    this.enemies.splice(index, 1);
+    if (this.selectedEnemyId === parent.id) {
+      this.selectedEnemyId = null;
+      this.typedBuffer = '';
+    }
+
+    const roundMode = parent.mode || this.currentRoundMode;
+    const offsetsX = [-90, 0, 90];
+
+    for (let s = 0; s < 3; s++) {
+      let entryWord = parent.word;
+      let entryPrompt = parent.promptText;
+      let entryMeaning = parent.meaningText;
+      let entryId = parent.entryId;
+      let acceptedAnswers = parent.acceptedAnswers;
+
+      if (s > 0 && this.wordPool.length > 0) {
+        const extraEntry = this.wordPool[(this.completedWordsCount + s + Math.floor(Math.random() * 5)) % this.wordPool.length];
+        entryId = extraEntry.id;
+        entryWord = extraEntry.english;
+        acceptedAnswers = extraEntry.acceptedAnswers.length > 0 ? extraEntry.acceptedAnswers : [extraEntry.english];
+        entryPrompt = roundMode === 'recall' ? (extraEntry.vietnamese || extraEntry.english) : extraEntry.english;
+        entryMeaning = extraEntry.vietnamese;
+      }
+
+      const childX = Math.max(90, Math.min(GAME_BALANCE.stageWidth - 90, parent.x + offsetsX[s]));
+      const childY = parent.y + (s === 1 ? -12 : 8);
+
+      const childEnemy: EnemyState = {
+        id: `mob_split_${Date.now()}_${s}_${Math.random().toString(36).substring(2, 5)}`,
+        speciesId: parent.speciesId,
+        entryId,
+        word: entryWord,
+        acceptedAnswers,
+        promptText: entryPrompt,
+        meaningText: entryMeaning,
+        mode: roundMode,
+        x: childX,
+        y: childY,
+        baseVelocityY: parent.baseVelocityY * 1.12,
+        statusEffects: { ...parent.statusEffects },
+        selected: false,
+        spawnedAtGameMs: this.gameTimeMs,
+        width: 48,
+        height: 48,
+        archetype: parent.archetype,
+        hp: 1,
+        maxHp: 1,
+        canSplit: false,
+        hasSplit: true,
+        scale: 0.68,
+      };
+
+      this.enemies.push(childEnemy);
+    }
+
+    this.onSoundEffect?.('hit', 'shield');
   }
 
   private spawnBoss(): void {
@@ -482,13 +551,24 @@ export class GameEngine {
       const effSpeed = calculateEffectiveSpeed(enemy, this.gameTimeMs);
       enemy.y += effSpeed * dtSec;
 
+      // Splitting mechanic: when a splitting monster travels to the middle (y >= 350 && y <= 460), it splits into 3 smaller enemies!
+      if (enemy.canSplit && !enemy.hasSplit && enemy.y >= 350 && enemy.y <= 460) {
+        enemy.hasSplit = true;
+        if (this.enemies.length + 2 <= this.maxConcurrentEnemies) {
+          this.splitEnemyIntoThree(enemy);
+          continue;
+        }
+      }
+
       // Shooter firing: Shoots directly AT Ponpi (the player character)
       const meta = ALL_SPECIES_META[enemy.speciesId];
       if (meta?.canShoot && enemy.archetype === 'shooter') {
         if (!enemy.lastShotGameMs) {
-          enemy.lastShotGameMs = this.gameTimeMs + 2500 + Math.random() * 2000;
+          // Ra 1 tý rồi mới bắn (3.8s - 5.5s)
+          enemy.lastShotGameMs = this.gameTimeMs + 4000 + Math.random() * 1500;
         } else if (this.gameTimeMs >= enemy.lastShotGameMs) {
-          enemy.lastShotGameMs = this.gameTimeMs + (meta.shotIntervalMs || 4500);
+          // Lâu lâu mới bắn 1 cái chứ không bắn dồn dập (8.5s - 12s)
+          enemy.lastShotGameMs = this.gameTimeMs + 9000 + Math.random() * 3000;
           const targetX = GAME_BALANCE.ponpiCenterX;
           const targetY = GAME_BALANCE.ponpiCenterY;
           const startX = enemy.x;
@@ -496,7 +576,7 @@ export class GameEngine {
           const dx = targetX - startX;
           const dy = targetY - startY;
           const dist = Math.hypot(dx, dy) || 1;
-          const speed = 250;
+          const speed = 190;
 
           this.enemyBullets.push({
             id: `eb_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
@@ -511,12 +591,12 @@ export class GameEngine {
         }
       }
 
-      // Boss firing: Boss shoots powerful energy spheres directly at the player character Ponpi!
+      // Boss firing: Boss shoots energy spheres with fair interval
       if (enemy.isBoss) {
         if (!enemy.lastShotGameMs) {
-          enemy.lastShotGameMs = this.gameTimeMs + 2200;
+          enemy.lastShotGameMs = this.gameTimeMs + 3500;
         } else if (this.gameTimeMs >= enemy.lastShotGameMs) {
-          enemy.lastShotGameMs = this.gameTimeMs + (this.currentRound === 3 ? 3200 : 4200);
+          enemy.lastShotGameMs = this.gameTimeMs + 7500;
           const targetX = GAME_BALANCE.ponpiCenterX;
           const targetY = GAME_BALANCE.ponpiCenterY;
           const startX = enemy.x;
@@ -524,7 +604,7 @@ export class GameEngine {
           const dx = targetX - startX;
           const dy = targetY - startY;
           const dist = Math.hypot(dx, dy) || 1;
-          const speed = 240;
+          const speed = 200;
 
           this.enemyBullets.push({
             id: `eb_boss_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,

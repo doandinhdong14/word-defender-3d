@@ -1,5 +1,5 @@
 export const GAME_BALANCE = {
-  maxLives: 3,
+  maxLives: 5,
   wavesPerRun: 3,                 // wave 1 & 2 regular mobs; wave 3 boss
   regularEnemiesPerWave: [6, 8],
   bossRequiredWords: 5,

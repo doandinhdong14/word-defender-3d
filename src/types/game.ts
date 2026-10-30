@@ -50,6 +50,9 @@ export interface EnemyState {
   }>;
   lastShotGameMs?: number;
   revealedUntilGameMs?: number;
+  canSplit?: boolean;
+  hasSplit?: boolean;
+  scale?: number;
 }
 
 export interface EnemyProjectileState {

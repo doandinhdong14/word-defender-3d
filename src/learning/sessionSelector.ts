@@ -199,37 +199,19 @@ export async function selectSessionWords(
 
   const selected: VocabularyEntry[] = [];
 
-  // Priority 1: Due reviews (up to 40% of session)
-  const maxDue = Math.min(Math.ceil(targetCount * 0.4), dueWords.length);
-  selected.push(...shuffle(dueWords).slice(0, maxDue));
-
-  // Priority 2: Struggling words (up to 30% of session)
-  const maxStruggling = Math.min(Math.ceil(targetCount * 0.3), strugglingWords.length);
-  selected.push(...shuffle(strugglingWords).slice(0, maxStruggling));
-
-  // Priority 3: Next new words from deck
-  const neededAfterReviews = targetCount - selected.length;
-  // Preserve order of new words from the set so users progress sequentially
-  const newToAdd = newWords.slice(0, neededAfterReviews);
+  // Priority 1: Next new unseen words from deck (sequential progression without repeating from start)
+  const newToAdd = newWords.slice(0, targetCount);
   selected.push(...newToAdd);
 
-  // If still need words and there are more due or struggling words left
+  // Priority 2: ONLY when running low on new words in the deck ("bao giờ thiếu từ quá thì mới lôi từ cũ ra"):
   if (selected.length < targetCount) {
-    const remainingDue = dueWords.filter((w) => !selected.some((s) => s.id === w.id));
-    const remainingStruggling = strugglingWords.filter((w) => !selected.some((s) => s.id === w.id));
-    const extraReviews = shuffle([...remainingDue, ...remainingStruggling]);
-    const needed = targetCount - selected.length;
-    selected.push(...extraReviews.slice(0, needed));
-  }
-
-  // ONLY if all new words are exhausted and targetCount is not met:
-  // Allow reviewing mastered words so the game has enough enemies to play
-  if (selected.length < targetCount && newWords.length === 0) {
-    const needed = targetCount - selected.length;
-    const availableMastered = shuffle(
-      masteredNotDueWords.filter((w) => !selected.some((s) => s.id === w.id))
-    );
-    selected.push(...availableMastered.slice(0, needed));
+    const reviewsPool = shuffle([...strugglingWords, ...dueWords, ...masteredNotDueWords]);
+    for (const w of reviewsPool) {
+      if (selected.length >= targetCount) break;
+      if (!selected.some((s) => s.id === w.id)) {
+        selected.push(w);
+      }
+    }
   }
 
   // Minimum fallback if pool is smaller than targetCount

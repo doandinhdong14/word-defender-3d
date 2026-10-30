@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GameEngine } from '../../game/engine/gameEngine';
 import { VocabularyEntry } from '../../types/vocabulary';
+import { GAME_BALANCE } from '../../config/balance';
 
 const createWords = (count: number): VocabularyEntry[] =>
   Array.from({ length: count }, (_, index) => ({
@@ -196,7 +197,7 @@ describe('Game Engine enemy lanes', () => {
 
     // Enemy should be removed, life lost, and missed effect spawned
     expect(engine.enemies.some((e) => e.id === enemyId)).toBe(false);
-    expect(engine.lives).toBe(2);
+    expect(engine.lives).toBe(GAME_BALANCE.maxLives - 1);
     expect(engine.defeatedWordEffects).toHaveLength(1);
     expect(engine.defeatedWordEffects[0].isMissed).toBe(true);
     expect(engine.defeatedWordEffects[0].word).toBe('dog');

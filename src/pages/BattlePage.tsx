@@ -4,6 +4,7 @@ import { GameEngine } from '../game/engine/gameEngine';
 import { playSoundEffect, configureSoundSettings } from '../utils/soundEffects';
 import { selectSessionWords } from '../learning/sessionSelector';
 import { logAttempt } from '../learning/attempts';
+import { batchSaveLearningProgress } from '../learning/scheduler';
 import { drawPonpi } from '../game/assets/PonpiRenderer';
 import { drawMonster } from '../game/assets/MonsterRenderer';
 import { drawBullet } from '../game/assets/BulletRenderer';
@@ -227,10 +228,21 @@ export const BattlePage: React.FC = () => {
           }
         },
         onAttempt: (params) => {
-          if (account) void logAttempt(params);
+          void logAttempt(params);
         },
         onRunFinished: (summary: RunSummary) => {
           setLastRunSummary(summary);
+          // Automatically save all attempted words to the account/database
+          if (summary.wordResults && summary.wordResults.length > 0) {
+            void batchSaveLearningProgress(
+              summary.wordResults.map((w) => ({
+                entryId: w.entryId,
+                isMastered: w.isMastered,
+                mode: summary.mode,
+                hadHint: w.hadHint,
+              }))
+            );
+          }
           navigateTo('results');
         },
         onRoundChanged: (round, phase) => {
@@ -444,7 +456,7 @@ export const BattlePage: React.FC = () => {
         bossSegmentsRemaining: enemy.bossSegmentsRemaining,
         bossMaxSegments: enemy.bossMaxSegments,
         pendingDefeat: enemy.pendingDefeat,
-        scale: visualScale,
+        scale: visualScale * (enemy.scale || 1.0),
       });
     }
 
@@ -748,7 +760,7 @@ export const BattlePage: React.FC = () => {
                   left: isMobile
                     ? `clamp(${enemy.isBoss ? 90 : 68}px, ${leftPct}%, calc(100% - ${enemy.isBoss ? 90 : 68}px))`
                     : `${leftPct}%`,
-                  top: `${topPct + (enemy.isBoss ? 7.2 : 3.6)}%`,
+                  top: `${topPct + (enemy.isBoss ? 7.2 : (enemy.scale && enemy.scale < 1 ? 2.5 : 3.6))}%`,
                   transform: 'translate(-50%, 0)',
                   width: 'max-content',
                   whiteSpace: 'nowrap',
