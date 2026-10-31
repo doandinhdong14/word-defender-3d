@@ -9,22 +9,26 @@ import {
   Crosshair,
   Gift,
   LockKeyhole,
+  Menu,
   ShoppingBag,
   Sparkles,
   Swords,
   Trophy,
   UserRound,
+  X,
 } from "lucide-react";
 import { useApp } from "../app/appStore";
 import { HomeBattleScene } from "../components/HomeBattleScene";
 import "../styles/doodle-home.css";
 import { useAuth } from "../auth/AuthContext";
 import { getAssetUrl } from "../utils/assetUrl";
+import { NavDrawer } from "../components/NavDrawer";
 
 export const HomePage: React.FC = () => {
   const { navigateTo, wallet, profile } = useApp();
   const { account } = useAuth();
   const [modesOpen, setModesOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // 1. GAME MODES SELECTION SCREEN
   if (modesOpen) {
@@ -165,22 +169,33 @@ export const HomePage: React.FC = () => {
                 {account?.displayName || "Đăng nhập"}
               </span>
             </button>
+
+            {/* Mobile/Tablet Hamburger Button */}
+            <button
+              className="doodle-hamburger"
+              aria-label={mobileMenuOpen ? "Đóng menu" : "Mở menu điều hướng (3 sọc)"}
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Hamburger Drawer Dropdown */}
+        <NavDrawer
+          isOpen={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          currentRoute="home"
+          onNavigate={navigateTo}
+          wallet={wallet}
+        />
       </header>
 
       {/* HERO SECTION: 2-COLUMN BALANCED STAGE */}
       <section className="landing-hero-section">
         {/* Left Column: Info & Rounded Juicy Play CTA */}
         <div className="landing-hero-card">
-          {/* Landscape Cockpit Deck Brand */}
-          <div className="landscape-deck-brand">
-            <div className="landing-brand-text">
-              <span className="landing-brand-title">pempom</span>
-              <span className="landing-brand-badge">Arcade</span>
-            </div>
-          </div>
-
           <div>
             <div className="landing-eyebrow">
               <Sparkles size={13} aria-hidden="true" />
@@ -206,10 +221,7 @@ export const HomePage: React.FC = () => {
                   <div className="plump-play-icon">
                     <Swords size={22} strokeWidth={2.2} />
                   </div>
-                  <div className="plump-play-labels">
-                    <strong>CHƠI NGAY</strong>
-                    <small>Đấu thường · Vào trận</small>
-                  </div>
+                  <strong className="plump-play-title">CHƠI NGAY</strong>
                 </div>
                 <ChevronRight size={22} className="plump-arrow" />
               </button>
@@ -224,39 +236,6 @@ export const HomePage: React.FC = () => {
                 </button>
               </div>
             </div>
-          </div>
-
-          {/* Highlights */}
-          <div className="landing-bullets-row">
-            <span className="bullet-chip">
-              <span className="bullet-dot" /> 5 Mạng mỗi trận
-            </span>
-            <span className="bullet-chip">
-              <span className="bullet-dot" /> Quái phân tách & Đấu Boss
-            </span>
-            <span className="bullet-chip">
-              <span className="bullet-dot" /> Chơi ngay không cần tài khoản
-            </span>
-          </div>
-
-          {/* Landscape Cockpit Deck Navigation */}
-          <div className="landing-landscape-nav">
-            <button onClick={() => navigateTo("store")} className="landscape-nav-btn">
-              <ShoppingBag size={14} />
-              <span>Store</span>
-            </button>
-            <button onClick={() => navigateTo("leaderboard")} className="landscape-nav-btn">
-              <Trophy size={14} />
-              <span>BXH</span>
-            </button>
-            <button onClick={() => navigateTo("gifts")} className="landscape-nav-btn">
-              <Gift size={14} />
-              <span>Quà</span>
-            </button>
-            <button onClick={() => navigateTo("account")} className="landscape-nav-btn">
-              <UserRound size={14} />
-              <span>TK</span>
-            </button>
           </div>
         </div>
 
@@ -303,48 +282,6 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
-
-
-
-      {/* FOOTER */}
-      <footer className="landing-footer">
-        <div className="landing-footer-inner">
-          <span>© {new Date().getFullYear()} pempom</span>
-          <span className="landing-footer-tagline">
-            Mỗi từ mới, một cuộc phiêu lưu ✦
-          </span>
-          <span>v1.0 · Học mà chơi</span>
-        </div>
-      </footer>
-
-      {/* MOBILE PORTRAIT BOTTOM DOCK (max-width: 960px) */}
-      <nav className="landing-mobile-dock" aria-label="Điều hướng nhanh mobile">
-        <button
-          onClick={() => setModesOpen(true)}
-          className="mobile-dock-btn dock-play-highlight"
-        >
-          <Swords size={20} />
-          <span>Chơi</span>
-        </button>
-        <button onClick={() => navigateTo("library")} className="mobile-dock-btn">
-          <BookOpen size={19} />
-          <span>Bài học</span>
-        </button>
-        <button onClick={() => navigateTo("store")} className="mobile-dock-btn">
-          <ShoppingBag size={19} />
-          <span>Store</span>
-        </button>
-        <button onClick={() => navigateTo("leaderboard")} className="mobile-dock-btn">
-          <Trophy size={19} />
-          <span>BXH</span>
-        </button>
-        <button onClick={() => navigateTo("account")} className="mobile-dock-btn">
-          <UserRound size={19} />
-          <span>Tài khoản</span>
-        </button>
-      </nav>
-
-
     </main>
   );
 };

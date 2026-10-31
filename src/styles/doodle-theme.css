@@ -65,31 +65,65 @@
   flex-shrink: 0;
 }
 
-.doodle-app-header button { display: inline-flex; align-items: center; justify-content: center; border: 0; background: transparent; }
-
-.doodle-back {
+.doodle-app-header button:not(.doodle-hamburger) {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+}
+
+/* Unified Brand Navigation Button (Home & Back) */
+.doodle-brand-nav-btn {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 6px;
   border: 1.5px solid #302d26 !important;
   border-radius: 999px;
   background: #FFFFFF !important;
-  font-size: 14px;
-  font-weight: 700;
-  color: #302d26;
   cursor: pointer;
   box-shadow: 1.5px 2px 0 #302d26;
-  transition: transform 0.15s, background 0.15s;
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  text-decoration: none;
+  flex-shrink: 0;
 }
-.doodle-back:hover { background: #f3e3bd !important; transform: translateY(-1px); }
 
-.doodle-wordmark {
+.doodle-brand-nav-btn:hover {
+  background: #fdf6e7 !important;
+  transform: translateY(-1px);
+  box-shadow: 2px 3px 0 #302d26;
+}
+
+.doodle-brand-nav-btn:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 #302d26;
+}
+
+.doodle-brand-nav-btn:hover .doodle-brand-back-icon {
+  transform: translateX(-2px);
+}
+
+.doodle-brand-back-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #f3e3bd;
+  border: 1px solid #302d26;
+  color: #302d26;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.doodle-brand-nav-btn .doodle-wordmark {
   color: #b52c27 !important;
-  font: 400 32px/1 var(--font-english);
-  letter-spacing: -2px;
-  transform: rotate(-3deg);
-  cursor: pointer;
+  font: 400 24px/1 var(--font-english);
+  letter-spacing: -1.5px;
+  transform: rotate(-2deg);
+  margin-top: 1px;
 }
 
 .doodle-wallet {
@@ -105,6 +139,11 @@
   cursor: pointer;
   box-shadow: 1.5px 2px 0 #302d26;
   white-space: nowrap;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.doodle-wallet:hover {
+  background: #ebd4a5 !important;
+  transform: translateY(-1px);
 }
 .doodle-wallet svg { color: #9b7135; }
 
@@ -117,10 +156,11 @@
   flex: 1 1 auto;
 }
 
-.desktop-nav button {
+.desktop-nav button,
+.desktop-nav .desktop-nav-item {
   position: relative;
   min-width: 0;
-  min-height: 38px;
+  min-height: 36px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -128,41 +168,63 @@
   border: 1.5px solid transparent;
   border-radius: 999px;
   background: transparent;
-  font: 700 14px/1.2 var(--font-english);
+  font: 700 13.5px/1.2 var(--font-english);
   color: #302d26;
   cursor: pointer;
-  transition: transform .15s, background .15s, border-color .15s;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
   white-space: nowrap;
 }
 
-.desktop-nav svg { flex-shrink: 0; color: #302d26; fill: #e9c17c; transform: rotate(-4deg); }
+.desktop-nav svg {
+  flex-shrink: 0;
+  color: #302d26;
+  fill: #e9c17c;
+  transform: rotate(-4deg);
+}
 .desktop-nav button:nth-child(even) svg { transform: rotate(4deg); }
-.desktop-nav button.active { border-color: #302d26; background: #f3e3bd; box-shadow: 1.5px 2px 0 #302d26; }
-.desktop-nav button:hover { background: #f3e3bd; transform: translateY(-2px); }
+.desktop-nav button.active,
+.desktop-nav .desktop-nav-item.active {
+  border-color: #302d26;
+  background: #f3e3bd;
+  box-shadow: 1.5px 2px 0 #302d26;
+}
+.desktop-nav button:hover,
+.desktop-nav .desktop-nav-item:hover {
+  background: #f3e3bd;
+  transform: translateY(-2px);
+}
 
-/* Mobile Hamburger Button (3 sọc ☰) */
+/* Mobile Hamburger Button (☰) - HIDDEN BY DEFAULT ON DESKTOP */
 .doodle-hamburger {
-  display: none;
+  display: none !important;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 2px solid #302d26 !important;
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid #302d26 !important;
   border-radius: 10px;
   background: #f3e3bd !important;
-  color: #302d26;
+  color: #302d26 !important;
   cursor: pointer;
-  box-shadow: 2px 2px 0 #302d26;
-  transition: transform 0.1s ease;
+  box-shadow: 1.5px 2px 0 #302d26;
+  transition: transform 0.12s ease, background 0.12s ease;
+  flex-shrink: 0;
 }
-.doodle-hamburger:active { transform: translateY(1px); box-shadow: 1px 1px 0 #302d26; }
+.doodle-hamburger:hover {
+  background: #ebd4a5 !important;
+  transform: translateY(-1px);
+}
+.doodle-hamburger:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 #302d26;
+}
 
 /* Mobile Navigation Dropdown Backdrop & Drawer */
 .mobile-nav-backdrop {
   position: fixed;
   inset: 0;
   top: 56px;
-  z-index: 120;
+  z-index: 1000;
   background: rgba(30, 27, 24, 0.45);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -173,10 +235,12 @@
   background-color: var(--color-paper);
   background-image: linear-gradient(to right, var(--color-grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--color-grid-line) 1px, transparent 1px);
   background-size: 14px 14px;
-  border-bottom: 3px solid #302d26;
+  border-bottom: 2.5px solid #302d26;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
-  padding: 14px 16px 20px;
+  padding: 16px 18px 22px;
   animation: slideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .mobile-nav-header {
@@ -184,15 +248,33 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
-  padding-bottom: 8px;
+  padding-bottom: 10px;
   border-bottom: 1.5px dashed #c9b593;
 }
 
-.mobile-nav-title {
-  font-family: var(--font-english);
-  font-size: 15px;
+.mobile-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-nav-wordmark {
+  font: 400 26px/1 var(--font-english);
+  color: #b52c27;
+  letter-spacing: -1.5px;
+  transform: rotate(-2deg);
+}
+
+.mobile-nav-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  background: #302d26;
+  color: #f7f5ee;
+  border-radius: 999px;
+  font-size: 11px;
   font-weight: 800;
-  color: #766b59;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .mobile-nav-close {
@@ -205,38 +287,155 @@
   background: #FFF !important;
   color: #302d26;
   cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.mobile-nav-close:hover {
+  background: #f8efd9 !important;
+  transform: rotate(90deg);
 }
 
+/* User status strip inside Drawer */
+.mobile-nav-user-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  background: #FFFFFF;
+  border: 1.5px solid #302d26;
+  border-radius: 12px;
+  box-shadow: 1.5px 2px 0 #302d26;
+}
+
+.drawer-user-info-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  cursor: pointer;
+  min-width: 0;
+  text-align: left;
+}
+
+.drawer-user-avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f3e3bd;
+  border: 1.5px solid #302d26;
+  font-weight: 800;
+  font-size: 13px;
+  color: #302d26;
+  flex-shrink: 0;
+}
+
+.drawer-user-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: #302d26;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drawer-wallet-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1.5px solid #302d26 !important;
+  border-radius: 999px;
+  background: #f3e3bd !important;
+  font-size: 12px;
+  font-weight: 800;
+  color: #302d26;
+  cursor: pointer;
+  box-shadow: 1px 1px 0 #302d26;
+  flex-shrink: 0;
+  transition: transform 0.12s ease;
+}
+.drawer-wallet-pill:hover {
+  background: #ebd4a5 !important;
+  transform: translateY(-1px);
+}
+.drawer-coin-icon {
+  color: #9b7135;
+}
+
+/* Mobile Nav Grid */
 .mobile-nav-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 
-.mobile-nav-grid button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 46px;
-  padding: 8px 12px;
-  border: 1.5px solid #302d26;
-  border-radius: 10px;
-  background: #FFFFFF;
+.drawer-nav-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 48px;
+  padding: 8px 12px !important;
+  border: 1.5px solid #302d26 !important;
+  border-radius: 12px !important;
+  background: #FFFFFF !important;
   font-family: var(--font-english);
   font-size: 14px;
   font-weight: 800;
-  color: #302d26;
+  color: #302d26 !important;
   box-shadow: 1.5px 2px 0 #302d26;
   cursor: pointer;
   text-align: left;
+  transition: transform 0.12s ease, background 0.12s ease;
 }
 
-.mobile-nav-grid button.active {
-  background: #f3e3bd;
-  box-shadow: inset 0 0 0 2px #302d26, 1.5px 2px 0 #302d26;
+.drawer-nav-item:hover {
+  background: #faf4e6 !important;
+  transform: translateY(-1px);
 }
 
-.mobile-nav-grid svg { flex-shrink: 0; color: #302d26; fill: #e9c17c; }
+.drawer-nav-item.active {
+  background: #f3e3bd !important;
+  border-color: #302d26 !important;
+  box-shadow: inset 0 0 0 1.5px #302d26, 1.5px 2px 0 #302d26;
+}
+
+.drawer-nav-icon-box {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #f8efd9;
+  border: 1px solid #302d26;
+  color: #302d26;
+  flex-shrink: 0;
+}
+
+.drawer-nav-item.active .drawer-nav-icon-box {
+  background: #e9c17c;
+}
+
+.drawer-nav-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-nav-label {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #302d26;
+}
+
+.drawer-nav-admin {
+  grid-column: span 2;
+  border-color: #b52c27 !important;
+}
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideDown { from { transform: translateY(-14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -403,17 +602,23 @@
 .doodle-shell .adm-search input { padding-left: 38px; }
 .doodle-shell .adm-shell .adm-primary { background: #f3e3bd; color: #302d26; }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .desktop-nav { display: none !important; }
   .doodle-hamburger { display: inline-flex !important; }
   .doodle-shell .store-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .doodle-shell .gift-grid { grid-template-columns: 1fr; }
 }
+
+@media (min-width: 1025px) {
+  .desktop-nav { display: flex !important; }
+  .doodle-hamburger { display: none !important; }
+}
+
 @media (max-width: 700px) {
   .doodle-header-inner { width: calc(100% - 20px); }
-  .doodle-back { font-size: 13px; padding: 5px 8px; gap: 4px !important; }
-  .doodle-back-text { display: none; }
-  .doodle-wordmark { font-size: 28px; }
+  .doodle-brand-nav-btn { padding: 4px 10px 4px 5px; gap: 6px; }
+  .doodle-brand-back-icon { width: 24px; height: 24px; }
+  .doodle-brand-nav-btn .doodle-wordmark { font-size: 22px; }
   .doodle-wallet { padding: 6px 10px; font-size: 13px; }
   .doodle-content { width: calc(100% - 20px); margin-top: 14px; padding-bottom: 40px; }
   .doodle-shell .account-layout { grid-template-columns: 1fr; }
@@ -435,10 +640,9 @@
   .doodle-shell :is(.step-tabs, .step-tabs button) { font-size: 14px; }
   .doodle-shell .auth-intro h1 { font-size: 36px; }
 }
+
 @media (max-width: 380px) {
-  .doodle-back { font-size: 0; padding: 5px; }
-  .doodle-back svg { width: 20px; height: 20px; }
-  .doodle-wordmark { font-size: 24px; }
+  .doodle-brand-nav-btn .doodle-wordmark { font-size: 20px; }
   .doodle-shell :is(.auth-tabs, .auth-form, .auth-google-section) { margin-left: 16px; margin-right: 16px; }
   .doodle-shell .auth-tabs { padding-inline: 0; }
 }

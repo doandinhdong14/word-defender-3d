@@ -821,17 +821,36 @@
   font-weight: 850;
 }
 
-/* Hidden by default on desktop */
-.landing-mobile-dock {
+.plump-play-title {
+  font-family: var(--font-english);
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: var(--pempom-ink);
+}
+
+.landing-top-bar .doodle-hamburger {
   display: none !important;
 }
 
+@media (min-width: 1025px) {
+  .landing-desktop-nav {
+    display: flex !important;
+  }
+  .landing-top-bar .doodle-hamburger {
+    display: none !important;
+  }
+}
+
 /* ==========================================================================
-   5. RESPONSIVE DESIGN - MOBILE PORTRAIT (max-width: 960px)
+   5. RESPONSIVE DESIGN - MOBILE PORTRAIT (max-width: 1024px)
    ========================================================================== */
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   .landing-desktop-nav {
     display: none !important;
+  }
+  .landing-top-bar .doodle-hamburger {
+    display: inline-flex !important;
   }
 
   .landing-nav-inner {
