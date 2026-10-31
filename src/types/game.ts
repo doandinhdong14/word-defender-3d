@@ -139,6 +139,9 @@ export interface RunWordSummary {
   wrongKeystrokes: number;
   timeToAnswerMs: number;
   isMastered: boolean;
+  srsStage?: number;             // Nấc 0..6 trong lộ trình lặp lại ngắt quãng
+  intervalDays?: number;         // Khoảng cách ngày (1, 3, 7, 14, 30, 60)
+  nextDueAt?: string;
 }
 
 export interface RunSummary {

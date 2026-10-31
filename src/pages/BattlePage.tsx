@@ -46,6 +46,7 @@ export const BattlePage: React.FC = () => {
     setSelectedMap,
     selectedWordCount,
     selectedChunkIndex,
+    isShuffleWords,
     inventory,
     refreshUserData,
     settings,
@@ -192,11 +193,12 @@ export const BattlePage: React.FC = () => {
       const loadout = account ? inventory : createGuestInventory();
       const wordCount = selectedWordCount || 30;
 
-      // Select words with Spaced Repetition (SRS) prioritizing due and new words, avoiding mastered words
+      // Select words with Spaced Repetition (SRS) prioritizing due and new words (randomized by default)
       const sessionWords = await selectSessionWords(selectedSetId, {
         targetCount: wordCount,
         chunkIndex: selectedChunkIndex !== null ? selectedChunkIndex : undefined,
         chunkSize: wordCount,
+        shuffle: isShuffleWords,
       });
 
       if (!isMounted) return;
@@ -212,6 +214,7 @@ export const BattlePage: React.FC = () => {
         mode: selectedMode,
         difficulty: selectedDifficulty,
         words: sessionWords,
+        shuffleWords: isShuffleWords,
         equippedSkills: loadout?.equippedSkillIds || [],
         equippedOutfitId: loadout?.equippedOutfitId || null,
         equippedHatId: loadout?.equippedHatId || null,
@@ -240,7 +243,7 @@ export const BattlePage: React.FC = () => {
               summary.wordResults.map((w) => ({
                 entryId: w.entryId,
                 isMastered: w.isMastered,
-                mode: summary.mode,
+                mode: 'recall', // 3-round battle includes recall testing, advancing Spaced Repetition stages
                 hadHint: w.hadHint,
               }))
             );

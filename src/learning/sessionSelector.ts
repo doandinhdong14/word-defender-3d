@@ -7,7 +7,20 @@ export interface ChunkInfo {
   title: string;
   total: number;
   mastered: number;
+  inRoadmap: number;
   isCompleted: boolean;
+}
+
+export interface SrsRoadmapDistribution {
+  srs0: number; // Chưa học (chưa vào lộ trình)
+  srs1: number; // Nấc 1 (1 ngày)
+  srs2: number; // Nấc 2 (3 ngày)
+  srs3: number; // Nấc 3 (7 ngày)
+  srs4: number; // Nấc 4 (14 ngày)
+  srs5: number; // Nấc 5 (30 ngày)
+  srs6: number; // Nấc 6 (60 ngày)
+  dueCount: number; // Đến hạn ôn
+  inRoadmapCount: number; // Tổng số từ đã vào lộ trình
 }
 
 export interface DeckProgressInfo {
@@ -20,6 +33,7 @@ export interface DeckProgressInfo {
   dueWords: number;
   completionPercent: number;
   chunks: ChunkInfo[];
+  srsDistribution: SrsRoadmapDistribution;
 }
 
 /**
@@ -47,22 +61,47 @@ export async function getDeckProgress(
   let newCount = 0;
   let dueCount = 0;
 
+  const srsDistribution: SrsRoadmapDistribution = {
+    srs0: 0,
+    srs1: 0,
+    srs2: 0,
+    srs3: 0,
+    srs4: 0,
+    srs5: 0,
+    srs6: 0,
+    dueCount: 0,
+    inRoadmapCount: 0,
+  };
+
   for (const entry of allEntries) {
     const rec = recordMap.get(entry.id);
-    if (!rec || rec.stage === 'new') {
+    const srsStage = rec?.srsStage ?? (rec?.stage === 'remembered' ? 2 : rec?.stage === 'learning' ? 1 : 0);
+    const isDue = Boolean(rec?.nextDueAt && rec.nextDueAt <= now);
+
+    if (isDue) {
+      dueCount++;
+      srsDistribution.dueCount++;
+    }
+
+    if (!rec || rec.stage === 'new' || srsStage === 0) {
       newCount++;
-    } else if (rec.stage === 'remembered') {
-      masteredCount++;
-      if (rec.nextDueAt && rec.nextDueAt <= now) {
-        dueCount++;
-      }
-    } else if (rec.stage === 'struggling') {
-      strugglingCount++;
+      srsDistribution.srs0++;
     } else {
+      srsDistribution.inRoadmapCount++;
+      if (srsStage === 1) srsDistribution.srs1++;
+      else if (srsStage === 2) srsDistribution.srs2++;
+      else if (srsStage === 3) srsDistribution.srs3++;
+      else if (srsStage === 4) srsDistribution.srs4++;
+      else if (srsStage === 5) srsDistribution.srs5++;
+      else if (srsStage >= 6) srsDistribution.srs6++;
+    }
+
+    if (rec?.stage === 'remembered' || srsStage >= 2) {
+      masteredCount++;
+    } else if (rec?.stage === 'struggling') {
+      strugglingCount++;
+    } else if (srsStage >= 1) {
       learningCount++;
-      if (rec.nextDueAt && rec.nextDueAt <= now) {
-        dueCount++;
-      }
     }
   }
 
@@ -78,9 +117,15 @@ export async function getDeckProgress(
     const end = Math.min(start + chunkSize, totalWords);
     const slice = allEntries.slice(start, end);
 
+    const inRoadmapInChunk = slice.filter((w) => {
+      const r = recordMap.get(w.id);
+      const stage = r?.srsStage ?? (r?.stage === 'remembered' ? 2 : r?.stage === 'learning' ? 1 : 0);
+      return stage >= 1;
+    }).length;
+
     const masteredInChunk = slice.filter((w) => {
       const r = recordMap.get(w.id);
-      return r && r.stage === 'remembered';
+      return r && (r.stage === 'remembered' || (r.srsStage ?? 0) >= 2);
     }).length;
 
     chunks.push({
@@ -88,7 +133,8 @@ export async function getDeckProgress(
       title: `Chặng ${i + 1} (${start + 1} - ${end})`,
       total: slice.length,
       mastered: masteredInChunk,
-      isCompleted: slice.length > 0 && masteredInChunk >= slice.length,
+      inRoadmap: inRoadmapInChunk,
+      isCompleted: slice.length > 0 && inRoadmapInChunk >= slice.length,
     });
   }
 
@@ -102,6 +148,7 @@ export async function getDeckProgress(
     dueWords: dueCount,
     completionPercent,
     chunks,
+    srsDistribution,
   };
 }
 
@@ -110,14 +157,15 @@ export interface SessionWordSelectionOptions {
   chunkIndex?: number;
   chunkSize?: number;
   allowReviewMastered?: boolean;
+  shuffle?: boolean; // Default: true (Học không theo thứ tự)
 }
 
 /**
  * Anki Spaced Repetition (SRS) Word Selector:
  * 1. Prioritizes words that are DUE for review (interval elapsed).
  * 2. Prioritizes words that are STRUGGLING (errors/timeouts).
- * 3. Pulls NEW unseen words sequentially from the current deck/chunk.
- * 4. NEVER repeats words that are already MASTERED unless all new words are completed.
+ * 3. Pulls NEW unseen words from the current deck/chunk (shuffled by default when shuffle !== false).
+ * 4. NEVER repeats words that are already advancing in the SRS roadmap unless needed for reviews.
  */
 export async function selectSessionWords(
   setId: string,
@@ -129,6 +177,8 @@ export async function selectSessionWords(
       : targetCountOrOptions;
 
   const targetCount = options.targetCount || 30;
+  const isShuffle = options.shuffle !== false; // Default: TRUE (học không theo thứ tự)
+
   const wordSet = await db.wordSets.get(setId);
   let allEntries = await db.words.where('setId').equals(setId).toArray();
   if (allEntries.length === 0) {
@@ -156,18 +206,20 @@ export async function selectSessionWords(
       // Prioritize unmastered words in this chunk
       const unmastered = chunkPool.filter((w) => {
         const r = recordMap.get(w.id);
-        return !r || r.stage !== 'remembered' || (r.nextDueAt && r.nextDueAt <= now);
+        const srsStage = r?.srsStage ?? (r?.stage === 'remembered' ? 2 : 0);
+        return !r || srsStage < 2 || (r.nextDueAt && r.nextDueAt <= now);
       });
 
-      if (unmastered.length >= targetCount) {
-        return shuffle(unmastered).slice(0, targetCount);
+      const poolToTake = isShuffle ? shuffle(unmastered) : unmastered;
+      if (poolToTake.length >= targetCount) {
+        return poolToTake.slice(0, targetCount);
       }
 
       // If chunk has fewer unmastered than target, include other chunk words
-      const result = [...unmastered];
+      const result = [...poolToTake];
       const remainingNeeded = targetCount - result.length;
       const otherChunkWords = chunkPool.filter((w) => !result.some((r) => r.id === w.id));
-      result.push(...shuffle(otherChunkWords).slice(0, remainingNeeded));
+      result.push(...(isShuffle ? shuffle(otherChunkWords) : otherChunkWords).slice(0, remainingNeeded));
 
       return result.slice(0, targetCount);
     }
@@ -181,13 +233,15 @@ export async function selectSessionWords(
 
   for (const entry of allEntries) {
     const rec = recordMap.get(entry.id);
-    if (!rec || rec.stage === 'new') {
+    const srsStage = rec?.srsStage ?? (rec?.stage === 'remembered' ? 2 : 0);
+
+    if (!rec || rec.stage === 'new' || srsStage === 0) {
       newWords.push(entry);
     } else if (rec.stage === 'struggling') {
       strugglingWords.push(entry);
     } else if (rec.nextDueAt && rec.nextDueAt <= now) {
       dueWords.push(entry);
-    } else if (rec.stage === 'remembered') {
+    } else if (rec.stage === 'remembered' || srsStage >= 2) {
       masteredNotDueWords.push(entry);
     } else {
       // learning stage but not due yet
@@ -199,13 +253,18 @@ export async function selectSessionWords(
 
   const selected: VocabularyEntry[] = [];
 
-  // Priority 1: Next new unseen words from deck (sequential progression without repeating from start)
-  const newToAdd = newWords.slice(0, targetCount);
+  // Priority 1: Next new unseen words from deck
+  // If isShuffle is true (default): words are picked randomly ("học ko theo thứ tự")
+  // If isShuffle is false: words are picked in sequential list order
+  const newSource = isShuffle ? shuffle(newWords) : newWords;
+  const newToAdd = newSource.slice(0, targetCount);
   selected.push(...newToAdd);
 
   // Priority 2: ONLY when running low on new words in the deck ("bao giờ thiếu từ quá thì mới lôi từ cũ ra"):
   if (selected.length < targetCount) {
-    const reviewsPool = shuffle([...strugglingWords, ...dueWords, ...masteredNotDueWords]);
+    const reviewsPool = isShuffle
+      ? shuffle([...strugglingWords, ...dueWords, ...masteredNotDueWords])
+      : [...strugglingWords, ...dueWords, ...masteredNotDueWords];
     for (const w of reviewsPool) {
       if (selected.length >= targetCount) break;
       if (!selected.some((s) => s.id === w.id)) {
@@ -216,7 +275,7 @@ export async function selectSessionWords(
 
   // Minimum fallback if pool is smaller than targetCount
   if (selected.length < targetCount && allEntries.length > 0) {
-    const pool = shuffle(allEntries);
+    const pool = isShuffle ? shuffle(allEntries) : allEntries;
     let index = 0;
     while (selected.length < targetCount && selected.length < allEntries.length) {
       const candidate = pool[index % pool.length];
@@ -228,5 +287,6 @@ export async function selectSessionWords(
     }
   }
 
-  return selected.slice(0, targetCount);
+  const finalResult = isShuffle ? shuffle(selected) : selected;
+  return finalResult.slice(0, targetCount);
 }

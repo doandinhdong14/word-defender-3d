@@ -47,6 +47,8 @@ export const PreparePage: React.FC = () => {
     setSelectedChunkIndex,
     selectedDifficulty,
     setSelectedDifficulty,
+    isShuffleWords,
+    setIsShuffleWords,
     inventory,
     wallet,
     refreshUserData,
@@ -346,6 +348,49 @@ export const PreparePage: React.FC = () => {
         </div>
       </div>
 
+      {/* THỨ TỰ HỌC TỪ (MẶC ĐỊNH LÀ KHÔNG THEO THỨ TỰ) */}
+      <section
+        style={{
+          width: 'min(100%, 560px)',
+          margin: '0 auto 12px auto',
+          padding: '10px 16px',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          border: '1.8px solid var(--color-ink)',
+          borderRadius: 'var(--radius-md)',
+          boxShadow: '0 2px 0 var(--color-ink)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '8px',
+        }}
+      >
+        <div>
+          <strong style={{ fontSize: '0.88rem', display: 'block' }}>Thứ tự học từ vựng:</strong>
+          <small style={{ color: '#555', fontSize: '0.78rem' }}>
+            {isShuffleWords ? '⚡ Mặc định: Học không theo thứ tự (ngẫu nhiên)' : '📋 Học theo thứ tự danh sách (A-Z)'}
+          </small>
+        </div>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <button
+            type="button"
+            className={`count-pill ${isShuffleWords ? "active" : ""}`}
+            style={{ fontWeight: 800, fontSize: '0.8rem', padding: '6px 12px' }}
+            onClick={() => setIsShuffleWords(true)}
+          >
+            🎲 Học ko theo thứ tự (Mặc định)
+          </button>
+          <button
+            type="button"
+            className={`count-pill ${!isShuffleWords ? "active" : ""}`}
+            style={{ fontWeight: 700, fontSize: '0.8rem', padding: '6px 12px' }}
+            onClick={() => setIsShuffleWords(false)}
+          >
+            🔤 Tuần tự A-Z
+          </button>
+        </div>
+      </section>
+
       <section className="prepare-difficulty" aria-labelledby="prepare-difficulty-label">
         <div className="prepare-difficulty-heading">
           <label id="prepare-difficulty-label" htmlFor="prepare-difficulty-slider">Độ khó</label>
@@ -607,6 +652,27 @@ export const PreparePage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Order selector inside modal */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 800 }}>Thứ tự học từ:</span>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    type="button"
+                    className={`count-pill ${isShuffleWords ? "active" : ""}`}
+                    onClick={() => setIsShuffleWords(true)}
+                  >
+                    🎲 Không theo thứ tự (Mặc định)
+                  </button>
+                  <button
+                    type="button"
+                    className={`count-pill ${!isShuffleWords ? "active" : ""}`}
+                    onClick={() => setIsShuffleWords(false)}
+                  >
+                    🔤 Tuần tự
+                  </button>
+                </div>
+              </div>
+
               {/* Chunk Selector shortcut */}
               <button
                 type="button"
@@ -707,7 +773,7 @@ export const PreparePage: React.FC = () => {
                       <strong>{chk.title}</strong>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ fontSize: '0.8rem', color: chk.isCompleted ? '#2E7D32' : '#555', fontWeight: 700 }}>
-                          {chk.mastered}/{chk.total} từ {chk.isCompleted ? '✓' : ''}
+                          {chk.inRoadmap || chk.mastered}/{chk.total} từ vào lộ trình SRS {chk.isCompleted ? '✓' : ''}
                         </span>
                         {isSelected && <span style={{ color: "#27AE60", fontWeight: 800 }}>✓ Chọn</span>}
                       </div>

@@ -81,11 +81,22 @@ export const ResultsPage: React.FC = () => {
         const items = (results.length > 0 ? results : lastRunSummary.wordResults || []).map((w) => ({
           entryId: w.entryId,
           isMastered: w.isMastered,
-          mode: lastRunSummary.mode,
+          mode: 'recall' as const, // Battle rounds test recall, advancing Spaced Repetition stages
           hadHint: w.hadHint,
         }));
         if (items.length > 0) {
-          await batchSaveLearningProgress(items);
+          const { records } = await batchSaveLearningProgress(items);
+          setWordResults((prev) =>
+            prev.map((w) => {
+              const rec = records[w.entryId];
+              return {
+                ...w,
+                srsStage: rec?.srsStage ?? (w.isMastered ? 1 : 0),
+                intervalDays: rec?.intervalDays ?? (w.isMastered ? 1 : 0),
+                nextDueAt: rec?.nextDueAt,
+              };
+            })
+          );
         }
         const updated = await getDeckProgress(lastRunSummary.setId, selectedWordCount || 30);
         setDeckProgress(updated);
@@ -241,7 +252,7 @@ export const ResultsPage: React.FC = () => {
               boxShadow: '0 2px 0 var(--color-ink)',
             }}
           >
-            ✓ {masteredCount}/{wordResults.length || lastRunSummary.completedWords} từ
+            ⚡ {masteredCount}/{wordResults.length || lastRunSummary.completedWords} từ thăng nấc SRS
           </div>
         </div>
 
@@ -331,7 +342,7 @@ export const ResultsPage: React.FC = () => {
                 backgroundColor: '#FFFDF5',
               }}
             >
-              <h3 style={{ margin: 0, font: '900 18px var(--font-display)' }}>Chi Tiết Trận Đấu</h3>
+              <h3 style={{ margin: 0, font: '900 18px var(--font-display)' }}>Chi Tiết Trận Đấu & Lộ Trình SRS</h3>
               <button
                 onClick={() => setShowDetails(false)}
                 style={{
@@ -363,13 +374,44 @@ export const ResultsPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* LỘ TRÌNH LẶP LẠI NGẮT QUÃNG CỦA TÀI KHOẢN */}
               {deckProgress && (
-                <div style={{ fontSize: '13px', color: '#4B5563', padding: '6px 8px' }}>
-                  Tiến độ bộ từ: <strong>{deckProgress.completionPercent}%</strong> ({deckProgress.masteredWords}/{deckProgress.totalWords} từ đã thuộc)
+                <div style={{ padding: '10px 12px', background: '#F8FAFC', borderRadius: '12px', border: '1.5px solid #E2E8F0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#1E293B' }}>Lộ trình Lặp lại ngắt quãng (SRS):</span>
+                    <strong style={{ fontSize: '13px', color: '#0284C7' }}>
+                      {deckProgress.srsDistribution.inRoadmapCount}/{deckProgress.totalWords} từ đã vào lộ trình
+                    </strong>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', fontSize: '11px' }}>
+                    <span style={{ padding: '3px 7px', background: '#EFF6FF', color: '#1D4ED8', borderRadius: '6px', border: '1px solid #BFDBFE' }}>
+                      Nấc 1 (1d): <strong>{deckProgress.srsDistribution.srs1}</strong>
+                    </span>
+                    <span style={{ padding: '3px 7px', background: '#EFF6FF', color: '#1D4ED8', borderRadius: '6px', border: '1px solid #BFDBFE' }}>
+                      Nấc 2 (3d): <strong>{deckProgress.srsDistribution.srs2}</strong>
+                    </span>
+                    <span style={{ padding: '3px 7px', background: '#EFF6FF', color: '#1D4ED8', borderRadius: '6px', border: '1px solid #BFDBFE' }}>
+                      Nấc 3 (7d): <strong>{deckProgress.srsDistribution.srs3}</strong>
+                    </span>
+                    <span style={{ padding: '3px 7px', background: '#ECFDF5', color: '#047857', borderRadius: '6px', border: '1px solid #A7F3D0' }}>
+                      Nấc 4 (14d): <strong>{deckProgress.srsDistribution.srs4}</strong>
+                    </span>
+                    <span style={{ padding: '3px 7px', background: '#ECFDF5', color: '#047857', borderRadius: '6px', border: '1px solid #A7F3D0' }}>
+                      Nấc 5 (30d): <strong>{deckProgress.srsDistribution.srs5}</strong>
+                    </span>
+                    <span style={{ padding: '3px 7px', background: '#FAF5FF', color: '#7E22CE', borderRadius: '6px', border: '1px solid #E9D5FF' }}>
+                      Nấc 6 (60d): <strong>{deckProgress.srsDistribution.srs6}</strong>
+                    </span>
+                    {deckProgress.srsDistribution.dueCount > 0 && (
+                      <span style={{ padding: '3px 7px', background: '#FFFBEB', color: '#B45309', borderRadius: '6px', border: '1px solid #FDE68A' }}>
+                        Đến hạn ôn: <strong>{deckProgress.srsDistribution.dueCount}</strong>
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
 
-              {/* Words list */}
+              {/* Words list with SRS stages */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
                 {wordResults.map((w) => (
                   <div
@@ -396,9 +438,37 @@ export const ResultsPage: React.FC = () => {
                       >
                         <Volume2 size={18} color="#4B5563" />
                       </button>
-                      <span style={{ fontSize: '12px', fontWeight: 800, color: w.isMastered ? '#16A34A' : '#DC2626' }}>
-                        {w.isMastered ? '✓ Thuộc' : '✕ Cần ôn'}
-                      </span>
+                      {w.isMastered ? (
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            color: '#15803D',
+                            background: '#DCFCE7',
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #86EFAC',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          Nấc {w.srsStage || 1} • Ôn sau {w.intervalDays || 1} ngày
+                        </span>
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            color: '#B91C1C',
+                            background: '#FEE2E2',
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #FECACA',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          Chưa qua nấc • Ôn lại sau 10p
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}

@@ -52,6 +52,7 @@ export interface GameEngineOptions {
   equippedStyleId: string;
   equippedBulletId?: string | null;
   ammoCounts?: Record<string, number>;
+  shuffleWords?: boolean; // Default: true (Học không theo thứ tự)
   onAmmoConsumed?: (ammoId: string, remainingCount: number) => void;
   onRoundChanged?: (round: number, phase: 'mobs' | 'boss') => void;
   maxConcurrentEnemies?: number;
@@ -77,6 +78,7 @@ export class GameEngine {
   public mode: GameMode;
   public difficulty: Difficulty;
   public words: VocabularyEntry[];
+  public shuffleWords: boolean = true;
 
   public status: GameStateStatus = 'READY';
   public currentWave: number = 1;
@@ -152,6 +154,7 @@ export class GameEngine {
     this.difficulty = options.difficulty;
     this.words = [...options.words];
     this.wordPool = [...options.words];
+    this.shuffleWords = options.shuffleWords !== false;
     this.equippedOutfitId = options.equippedOutfitId || null;
     this.equippedHatId = options.equippedHatId ?? null;
     this.equippedShirtId = options.equippedShirtId ?? null;
@@ -220,10 +223,10 @@ export class GameEngine {
 
   private partitionRounds(): void {
     // Mỗi trận đấu bao gồm đầy đủ toàn bộ từ vựng được chọn, đi qua cả 3 vòng tiến trình:
-    // Round 1: Toàn bộ từ vựng dưới dạng Gõ theo chữ có sẵn (Copy) để thuộc mặt chữ
+    // Round 1: Toàn bộ từ vựng dưới dạng Gõ theo chữ có sẵn (Copy) để thuộc mặt chữ (ngẫu nhiên nếu shuffleWords=true)
     // Round 2: Toàn bộ từ vựng dưới dạng Đoán nghĩa (Recall: Hiện Tiếng Việt -> Bấm Tiếng Anh)
     // Round 3: Toàn bộ từ vựng dưới dạng Thử thách phản xạ, quái tốc độ, quái trâu & Đại Trùm
-    this.round1Words = [...this.words];
+    this.round1Words = this.shuffleWords ? [...this.words].sort(() => Math.random() - 0.5) : [...this.words];
     this.round2Words = [...this.words].sort(() => Math.random() - 0.5);
     this.round3Words = [...this.words].sort(() => Math.random() - 0.5);
   }

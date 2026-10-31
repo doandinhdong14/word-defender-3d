@@ -5,67 +5,125 @@ import { getActiveProfileId } from '../auth/authService';
 const ONE_MINUTE_MS = 60 * 1000;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
+export const SRS_INTERVAL_DAYS = [0, 1, 3, 7, 14, 30, 60] as const;
+
+export function getSrsStageLabel(srsStage: number): string {
+  switch (srsStage) {
+    case 1:
+      return 'Nấc 1 (1 ngày)';
+    case 2:
+      return 'Nấc 2 (3 ngày)';
+    case 3:
+      return 'Nấc 3 (7 ngày)';
+    case 4:
+      return 'Nấc 4 (14 ngày)';
+    case 5:
+      return 'Nấc 5 (30 ngày)';
+    case 6:
+      return 'Nấc 6 (60 ngày)';
+    default:
+      return 'Nấc 0 (Chưa học)';
+  }
+}
+
+export function getSrsStageDescription(srsStage: number): string {
+  switch (srsStage) {
+    case 1:
+      return 'Khoảng cách 1 ngày';
+    case 2:
+      return 'Khoảng cách 3 ngày';
+    case 3:
+      return 'Khoảng cách 7 ngày';
+    case 4:
+      return 'Khoảng cách 14 ngày';
+    case 5:
+      return 'Khoảng cách 30 ngày';
+    case 6:
+      return 'Trí nhớ dài hạn (60 ngày)';
+    default:
+      return 'Chưa vào lộ trình';
+  }
+}
+
 export function calculateNextReview(
   currentRecord: LearningRecord | undefined,
   mode: 'copy' | 'recall' | 'listen',
   isCorrect: boolean,
   hadHint: boolean,
   now: Date = new Date()
-): { stage: MemoryStage; streak: number; nextDueAt: string } {
+): {
+  stage: MemoryStage;
+  streak: number;
+  srsStage: number;
+  intervalDays: number;
+  nextDueAt: string;
+} {
   const currentStage = currentRecord?.stage || 'new';
-  const currentStreak = currentRecord?.independentRecallStreak || 0;
+  const currentSrs = currentRecord?.srsStage ?? (currentRecord?.independentRecallStreak || 0);
 
   // Recall mode is the primary signal of durable semantic memory
   if (mode === 'recall') {
     if (isCorrect && !hadHint) {
-      const newStreak = currentStreak + 1;
-      let newStage: MemoryStage = 'learning';
-      let delayMs = ONE_DAY_MS;
-
-      if (newStreak >= 2) {
-        newStage = 'remembered';
-      }
-
-      if (newStreak === 1) {
-        delayMs = ONE_DAY_MS; // 1 day
-      } else if (newStreak === 2) {
-        delayMs = 3 * ONE_DAY_MS; // 3 days
-      } else if (newStreak === 3) {
-        delayMs = 7 * ONE_DAY_MS; // 7 days
-      } else if (newStreak === 4) {
-        delayMs = 14 * ONE_DAY_MS; // 14 days
-      } else if (newStreak === 5) {
-        delayMs = 30 * ONE_DAY_MS; // 30 days
-      } else {
-        delayMs = 60 * ONE_DAY_MS; // 60 days max cap
-      }
-
+      const newSrsStage = Math.min(6, currentSrs + 1);
+      const intervalDays = SRS_INTERVAL_DAYS[newSrsStage] || 1;
+      const delayMs = intervalDays * ONE_DAY_MS;
       const nextDueAt = new Date(now.getTime() + delayMs).toISOString();
-      return { stage: newStage, streak: newStreak, nextDueAt };
+      const newStage: MemoryStage = newSrsStage >= 2 ? 'remembered' : 'learning';
+
+      return {
+        stage: newStage,
+        streak: newSrsStage,
+        srsStage: newSrsStage,
+        intervalDays,
+        nextDueAt,
+      };
     } else {
-      // Wrong or used hint or timeout
+      // Wrong or used hint or timeout -> reset / step down in Leitner roadmap
       const nextDueAt = new Date(now.getTime() + 10 * ONE_MINUTE_MS).toISOString(); // 10 minutes
-      return { stage: 'struggling', streak: 0, nextDueAt };
+      const newSrsStage = Math.max(0, currentSrs > 1 ? currentSrs - 1 : 0);
+      return {
+        stage: 'struggling',
+        streak: 0,
+        srsStage: newSrsStage,
+        intervalDays: 0,
+        nextDueAt,
+      };
     }
   }
 
-  // Copy mode: does NOT grant 'remembered', keeps stage or moves to learning if new
+  // Copy mode: does NOT advance recall streak, sets baseline Nấc 1 if new
   if (mode === 'copy') {
     const stage: MemoryStage = isCorrect
       ? (currentStage === 'new' ? 'learning' : currentStage)
       : 'struggling';
     const delayMs = isCorrect ? ONE_DAY_MS : 10 * ONE_MINUTE_MS;
     const nextDueAt = new Date(now.getTime() + delayMs).toISOString();
-    return { stage, streak: currentStreak, nextDueAt };
+    const srsStage = isCorrect ? Math.max(1, currentSrs) : 0;
+    const intervalDays = isCorrect ? 1 : 0;
+    return {
+      stage,
+      streak: currentRecord?.independentRecallStreak || 0,
+      srsStage,
+      intervalDays,
+      nextDueAt,
+    };
   }
 
-  // Listen mode: dictation practice, does NOT grant 'remembered'
+  // Listen mode: dictation practice
   const stage: MemoryStage = isCorrect
     ? (currentStage === 'new' ? 'learning' : currentStage)
     : 'struggling';
   const delayMs = isCorrect ? ONE_DAY_MS : 10 * ONE_MINUTE_MS;
   const nextDueAt = new Date(now.getTime() + delayMs).toISOString();
-  return { stage, streak: currentStreak, nextDueAt };
+  const srsStage = isCorrect ? Math.max(1, currentSrs) : 0;
+  const intervalDays = isCorrect ? 1 : 0;
+  return {
+    stage,
+    streak: currentRecord?.independentRecallStreak || 0,
+    srsStage,
+    intervalDays,
+    nextDueAt,
+  };
 }
 
 export async function updateLearningProgress(
@@ -79,7 +137,13 @@ export async function updateLearningProgress(
   let record = await db.learningRecords.get(recordId);
   const now = new Date();
 
-  const { stage, streak, nextDueAt } = calculateNextReview(record, mode, isCorrect, hadHint, now);
+  const { stage, streak, srsStage, intervalDays, nextDueAt } = calculateNextReview(
+    record,
+    mode,
+    isCorrect,
+    hadHint,
+    now
+  );
 
   if (!record) {
     record = {
@@ -87,6 +151,8 @@ export async function updateLearningProgress(
       entryId: recordId,
       wordId: entryId,
       stage,
+      srsStage,
+      intervalDays,
       independentRecallStreak: streak,
       easeLevel: 2.5,
       successfulRecalls: isCorrect && mode === 'recall' && !hadHint ? 1 : 0,
@@ -98,6 +164,8 @@ export async function updateLearningProgress(
     };
   } else {
     record.stage = stage;
+    record.srsStage = srsStage;
+    record.intervalDays = intervalDays;
     record.independentRecallStreak = streak;
     record.lastReviewedAt = now.toISOString();
     record.nextDueAt = nextDueAt;
@@ -128,13 +196,19 @@ export async function batchSaveLearningProgress(
     mode?: 'copy' | 'recall' | 'listen';
     hadHint?: boolean;
   }>
-): Promise<{ updatedCount: number; masteredCount: number; strugglingCount: number }> {
+): Promise<{
+  updatedCount: number;
+  masteredCount: number;
+  strugglingCount: number;
+  records: Record<string, LearningRecord>;
+}> {
   const profileId = getActiveProfileId();
   const now = new Date();
   let masteredCount = 0;
   let strugglingCount = 0;
 
   const recordsToPut: LearningRecord[] = [];
+  const recordsMap: Record<string, LearningRecord> = {};
 
   for (const item of items) {
     const recordId = `${profileId}:${item.entryId}`;
@@ -144,9 +218,15 @@ export async function batchSaveLearningProgress(
     const isCorrect = item.isMastered;
     const hadHint = item.hadHint ?? false;
 
-    const { stage, streak, nextDueAt } = calculateNextReview(prev, mode, isCorrect, hadHint, now);
+    const { stage, streak, srsStage, intervalDays, nextDueAt } = calculateNextReview(
+      prev,
+      mode,
+      isCorrect,
+      hadHint,
+      now
+    );
 
-    if (stage === 'remembered') {
+    if (stage === 'remembered' || srsStage >= 2) {
       masteredCount++;
     } else if (stage === 'struggling') {
       strugglingCount++;
@@ -157,6 +237,8 @@ export async function batchSaveLearningProgress(
       entryId: recordId,
       wordId: item.entryId,
       stage,
+      srsStage,
+      intervalDays,
       independentRecallStreak: streak,
       easeLevel: prev?.easeLevel ?? 2.5,
       successfulRecalls: (prev?.successfulRecalls || 0) + (isCorrect ? 1 : 0),
@@ -168,6 +250,7 @@ export async function batchSaveLearningProgress(
     };
 
     recordsToPut.push(updated);
+    recordsMap[item.entryId] = updated;
   }
 
   if (recordsToPut.length > 0) {
@@ -178,5 +261,6 @@ export async function batchSaveLearningProgress(
     updatedCount: recordsToPut.length,
     masteredCount,
     strugglingCount,
+    records: recordsMap,
   };
 }

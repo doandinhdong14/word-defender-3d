@@ -207,7 +207,7 @@ export const ReviewPage: React.FC = () => {
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
-                {dueEntries.map(({ entry }) => (
+                {dueEntries.map(({ entry, record }) => (
                   <div
                     key={entry.id}
                     onClick={() => {
@@ -222,10 +222,16 @@ export const ReviewPage: React.FC = () => {
                       borderRadius: 'var(--radius-sm)',
                       display: 'flex',
                       justifyContent: 'space-between',
+                      alignItems: 'center',
                       cursor: 'pointer',
                     }}
                   >
-                    <span style={{ fontWeight: 800, fontFamily: 'var(--font-english)', fontSize: '1.05rem' }}>{entry.english}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 800, fontFamily: 'var(--font-english)', fontSize: '1.05rem' }}>{entry.english}</span>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#1D4ED8', background: '#EFF6FF', border: '1px solid #BFDBFE', padding: '1px 6px', borderRadius: '4px' }}>
+                        Nấc {record?.srsStage || 1}
+                      </span>
+                    </div>
                     <span style={{ color: '#E06C96', fontWeight: 700, fontFamily: 'var(--font-vietnamese)' }}>{entry.vietnamese}</span>
                   </div>
                 ))}

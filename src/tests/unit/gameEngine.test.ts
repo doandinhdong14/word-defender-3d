@@ -190,6 +190,8 @@ describe('Game Engine enemy lanes', () => {
     expect(engine.enemies.length).toBeGreaterThan(0);
     const enemy = engine.enemies[0];
     const enemyId = enemy.id;
+    const enemyWord = enemy.word;
+    const enemyMeaning = enemy.meaningText;
 
     // Force enemy to defense line
     enemy.y = 650;
@@ -200,8 +202,8 @@ describe('Game Engine enemy lanes', () => {
     expect(engine.lives).toBe(GAME_BALANCE.maxLives - 1);
     expect(engine.defeatedWordEffects).toHaveLength(1);
     expect(engine.defeatedWordEffects[0].isMissed).toBe(true);
-    expect(engine.defeatedWordEffects[0].word).toBe('dog');
-    expect(engine.defeatedWordEffects[0].meaning).toBe('con chó');
+    expect(engine.defeatedWordEffects[0].word).toBe(enemyWord);
+    expect(engine.defeatedWordEffects[0].meaning).toBe(enemyMeaning);
   });
 
   it('ensures Boss includes 100% of the words from the round', () => {

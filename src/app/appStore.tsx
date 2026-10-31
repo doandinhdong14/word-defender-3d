@@ -42,6 +42,8 @@ interface AppContextValue {
   setSelectedWordCount: (count: number) => void;
   selectedChunkIndex: number | null;
   setSelectedChunkIndex: (idx: number | null) => void;
+  isShuffleWords: boolean;
+  setIsShuffleWords: (val: boolean) => void;
   lastRunSummary: RunSummary | null;
   setLastRunSummary: (summary: RunSummary | null) => void;
   profile: UserProfile | null;
@@ -65,6 +67,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedMap, setSelectedMapState] = useState<GameMapId>(() => account ? getActiveMapId() : BASIC_MAP_ID);
   const [selectedWordCount, setSelectedWordCount] = useState<number>(30);
   const [selectedChunkIndex, setSelectedChunkIndex] = useState<number | null>(null);
+  const [isShuffleWords, setIsShuffleWordsState] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem('pempom_shuffle_words');
+      return stored === null ? true : stored !== 'false';
+    } catch {
+      return true;
+    }
+  });
+
+  const setIsShuffleWords = (val: boolean) => {
+    setIsShuffleWordsState(val);
+    try {
+      localStorage.setItem('pempom_shuffle_words', String(val));
+    } catch {}
+  };
+
   const [lastRunSummary, setLastRunSummary] = useState<RunSummary | null>(null);
 
   const setSelectedMap = (map: GameMapId) => {
@@ -182,6 +200,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedWordCount,
         selectedChunkIndex,
         setSelectedChunkIndex,
+        isShuffleWords,
+        setIsShuffleWords,
         lastRunSummary,
         setLastRunSummary,
         profile,

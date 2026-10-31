@@ -72,6 +72,20 @@ describe('Deck Progress & Session Selector (Anki SRS)', () => {
     expect(progress.strugglingWords).toBe(1);
     expect(progress.learningWords).toBe(1);
     expect(progress.completionPercent).toBe(2); // 1/50 = 2%
+    expect(progress.srsDistribution.inRoadmapCount).toBeGreaterThanOrEqual(1);
+  });
+
+  it('selects words in sequential order when shuffle: false', async () => {
+    const session = await selectSessionWords(testSetId, {
+      targetCount: 5,
+      shuffle: false,
+    });
+    expect(session.length).toBe(5);
+    expect(session[0].id).toBe('w_1');
+    expect(session[1].id).toBe('w_2');
+    expect(session[2].id).toBe('w_3');
+    expect(session[3].id).toBe('w_4');
+    expect(session[4].id).toBe('w_5');
   });
 
   it('selects session words excluding remembered words when new words are available', async () => {

@@ -5,6 +5,8 @@ export interface LearningRecord {
   entryId: string;
   wordId?: string;
   stage: MemoryStage;
+  srsStage?: number;             // 0..6 (Nấc 0..6 trong lộ trình lặp lại ngắt quãng)
+  intervalDays?: number;         // 0, 1, 3, 7, 14, 30, 60
   independentRecallStreak: number;
   easeLevel: number;             // 0..5
   successfulRecalls: number;
