@@ -17,6 +17,7 @@ export const LibraryPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [previewSet, setPreviewSet] = useState<VocabularySet | null>(null);
   const [previewWords, setPreviewWords] = useState<VocabularyEntry[]>([]);
+  const [previewSearch, setPreviewSearch] = useState('');
 
   const loadSets = async () => {
     if (!account) { setSets(getBasicSets()); return; }
@@ -50,7 +51,7 @@ export const LibraryPage: React.FC = () => {
         await db.words.where('setId').equals(setId).delete();
       });
       if (selectedSetId === setId) {
-        setSelectedSetId('set_everyday');
+        setSelectedSetId('set_oxford_a1');
       }
       loadSets();
     }
@@ -278,10 +279,23 @@ export const LibraryPage: React.FC = () => {
                     Danh sách {previewWords.length} từ trong bộ
                   </p>
                 </div>
-                <StickerButton size="sm" onClick={() => setPreviewSet(null)}>
+                <StickerButton size="sm" onClick={() => { setPreviewSet(null); setPreviewSearch(''); }}>
                   Đóng
                 </StickerButton>
               </div>
+
+              {previewWords.length > 30 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <input
+                    type="text"
+                    value={previewSearch}
+                    onChange={(e) => setPreviewSearch(e.target.value)}
+                    placeholder="Tìm từ vựng trong bộ..."
+                    className="doodle-input"
+                    style={{ width: '100%', fontSize: '0.9rem', padding: '8px 12px' }}
+                  />
+                </div>
+              )}
 
               <div
                 style={{
@@ -293,34 +307,56 @@ export const LibraryPage: React.FC = () => {
                   paddingRight: '6px',
                 }}
               >
-                {previewWords.map((word) => (
-                  <div
-                    key={word.id}
-                    style={{
-                      padding: '8px 12px',
-                      backgroundColor: 'var(--color-paper)',
-                      border: '1.5px solid var(--color-ink)',
-                      borderRadius: 'var(--radius-sm)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 800, fontFamily: 'var(--font-english)' }}>
-                        {word.english} {word.ipa && <span style={{ fontWeight: 400, opacity: 0.7, fontFamily: 'var(--font-vietnamese)' }}>{word.ipa}</span>}
-                      </div>
-                      {word.exampleEn && (
-                        <div style={{ fontSize: '0.8rem', color: 'var(--color-muted-ink)', marginTop: '2px', fontFamily: 'var(--font-english)' }}>
-                          {word.exampleEn}
+                {(() => {
+                  const filtered = previewWords.filter((w) =>
+                    !previewSearch ||
+                    w.english.toLowerCase().includes(previewSearch.toLowerCase()) ||
+                    w.vietnamese.toLowerCase().includes(previewSearch.toLowerCase())
+                  );
+                  const displayList = filtered.slice(0, 100);
+                  return (
+                    <>
+                      {displayList.map((word) => (
+                        <div
+                          key={word.id}
+                          style={{
+                            padding: '8px 12px',
+                            backgroundColor: 'var(--color-paper)',
+                            border: '1.5px solid var(--color-ink)',
+                            borderRadius: 'var(--radius-sm)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontWeight: 800, fontFamily: 'var(--font-english)' }}>
+                              {word.english} {word.ipa && <span style={{ fontWeight: 400, opacity: 0.7, fontFamily: 'var(--font-vietnamese)' }}>{word.ipa}</span>}
+                            </div>
+                            {word.exampleEn && (
+                              <div style={{ fontSize: '0.8rem', color: 'var(--color-muted-ink)', marginTop: '2px', fontFamily: 'var(--font-english)' }}>
+                                {word.exampleEn}
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ fontWeight: 700, color: '#E06C96', textAlign: 'right', fontFamily: 'var(--font-vietnamese)' }}>
+                            {word.vietnamese}
+                          </div>
+                        </div>
+                      ))}
+                      {filtered.length > 100 && (
+                        <div style={{ textAlign: 'center', padding: '8px', color: 'var(--color-muted-ink)', fontSize: '0.85rem' }}>
+                          Đang hiển thị 100/{filtered.length} từ. Dùng ô tìm kiếm để lọc từ cụ thể.
                         </div>
                       )}
-                    </div>
-                    <div style={{ fontWeight: 700, color: '#E06C96', textAlign: 'right', fontFamily: 'var(--font-vietnamese)' }}>
-                      {word.vietnamese}
-                    </div>
-                  </div>
-                ))}
+                      {filtered.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '24px', color: 'var(--color-muted-ink)' }}>
+                          Không tìm thấy từ nào phù hợp.
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </PaperPanel>
           </div>

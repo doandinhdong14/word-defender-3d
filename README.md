@@ -22,6 +22,8 @@ npm run build    # TypeScript + production build vào build/
 
 Browser tests dùng Edge trên Windows, Chromium trên hệ điều hành khác. Nếu chưa có Chromium, chạy `npx playwright install chromium`.
 
+Trong trận, các chữ A–Z luôn dùng để gõ đáp án; `F1` gợi ý, `F2` nghe lại, `Tab` đổi mục tiêu, `Backspace` xóa một chữ, `Esc` xóa phần đã gõ/bỏ chọn mục tiêu. Giữ phím không tự điền chữ. Chế độ nhìn từ yêu cầu gõ đủ từ đang hiển thị; đáp án phụ được chấp nhận ở chế độ nhớ nghĩa/nghe. Ô nhập điện thoại xử lý riêng các lần cập nhật Telex để tránh nhận trùng chữ và điền sang từ tiếp theo.
+
 ## Đúng 7 mục trong giao diện
 
 1. **Chơi:** sảnh game → chế độ chơi → Đấu thường → chọn map, tướng, đạn, tài liệu → xác nhận vào trận. Các chế độ khác hiển thị Sắp ra mắt. Trong Đấu thường có tùy chọn cách học và độ khó.

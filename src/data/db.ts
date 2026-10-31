@@ -167,7 +167,11 @@ async function seedMissingData(): Promise<void> {
       });
     }
 
-    // Upsert builtin sets to ensure entryIds array contains all 300+ entries
+    // Remove obsolete starter sets and words
+    await db.wordSets.bulkDelete(['set_everyday', 'set_school', 'set_ielts']);
+    await db.words.where('setId').anyOf(['set_everyday', 'set_school', 'set_ielts']).delete();
+
+    // Upsert builtin sets to ensure entryIds array contains all 3000 entries
     await db.wordSets.bulkPut(SEED_WORD_SETS);
 
     const existingWords = await db.words.bulkGet(SEED_ENTRIES.map((word) => word.id));

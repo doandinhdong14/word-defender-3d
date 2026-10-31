@@ -283,7 +283,7 @@ describe('Game Engine enemy lanes', () => {
     expect(engine.completedWordsCount).toBe(1);
   });
 
-  it('smartly retargets when player presses starting letter of another enemy with <= 1 char typed', () => {
+  it('keeps the current word on a typo until the player explicitly switches targets', () => {
     const engine = new GameEngine({
       setId: 'set_test',
       mode: 'copy',
@@ -325,11 +325,15 @@ describe('Game Engine enemy lanes', () => {
     const catTarget = engine.enemies.find((e) => e.word === 'cat')!;
     expect(engine.selectedEnemyId).toBe(catTarget.id);
 
-    // Player switches mind or sees 'dog' approaching and presses 'd'
     engine.handleKeyDown({ key: 'd', code: 'KeyD', preventDefault: () => {} } as any);
 
-    // Engine should switch target to 'dog' and buffer should be 'd'
     const dogTarget = engine.enemies.find((e) => e.word === 'dog')!;
+    expect(engine.selectedEnemyId).toBe(catTarget.id);
+    expect(engine.typedBuffer).toBe('c');
+    expect(engine.wrongKeystrokesCount).toBe(1);
+
+    engine.selectTarget(dogTarget.id);
+    engine.handleKeyDown({ key: 'd', code: 'KeyD', preventDefault: () => {} } as any);
     expect(engine.selectedEnemyId).toBe(dogTarget.id);
     expect(engine.typedBuffer).toBe('d');
   });

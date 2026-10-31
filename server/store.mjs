@@ -84,11 +84,12 @@ export async function createStore({ connectionString, database, ownerEmail = '',
     finally { client.release(); }
   };
   await transaction(async tx => {
+    await tx.query(`DELETE FROM pempom_content WHERE id IN ('set_everyday', 'set_school', 'set_ielts')`);
     const seed = JSON.parse(readFileSync(new URL('./seed-content.json', import.meta.url), 'utf8'));
     for (const item of seed) {
       const at = new Date().toISOString();
       const content = { ...item, body: '', revision: 1, createdAt: at, updatedAt: at, updatedBy: 'system' };
-      await tx.query('INSERT INTO pempom_content(id,data) VALUES($1,$2) ON CONFLICT DO NOTHING', [item.id, JSON.stringify(content)]);
+      await tx.query('INSERT INTO pempom_content(id,data) VALUES($1,$2) ON CONFLICT(id) DO UPDATE SET data=$2', [item.id, JSON.stringify(content)]);
     }
   });
 

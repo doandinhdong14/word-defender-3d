@@ -15,7 +15,7 @@ import {
 import { VocabularyEntry } from '../../types/vocabulary';
 import { GAME_BALANCE } from '../../config/balance';
 import { getPoseFromAngle, PONPI_RIG } from '../assets/ponpiRig';
-import { cleanKey, evaluateKeystroke, normalizeInput, TELEX_DECODE_MAP } from './typing';
+import { cleanKey, evaluateKeystroke, normalizeInput, TELEX_DECODE_MAP, typingAnswers } from './typing';
 import { cycleTarget, findTargetByFirstChar } from './targeting';
 import { createBullet, updateProjectiles } from './projectiles';
 import {
@@ -126,6 +126,7 @@ export class GameEngine {
   private maxConcurrentEnemies: number;
   private lastBackspaceTime: number = 0;
   private lastBackspaceBuffer: string = '';
+  private lastBackspaceTarget: string | null = null;
 
   // Stats
   public completedWordsCount: number = 0;
@@ -838,8 +839,14 @@ export class GameEngine {
   // -------------------------------------------------------------
   // KEYBOARD INPUT & TARGETING
   // -------------------------------------------------------------
+  public get typingTargetKey(): string | null {
+    const target = this.enemies.find((enemy) => enemy.id === this.selectedEnemyId);
+    return target ? `${target.id}:${target.entryId}:${target.bossSegmentsRemaining ?? ''}:${target.hp ?? ''}` : null;
+  }
+
   public handleKeyDown(event: KeyboardEvent): void {
-    if (this.status === 'PAUSED' || this.status === 'VICTORY' || this.status === 'DEFEAT') {
+    if (event.repeat || event.ctrlKey || event.altKey || event.metaKey ||
+        (this.status !== 'WAVE_PLAYING' && this.status !== 'BOSS_PLAYING')) {
       return;
     }
 
@@ -875,18 +882,21 @@ export class GameEngine {
 
     // 4. Backspace: remove last typed char
     if (event.key === 'Backspace') {
+      event.preventDefault();
+      if (event.isComposing || event.keyCode === 229) return;
       this.handleBackspace();
       return;
     }
 
-    // 5. 'R' key in Listen mode: replay audio
-    if (this.mode === 'listen' && (event.key === 'r' || event.key === 'R') && this.selectedEnemyId) {
+    // Letter keys always type letters, including H and R.
+    if (event.key === 'F2') {
+      event.preventDefault();
       this.replayTargetAudio();
       return;
     }
 
-    // 6. 'H' key: Hint
-    if ((event.key === 'h' || event.key === 'H') && this.selectedEnemyId) {
+    if (event.key === 'F1') {
+      event.preventDefault();
       this.useHint();
       return;
     }
@@ -898,18 +908,12 @@ export class GameEngine {
     const isSyntheticImeBackspace =
       this.lastBackspaceTime > 0 &&
       now - this.lastBackspaceTime < 110 &&
+      this.lastBackspaceTarget === this.typingTargetKey &&
+      this.typedBuffer === this.lastBackspaceBuffer.slice(0, -1) &&
       (
         !!TELEX_DECODE_MAP[event.key] ||
         event.key === 'Process' ||
-        event.key === 'Dead' ||
-        (event.code && /^Key[A-Za-z]$/.test(event.code) && event.key !== event.code.slice(3).toLowerCase()) ||
-        (event.code && /^Key[A-Za-z]$/.test(event.code) && (
-          (this.lastBackspaceBuffer.endsWith('e') && event.code === 'KeyE') ||
-          (this.lastBackspaceBuffer.endsWith('o') && event.code === 'KeyO') ||
-          (this.lastBackspaceBuffer.endsWith('a') && ['KeyA', 'KeyS', 'KeyR', 'KeyF', 'KeyX', 'KeyJ', 'KeyW'].includes(event.code)) ||
-          (this.lastBackspaceBuffer.endsWith('u') && ['KeyW', 'KeyS', 'KeyR', 'KeyF', 'KeyX', 'KeyJ'].includes(event.code)) ||
-          (this.lastBackspaceBuffer.endsWith('d') && event.code === 'KeyD')
-        ))
+        event.key === 'Dead'
       );
 
     if (isSyntheticImeBackspace && this.lastBackspaceBuffer.length > 0) {
@@ -917,18 +921,18 @@ export class GameEngine {
       this.typedBuffer = this.lastBackspaceBuffer;
       this.lastBackspaceTime = 0;
       this.lastBackspaceBuffer = '';
-    } else if (now - this.lastBackspaceTime >= 110) {
-      this.lastBackspaceTime = 0;
-      this.lastBackspaceBuffer = '';
     }
+    // Recovery applies only to the very next key and the same word. Ordinary
+    // Backspace + retyping (including capitals/double letters) must stay deleted.
+    this.lastBackspaceTime = 0;
+    this.lastBackspaceBuffer = '';
+    this.lastBackspaceTarget = null;
 
     // 7. Printable characters
     const char = cleanKey(event);
     if (!char) return;
 
-    if (char === ' ') {
-      event.preventDefault(); // prevent browser scrolling
-    }
+    event.preventDefault();
 
     this.handleCharacterInput(char);
   }
@@ -956,16 +960,17 @@ export class GameEngine {
   }
 
   public handleBackspace(): void {
-    if (this.status === 'PAUSED' || this.status === 'VICTORY' || this.status === 'DEFEAT') return;
+    if (this.status !== 'WAVE_PLAYING' && this.status !== 'BOSS_PLAYING') return;
     if (this.typedBuffer.length > 0) {
       this.lastBackspaceTime = performance.now();
       this.lastBackspaceBuffer = this.typedBuffer;
+      this.lastBackspaceTarget = this.typingTargetKey;
       this.typedBuffer = this.typedBuffer.slice(0, -1);
     }
   }
 
   public handleCharacterInput(inputChar: string): void {
-    if (this.status === 'PAUSED' || this.status === 'VICTORY' || this.status === 'DEFEAT') {
+    if (this.status !== 'WAVE_PLAYING' && this.status !== 'BOSS_PLAYING') {
       return;
     }
 
@@ -994,7 +999,8 @@ export class GameEngine {
         return;
       }
     } else if (this.typedBuffer === '') {
-      const targetMatches = currentTarget.acceptedAnswers.some((ans) =>
+      const targetMatches = typingAnswers(currentTarget.word, currentTarget.acceptedAnswers,
+        currentTarget.mode || this.currentRoundMode).some((ans) =>
         normalizeInput(ans).startsWith(char)
       );
       if (!targetMatches) {
@@ -1009,29 +1015,13 @@ export class GameEngine {
       }
     }
 
-    // Evaluate keystroke against candidate answers
-    let evalResult = evaluateKeystroke(
+    // Once typing has started, only an explicit click, Tab or Escape changes
+    // targets. A wrong letter must not silently start a different word.
+    const evalResult = evaluateKeystroke(
       this.typedBuffer,
-      currentTarget.acceptedAnswers,
+      typingAnswers(currentTarget.word, currentTarget.acceptedAnswers, currentTarget.mode || this.currentRoundMode),
       char
     );
-
-    // Smart retargeting when player made a typo or decides to target a closer monster:
-    // If the letter is wrong for current target, but matches the starting letter of another monster on screen,
-    // and player has typed at most 1 character, dynamically switch target so typing doesn't feel jammed/paralyzed!
-    if (evalResult.isWrong && this.typedBuffer.length <= 1) {
-      const altMatch = findTargetByFirstChar(this.enemies, char);
-      if (altMatch && altMatch.id !== currentTarget.id) {
-        this.selectTarget(altMatch.id);
-        currentTarget = altMatch;
-        this.typedBuffer = '';
-        evalResult = evaluateKeystroke(
-          '',
-          currentTarget.acceptedAnswers,
-          char
-        );
-      }
-    }
 
     if (evalResult.isWrong) {
       this.wrongKeystrokesCount += 1;
@@ -1050,6 +1040,38 @@ export class GameEngine {
 
     if (evalResult.isComplete) {
       const matchedAnswer = evalResult.matchedAnswer || currentTarget.word;
+
+      // Record the answer before a boss/tank advances to its next prompt.
+      this.completedWordsCount += 1;
+      this.attemptedEntryIds.add(currentTarget.entryId);
+      const timeToAnswerMs = this.gameTimeMs - this.targetStartTimeMs;
+      const wordSummary = this.wordsSummary.get(currentTarget.entryId);
+      if (wordSummary) {
+        wordSummary.outcome = 'correct';
+        wordSummary.hadHint = this.currentTargetHadHint;
+        wordSummary.timeToAnswerMs = timeToAnswerMs;
+        wordSummary.isMastered = !this.currentTargetHadHint;
+      }
+
+      if ((currentTarget.mode || this.currentRoundMode) === 'recall' && !this.currentTargetHadHint) {
+        this.independentRecallCorrectCount += 1;
+      }
+
+      this.combo += 1;
+      this.maxCombo = Math.max(this.maxCombo, this.combo);
+      this.score += 100 + matchedAnswer.length * 5 + Math.min(this.combo, 10) * 10;
+      this.onAttempt?.({
+        runId: this.runId,
+        entryId: currentTarget.entryId,
+        mode: currentTarget.mode || this.currentRoundMode,
+        outcome: 'correct',
+        typedAnswer: this.typedBuffer,
+        acceptedAnswer: matchedAnswer,
+        hadHint: this.currentTargetHadHint,
+        wrongKeystrokes: wordSummary?.wrongKeystrokes || 0,
+        timeToAnswerMs,
+        slowSkillUsedOnEnemy: !!currentTarget.statusEffects.slowUntilGameMs,
+      });
 
       // Spawn lethal finishing bullet that carries matchedWord
       const bullet = this.spawnNormalBullet(currentTarget.id, true, matchedAnswer);
@@ -1105,43 +1127,6 @@ export class GameEngine {
         this.typedBuffer = '';
       }
 
-      // Immediately log learning stats & calculate combo/score
-      this.completedWordsCount += 1;
-      this.attemptedEntryIds.add(currentTarget.entryId);
-
-      const wordSummary = this.wordsSummary.get(currentTarget.entryId);
-      if (wordSummary) {
-        wordSummary.outcome = 'correct';
-        wordSummary.hadHint = this.currentTargetHadHint;
-        wordSummary.timeToAnswerMs = this.gameTimeMs - this.targetStartTimeMs;
-        wordSummary.isMastered = !this.currentTargetHadHint;
-      }
-
-      const isIndependent =
-        (currentTarget.mode === 'recall' || this.currentRoundMode === 'recall' || this.mode === 'recall') &&
-        !this.currentTargetHadHint;
-      if (isIndependent) {
-        this.independentRecallCorrectCount += 1;
-      }
-
-      const wordLength = matchedAnswer.length;
-      this.combo += 1;
-      this.maxCombo = Math.max(this.maxCombo, this.combo);
-      const wordScore = 100 + wordLength * 5 + Math.min(this.combo, 10) * 10;
-      this.score += wordScore;
-
-      this.onAttempt?.({
-        runId: this.runId,
-        entryId: currentTarget.entryId,
-        mode: this.mode,
-        outcome: 'correct',
-        typedAnswer: this.typedBuffer,
-        acceptedAnswer: matchedAnswer,
-        hadHint: this.currentTargetHadHint,
-        wrongKeystrokes: 0,
-        timeToAnswerMs: this.gameTimeMs - this.targetStartTimeMs,
-        slowSkillUsedOnEnemy: !!currentTarget.statusEffects.slowUntilGameMs,
-      });
     } else {
       const bullet = this.spawnNormalBullet(currentTarget.id, false);
       this.onSoundEffect?.('shoot', bullet.kind, false);
@@ -1149,6 +1134,11 @@ export class GameEngine {
   }
 
   public selectTarget(enemyId: string): void {
+    const target = this.enemies.find((e) => e.id === enemyId && !e.pendingDefeat);
+    if (!target) return;
+    this.lastBackspaceTime = 0;
+    this.lastBackspaceBuffer = '';
+    this.lastBackspaceTarget = null;
     for (const e of this.enemies) {
       e.selected = e.id === enemyId;
     }
@@ -1157,7 +1147,6 @@ export class GameEngine {
     this.targetStartTimeMs = this.gameTimeMs;
     this.currentTargetHadHint = false;
 
-    const target = this.enemies.find((e) => e.id === enemyId);
     if (target && this.mode === 'listen') {
       speakEnglishWord(target.word);
     }
@@ -1345,9 +1334,10 @@ export class GameEngine {
   }
 
   public useHint(): void {
+    if (this.status !== 'WAVE_PLAYING' && this.status !== 'BOSS_PLAYING') return;
     if (!this.selectedEnemyId) return;
     const target = this.enemies.find((e) => e.id === this.selectedEnemyId);
-    if (!target) return;
+    if (!target || target.pendingDefeat) return;
 
     this.hintsUsedCount += 1;
     this.currentTargetHadHint = true;
@@ -1359,28 +1349,14 @@ export class GameEngine {
     }
 
     // Reveal one next letter
-    const expected = normalizeInput(target.word);
+    const expected = typingAnswers(target.word, target.acceptedAnswers, target.mode || this.currentRoundMode)
+      .map(normalizeInput)
+      .find((answer) => answer.startsWith(this.typedBuffer));
+    if (!expected) return;
     const nextIdx = this.typedBuffer.length;
     if (nextIdx < expected.length) {
       const nextChar = expected[nextIdx];
-      const evalResult = evaluateKeystroke(this.typedBuffer, target.acceptedAnswers, nextChar);
-      this.typedBuffer = evalResult.newBuffer;
-      if (evalResult.isComplete) {
-        const matchedAnswer = evalResult.matchedAnswer || target.word;
-        const bullet = this.spawnNormalBullet(target.id, true, matchedAnswer);
-        this.onSoundEffect?.('shoot', bullet.kind, true);
-        target.pendingDefeat = true;
-        if (target.isBoss || (target.archetype === 'tank' && (target.hp || 0) > 1)) {
-          this.selectedEnemyId = target.id;
-          target.selected = true;
-        } else {
-          this.selectedEnemyId = null;
-        }
-        this.typedBuffer = '';
-      } else {
-        const bullet = this.spawnNormalBullet(target.id, false);
-        this.onSoundEffect?.('shoot', bullet.kind, false);
-      }
+      this.handleCharacterInput(nextChar);
     }
   }
 

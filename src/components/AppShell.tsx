@@ -53,7 +53,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
   if (currentRoute === "home") return <>{children}</>;
 
   return (
-    <div className="doodle-shell notebook-grid-bg">
+    <div className={`doodle-shell notebook-grid-bg${currentRoute === "prepare" ? " is-preparing" : ""}`}>
       {/* STICKY TOP APP HEADER WITH NAVIGATION & HAMBURGER */}
       <header className="doodle-app-header">
         <div className="doodle-header-inner">

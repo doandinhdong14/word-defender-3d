@@ -1,7 +1,7 @@
 import type { Inventory } from '../types/economy';
 import { SEED_ENTRIES, SEED_WORD_SETS } from '../data/seedWordSets';
 
-export const BASIC_SET_IDS = ['set_everyday', 'set_school'] as const;
+export const BASIC_SET_IDS = ['set_oxford_a1', 'set_oxford_a2'] as const;
 export const BASIC_MAP_ID = 'default' as const;
 export const BASIC_MODE = 'copy' as const;
 

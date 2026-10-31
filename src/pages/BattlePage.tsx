@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useApp } from '../app/appStore';
 import { GameEngine } from '../game/engine/gameEngine';
-import { TELEX_DECODE_MAP } from '../game/engine/typing';
+import { NativeTypingInput } from '../game/engine/nativeTyping';
+import { normalizeInput, typingAnswers } from '../game/engine/typing';
 import { playSoundEffect, configureSoundSettings } from '../utils/soundEffects';
 import { selectSessionWords } from '../learning/sessionSelector';
 import { logAttempt } from '../learning/attempts';
@@ -54,7 +55,7 @@ export const BattlePage: React.FC = () => {
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const hiddenInputRef = useRef<HTMLInputElement | null>(null);
+  const nativeTypingRef = useRef(new NativeTypingInput());
   const engineRef = useRef<GameEngine | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const settingsRef = useRef(settings);
@@ -269,6 +270,7 @@ export const BattlePage: React.FC = () => {
       });
 
       engineRef.current = engine;
+      syncNativeInput();
       setRoundBanner({
         round: 1,
         phase: 'mobs',
@@ -328,6 +330,8 @@ export const BattlePage: React.FC = () => {
   // Global Keyboard Listener for Battle
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || (e.target instanceof HTMLElement &&
+          e.target.closest('input, textarea, select, [contenteditable="true"]'))) return;
       if (engineRef.current) {
         engineRef.current.handleKeyDown(e);
       }
@@ -515,6 +519,7 @@ export const BattlePage: React.FC = () => {
   const handleEnemyTagClick = (enemyId: string) => {
     if (engineRef.current) {
       engineRef.current.selectTarget(enemyId);
+      syncNativeInput();
       if (isMobilePortrait && mobileKeyboardMode === 'native') {
         nativeInputRef.current?.focus();
       }
@@ -530,6 +535,7 @@ export const BattlePage: React.FC = () => {
   const handleHintClick = () => {
     if (engineRef.current) {
       engineRef.current.useHint();
+      syncNativeInput();
     }
   };
 
@@ -607,80 +613,35 @@ export const BattlePage: React.FC = () => {
 
   const nativeInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleNativeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const incoming = e.target.value;
-    if (!engineRef.current) return;
-
-    const currentBuffer = engineRef.current.typedBuffer;
-
-    if (incoming.length > currentBuffer.length) {
-      // User typed characters from their phone keyboard
-      const addedChars = incoming.slice(currentBuffer.length);
-      for (const rawChar of addedChars) {
-        const telex = TELEX_DECODE_MAP[rawChar];
-        if (telex && currentBuffer.endsWith(telex.baseChar)) {
-          engineRef.current.handleCharacterInput(telex.telexKey);
-          continue;
-        }
-        // Strip Vietnamese accents if user is using Telex/VNI keyboard on their phone
-        const clean = rawChar
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/đ/g, 'd')
-          .replace(/Đ/g, 'd')
-          .toLowerCase();
-        for (const c of clean) {
-          engineRef.current.handleCharacterInput(c);
-        }
-      }
-    } else if (incoming.length < currentBuffer.length) {
-      // User pressed Backspace on phone keyboard
-      const diff = currentBuffer.length - incoming.length;
-      for (let i = 0; i < diff; i++) {
-        engineRef.current.handleBackspace();
-      }
-    } else {
-      // Same length - IME accent substitution (e.g., typing 's' converted 'a' to 'á', or 'e' to 'ê')
-      const lastIncomingChar = incoming.slice(-1);
-      const telex = TELEX_DECODE_MAP[lastIncomingChar];
-      if (telex && currentBuffer.endsWith(telex.baseChar)) {
-        engineRef.current.handleCharacterInput(telex.telexKey);
-      } else {
-        const nativeEvt = e.nativeEvent as InputEvent;
-        if (nativeEvt && nativeEvt.data) {
-          const evtTelex = TELEX_DECODE_MAP[nativeEvt.data];
-          if (evtTelex && currentBuffer.endsWith(evtTelex.baseChar)) {
-            engineRef.current.handleCharacterInput(evtTelex.telexKey);
-          } else {
-            const clean = nativeEvt.data
-              .normalize('NFD')
-              .replace(/[\u0300-\u036f]/g, '')
-              .replace(/đ/g, 'd')
-              .replace(/Đ/g, 'd')
-              .toLowerCase();
-            for (const c of clean) {
-              engineRef.current.handleCharacterInput(c);
-            }
-          }
-        }
-      }
-    }
-
-    // Keep DOM input value synced with engine's validated buffer
-    if (nativeInputRef.current) {
-      nativeInputRef.current.value = engineRef.current.typedBuffer;
+  const syncNativeInput = () => {
+    if (engineRef.current && nativeInputRef.current) {
+      nativeInputRef.current.value = nativeTypingRef.current.reset(engineRef.current);
     }
   };
 
+  const handleNativeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!engineRef.current) return;
+    e.currentTarget.value = nativeTypingRef.current.change(
+      engineRef.current, e.currentTarget.value, e.nativeEvent as InputEvent
+    );
+  };
+
   const handleNativeInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && engineRef.current?.typedBuffer.length === 0) {
-      return;
-    }
-    if (e.key === 'Escape') {
-      engineRef.current?.handleEscape();
-    } else if (e.key === 'Tab' || e.key === 'Enter') {
+    // Text has exactly one owner: input/composition. Never also send its
+    // keydown to the global game listener, even with a physical keyboard.
+    e.stopPropagation();
+    if (e.repeat) { e.preventDefault(); return; }
+    if (e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229) return;
+    nativeTypingRef.current.startKey();
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    if (e.key === 'Enter') {
       e.preventDefault();
       engineRef.current?.cycleTargetNext();
+      syncNativeInput();
+    } else if (['Escape', 'Tab', 'F1', 'F2', '1', '2', '3'].includes(e.key)) {
+      e.preventDefault();
+      engineRef.current?.handleKeyDown(e.nativeEvent);
+      syncNativeInput();
     }
   };
 
@@ -768,10 +729,14 @@ export const BattlePage: React.FC = () => {
 
             const isSelected = enemy.id === engineState.selectedEnemyId;
             const currentBuffer = enemy.pendingDefeat ? enemy.word : (isSelected ? engineState.typedBuffer : '');
+            const displayedAnswer = typingAnswers(enemy.word, enemy.acceptedAnswers, enemy.mode)
+              .find((answer) => normalizeInput(answer).startsWith(currentBuffer)) || enemy.word;
 
             return (
               <div
                 key={enemy.id}
+                data-enemy-id={enemy.id}
+                data-selected={isSelected}
                 style={{
                   position: 'absolute',
                   left: isMobile
@@ -788,7 +753,7 @@ export const BattlePage: React.FC = () => {
               >
                 <WordTag
                   promptText={enemy.promptText}
-                  expectedWord={enemy.word}
+                  expectedWord={displayedAnswer}
                   meaningText={enemy.meaningText}
                   typedBuffer={currentBuffer}
                   isSelected={isSelected}
@@ -1154,7 +1119,7 @@ export const BattlePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleReplayAudio}
-                  title="Nghe lại [R]"
+                  title="Nghe lại [F2]"
                   style={{
                     padding: '5px 9px',
                     borderRadius: '8px',
@@ -1169,13 +1134,13 @@ export const BattlePage: React.FC = () => {
                     fontWeight: 800,
                   }}
                 >
-                  <Volume2 size={15} /> R
+                  <Volume2 size={15} /> F2
                 </button>
               )}
               <button
                 type="button"
                 onClick={handleHintClick}
-                title="Gợi ý [H]"
+                title="Gợi ý [F1]"
                 style={{
                   padding: '5px 9px',
                   borderRadius: '8px',
@@ -1190,7 +1155,7 @@ export const BattlePage: React.FC = () => {
                   fontWeight: 800,
                 }}
               >
-                <HelpCircle size={15} /> H
+                <HelpCircle size={15} /> F1
               </button>
             </div>
           </div>
@@ -1472,9 +1437,19 @@ export const BattlePage: React.FC = () => {
                 spellCheck="false"
                 lang="en"
                 enterKeyHint="next"
-                value={engineState.typedBuffer}
+                aria-label="Gõ từ tiếng Anh"
+                defaultValue=""
+                onFocus={syncNativeInput}
                 onChange={handleNativeInputChange}
                 onKeyDown={handleNativeInputKeyDown}
+                onCompositionStart={() => nativeTypingRef.current.startComposition()}
+                onCompositionEnd={(e) => {
+                  if (engineRef.current) {
+                    e.currentTarget.value = nativeTypingRef.current.endComposition(
+                      engineRef.current, e.currentTarget.value
+                    );
+                  }
+                }}
                 placeholder={
                   selectedEnemy
                     ? (engineState.wave >= 2
@@ -1605,10 +1580,6 @@ export const BattlePage: React.FC = () => {
                     <button
                       key={k}
                       type="button"
-                      onPointerDown={(e) => {
-                        e.preventDefault();
-                        handleVirtualKey(k, e);
-                      }}
                       onClick={(e) => handleVirtualKey(k, e)}
                       style={{
                         flex: 1,
@@ -1638,10 +1609,6 @@ export const BattlePage: React.FC = () => {
                   {rowIdx === 2 && (
                     <button
                       type="button"
-                      onPointerDown={(e) => {
-                        e.preventDefault();
-                        handleVirtualBackspace(e);
-                      }}
                       onClick={handleVirtualBackspace}
                       style={{
                         flex: 1.5,
@@ -1669,10 +1636,6 @@ export const BattlePage: React.FC = () => {
               <div style={{ display: 'flex', gap: '4px', marginTop: '1px', padding: '0 3px' }}>
                 <button
                   type="button"
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    handleVirtualSpace(e);
-                  }}
                   onClick={handleVirtualSpace}
                   style={{
                     flex: 1,

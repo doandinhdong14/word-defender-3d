@@ -59,7 +59,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const { account, isAdmin } = useAuth();
   const profileId = account?.id ?? 'guest_profile';
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(() => window.location.pathname === '/admin' ? 'admin' : new URLSearchParams(window.location.search).has('auth_error') ? 'account' : 'home');
-  const [selectedSetId, setSelectedSetIdState] = useState<string>('set_everyday');
+  const [selectedSetId, setSelectedSetIdState] = useState<string>('set_oxford_a1');
   const [selectedMode, setSelectedModeState] = useState<GameMode>('copy');
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('normal');
   const [selectedMap, setSelectedMapState] = useState<GameMapId>(() => account ? getActiveMapId() : BASIC_MAP_ID);

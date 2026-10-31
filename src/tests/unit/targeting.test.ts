@@ -43,6 +43,13 @@ describe('Targeting Engine', () => {
     expect(target?.id).toBe('mob1');
   });
 
+  it('targets the displayed word in copy mode instead of an invisible alias', () => {
+    const enemy = createMockEnemy('mob1', 'improve', 200, ['better']);
+    enemy.mode = 'copy';
+    expect(findTargetByFirstChar([enemy], 'b')).toBeNull();
+    expect(findTargetByFirstChar([enemy], 'i')?.id).toBe('mob1');
+  });
+
   it('cycles across living enemies in deterministic order on Tab', () => {
     const e1 = createMockEnemy('e1', 'apple', 100);
     const e2 = createMockEnemy('e2', 'banana', 300);

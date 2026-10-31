@@ -1,5 +1,5 @@
 import { EnemyState } from '../../types/game';
-import { normalizeInput } from './typing';
+import { normalizeInput, typingAnswers } from './typing';
 
 export function findTargetByFirstChar(
   enemies: EnemyState[],
@@ -10,7 +10,8 @@ export function findTargetByFirstChar(
   // Find all living, non-pending-defeat enemies with an answer starting with normChar
   const eligible = enemies.filter((enemy) =>
     !enemy.pendingDefeat &&
-    enemy.acceptedAnswers.some((ans) => normalizeInput(ans).startsWith(normChar))
+    typingAnswers(enemy.word, enemy.acceptedAnswers, enemy.mode)
+      .some((ans) => normalizeInput(ans).startsWith(normChar))
   );
 
   if (eligible.length === 0) return null;

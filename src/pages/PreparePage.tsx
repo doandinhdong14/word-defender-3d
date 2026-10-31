@@ -22,6 +22,13 @@ import { BASIC_MAP_ID, BASIC_MODE, getBasicSets, getBasicWords, isBasicSet } fro
 import { buyStoreItem, buyAmmoPack } from "../economy/inventory";
 import { MonsterAlmanacModal } from "../components/MonsterAlmanacModal";
 import { getDeckProgress, DeckProgressInfo } from "../learning/sessionSelector";
+import type { Difficulty } from "../types/game";
+
+const DIFFICULTY_OPTIONS: { value: Difficulty; label: string; description: string }[] = [
+  { value: "easy", label: "Dễ", description: "Quái thường chậm hơn 30%, thêm thời gian luyện gõ." },
+  { value: "normal", label: "Vừa", description: "Tốc độ tiêu chuẩn, phù hợp khi đã quen tay." },
+  { value: "hard", label: "Khó", description: "Quái thường nhanh hơn 35%, thử thách phản xạ." },
+];
 
 type ActiveModal = "hero" | "map" | "ammo" | "wordset" | "almanac" | "chunk" | null;
 
@@ -38,6 +45,8 @@ export const PreparePage: React.FC = () => {
     setSelectedWordCount,
     selectedChunkIndex,
     setSelectedChunkIndex,
+    selectedDifficulty,
+    setSelectedDifficulty,
     inventory,
     wallet,
     refreshUserData,
@@ -80,6 +89,8 @@ export const PreparePage: React.FC = () => {
   const activeHero = STORE_CATALOG.find((i) => i.id === outfit);
   const activeBullet = STORE_CATALOG.find((i) => i.id === bullet) || STORE_CATALOG.find((i) => i.id === "bullet_default")!;
   const ammoCounts = inventory?.ammoCounts || {};
+  const difficultyIndex = DIFFICULTY_OPTIONS.findIndex((option) => option.value === selectedDifficulty);
+  const difficultyOption = DIFFICULTY_OPTIONS[difficultyIndex];
 
   const handleBuyHero = async (heroId: string) => {
     if (isGuest) { navigateTo('account'); return; }
@@ -334,6 +345,40 @@ export const PreparePage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      <section className="prepare-difficulty" aria-labelledby="prepare-difficulty-label">
+        <div className="prepare-difficulty-heading">
+          <label id="prepare-difficulty-label" htmlFor="prepare-difficulty-slider">Độ khó</label>
+          <output htmlFor="prepare-difficulty-slider">{difficultyOption.label}</output>
+        </div>
+        <input
+          id="prepare-difficulty-slider"
+          className="prepare-difficulty-slider"
+          type="range"
+          min={0}
+          max={DIFFICULTY_OPTIONS.length - 1}
+          step={1}
+          value={difficultyIndex}
+          aria-valuetext={difficultyOption.label}
+          aria-describedby="prepare-difficulty-description"
+          disabled={launching}
+          onChange={(event) => setSelectedDifficulty(DIFFICULTY_OPTIONS[Number(event.target.value)].value)}
+        />
+        <div className="prepare-difficulty-stops">
+          {DIFFICULTY_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={option.value === selectedDifficulty}
+              disabled={launching}
+              onClick={() => setSelectedDifficulty(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <p id="prepare-difficulty-description">{difficultyOption.description}</p>
+      </section>
 
       {/* Bottom Launch Row */}
       <div className="prepare-bottom-bar">

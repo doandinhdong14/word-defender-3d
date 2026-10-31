@@ -1,3 +1,5 @@
+import type { GameMode } from '../../types/game';
+
 export interface TypingResult {
   accepted: boolean;
   isComplete: boolean;
@@ -8,6 +10,12 @@ export interface TypingResult {
 
 export function normalizeInput(str: string): string {
   return str.trim().toLowerCase().normalize('NFC');
+}
+
+export function typingAnswers(word: string, aliases: string[], mode?: GameMode): string[] {
+  // Copy mode must finish the word the player can see. A shorter alias such
+  // as "lab" must not complete "laboratory" and send its suffix elsewhere.
+  return mode === 'copy' ? [word] : [word, ...aliases];
 }
 
 // Mapping of Vietnamese accented characters to their base Latin character and the Telex key used to produce them
@@ -70,11 +78,15 @@ export const TELEX_DECODE_MAP: Record<string, { baseChar: string; telexKey: stri
 };
 
 export function cleanKey(event: KeyboardEvent): string | null {
-  if (event.ctrlKey || event.altKey || event.metaKey) {
+  if (event.repeat || event.ctrlKey || event.altKey || event.metaKey) {
     return null;
   }
   let key = event.key;
   if (!key) return null;
+
+  // Mobile keyboards may attach a stale physical code to a composition event.
+  // Their text is handled by the native input path instead.
+  if (event.isComposing && !/^Key[A-Z]$/i.test(event.code || '')) return null;
 
   // 1. If physical key code is KeyA-Z:
   // When typing on Windows with Unikey / EVKey / Vietnamese IME,

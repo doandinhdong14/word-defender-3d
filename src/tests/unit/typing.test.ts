@@ -49,13 +49,13 @@ describe('Typing Engine', () => {
     expect(res2.matchedAnswer).toBe('better');
   });
 
-  it('ignores modifier keys while permitting repeat keystrokes for rapid double letters', () => {
+  it('ignores held-key repeats and modifiers while accepting distinct presses', () => {
     const event1 = { key: 'a', ctrlKey: true, altKey: false, metaKey: false, repeat: false } as KeyboardEvent;
     expect(cleanKey(event1)).toBeNull();
 
-    // Key repeats (e.g. typing rapid double letters in "speed", "good", "feel", "book") are preserved
+    // repeat means holding a key, not pressing the same letter twice.
     const event2 = { key: 'a', ctrlKey: false, altKey: false, metaKey: false, repeat: true } as KeyboardEvent;
-    expect(cleanKey(event2)).toBe('a');
+    expect(cleanKey(event2)).toBeNull();
 
     const event3 = { key: 'A', ctrlKey: false, altKey: false, metaKey: false, repeat: false } as KeyboardEvent;
     expect(cleanKey(event3)).toBe('a');
