@@ -245,7 +245,7 @@ export const ProgressPage: React.FC = () => {
                         {r.result === 'win' ? 'CHIẾN THẮNG' : r.result === 'lose' ? 'THẤT BẠI' : 'THOÁT TRẬN'}
                       </span>
                       <span style={{ fontSize: '0.85rem', color: 'var(--color-muted-ink)' }}>
-                        • Chế độ: {r.mode} • Độ khó: {r.difficulty}
+                        • Chế độ: {r.mode} • Độ khó: {{ beginner: 'Siêu dễ', easy: 'Dễ', normal: 'Vừa', hard: 'Khó', nightmare: 'Cực khó' }[r.difficulty] || r.difficulty}
                       </span>
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--color-muted-ink)', marginTop: '2px' }}>

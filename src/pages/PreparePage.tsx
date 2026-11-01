@@ -25,9 +25,31 @@ import { getDeckProgress, DeckProgressInfo } from "../learning/sessionSelector";
 import type { Difficulty } from "../types/game";
 
 const DIFFICULTY_OPTIONS: { value: Difficulty; label: string; description: string }[] = [
-  { value: "easy", label: "Dễ", description: "Quái thường chậm hơn 30%, thêm thời gian luyện gõ." },
-  { value: "normal", label: "Vừa", description: "Tốc độ tiêu chuẩn, phù hợp khi đã quen tay." },
-  { value: "hard", label: "Khó", description: "Quái thường nhanh hơn 35%, thử thách phản xạ." },
+  {
+    value: "beginner",
+    label: "Siêu dễ",
+    description: "Quái siêu chậm (30% tốc độ), quái KHÔNG bắn đạn, thảnh thơi học từ và làm quen.",
+  },
+  {
+    value: "easy",
+    label: "Dễ",
+    description: "Quái đi chậm (55%), quái KHÔNG bắn đạn, luyện phản xạ gõ nhẹ nhàng.",
+  },
+  {
+    value: "normal",
+    label: "Vừa",
+    description: "Tốc độ tiêu chuẩn (1.0x), quái thỉnh thoảng bắn tỉa, nhịp độ vừa phải.",
+  },
+  {
+    value: "hard",
+    label: "Khó",
+    description: "Quái nhanh hơn (1.35x), quái bắn chủ động, thử thách phản xạ.",
+  },
+  {
+    value: "nightmare",
+    label: "Cực khó",
+    description: "Tốc độ dồn dập (1.65x), quái bắn liên tục, dành cho cao thủ tốc gõ!",
+  },
 ];
 
 type ActiveModal = "hero" | "map" | "ammo" | "wordset" | "almanac" | "chunk" | null;
@@ -91,8 +113,9 @@ export const PreparePage: React.FC = () => {
   const activeHero = STORE_CATALOG.find((i) => i.id === outfit);
   const activeBullet = STORE_CATALOG.find((i) => i.id === bullet) || STORE_CATALOG.find((i) => i.id === "bullet_default")!;
   const ammoCounts = inventory?.ammoCounts || {};
-  const difficultyIndex = DIFFICULTY_OPTIONS.findIndex((option) => option.value === selectedDifficulty);
-  const difficultyOption = DIFFICULTY_OPTIONS[difficultyIndex];
+  const rawDiffIndex = DIFFICULTY_OPTIONS.findIndex((option) => option.value === selectedDifficulty);
+  const difficultyIndex = rawDiffIndex >= 0 ? rawDiffIndex : 0;
+  const difficultyOption = DIFFICULTY_OPTIONS[difficultyIndex] || DIFFICULTY_OPTIONS[0];
 
   const handleBuyHero = async (heroId: string) => {
     if (isGuest) { navigateTo('account'); return; }

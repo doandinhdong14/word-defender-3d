@@ -8,18 +8,16 @@ test('difficulty slider changes the selection and stays accessible on small scre
   await page.getByRole('button', { name: /Đấu thường/ }).click();
 
   const slider = page.getByRole('slider', { name: 'Độ khó' });
-  await expect(slider).toHaveValue('1');
-  await slider.focus();
-  await slider.press('Home');
   await expect(slider).toHaveValue('0');
-  await expect(slider).toHaveAttribute('aria-valuetext', 'Dễ');
-  await expect(page.getByText('Quái thường chậm hơn 30%, thêm thời gian luyện gõ.')).toBeVisible();
+  await expect(slider).toHaveAttribute('aria-valuetext', 'Siêu dễ');
+  await expect(page.getByText('Quái siêu chậm (30% tốc độ), quái KHÔNG bắn đạn, thảnh thơi học từ và làm quen.')).toBeVisible();
   await page.getByRole('button', { name: 'Khó', exact: true }).click();
-  await expect(slider).toHaveValue('2');
+  await expect(slider).toHaveValue('3');
   await slider.focus();
   await slider.press('ArrowLeft');
   await expect(slider).toHaveAttribute('aria-valuetext', 'Vừa');
-  await page.getByRole('button', { name: 'Dễ', exact: true }).click();
+  await page.getByRole('button', { name: 'Siêu dễ', exact: true }).click();
+  await expect(slider).toHaveValue('0');
 
   for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }, { width: 390, height: 640 }]) {
     await page.setViewportSize(viewport);

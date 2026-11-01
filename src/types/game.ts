@@ -1,5 +1,5 @@
 export type PoseId = 'idle' | 'fire_up_left' | 'fire_up' | 'fire_up_right' | 'fire_left' | 'fire_right';
-export type Difficulty = 'easy' | 'normal' | 'hard';
+export type Difficulty = 'beginner' | 'easy' | 'normal' | 'hard' | 'nightmare';
 export type GameMode = 'copy' | 'recall' | 'listen';
 
 export interface StatusEffects {

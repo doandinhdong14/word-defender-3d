@@ -63,7 +63,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(() => window.location.pathname === '/admin' ? 'admin' : new URLSearchParams(window.location.search).has('auth_error') ? 'account' : 'home');
   const [selectedSetId, setSelectedSetIdState] = useState<string>('set_oxford_a1');
   const [selectedMode, setSelectedModeState] = useState<GameMode>('copy');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('normal');
+  const [selectedDifficulty, setSelectedDifficultyState] = useState<Difficulty>(() => {
+    try {
+      const stored = localStorage.getItem('pempom_difficulty');
+      if (stored && ['beginner', 'easy', 'normal', 'hard', 'nightmare'].includes(stored)) {
+        return stored as Difficulty;
+      }
+    } catch {
+      // ignore
+    }
+    return 'beginner';
+  });
+
+  const setSelectedDifficulty = (diff: Difficulty) => {
+    setSelectedDifficultyState(diff);
+    try {
+      localStorage.setItem('pempom_difficulty', diff);
+    } catch {
+      // ignore
+    }
+  };
+
   const [selectedMap, setSelectedMapState] = useState<GameMapId>(() => account ? getActiveMapId() : BASIC_MAP_ID);
   const [selectedWordCount, setSelectedWordCount] = useState<number>(30);
   const [selectedChunkIndex, setSelectedChunkIndex] = useState<number | null>(null);

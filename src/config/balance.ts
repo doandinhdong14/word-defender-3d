@@ -1,3 +1,5 @@
+import type { Difficulty } from '../types/game';
+
 export const GAME_BALANCE = {
   maxLives: 5,
   wavesPerRun: 3,                 // wave 1 & 2 regular mobs; wave 3 boss
@@ -8,10 +10,33 @@ export const GAME_BALANCE = {
   spawnIntervalMs: 1900,
   baseEnemySpeedPxPerSec: 22,
   speedMultiplierByDifficulty: {
-    easy: 0.70,
+    beginner: 0.30,
+    easy: 0.55,
     normal: 1.0,
     hard: 1.35,
-  },
+    nightmare: 1.65,
+  } as Record<Difficulty, number>,
+  spawnIntervalMultiplierByDifficulty: {
+    beginner: 1.8,
+    easy: 1.3,
+    normal: 1.0,
+    hard: 0.85,
+    nightmare: 0.70,
+  } as Record<Difficulty, number>,
+  maxConcurrentEnemiesByDifficulty: {
+    beginner: 2,
+    easy: 3,
+    normal: 5,
+    hard: 6,
+    nightmare: 7,
+  } as Record<Difficulty, number>,
+  enemyShootingByDifficulty: {
+    beginner: false,
+    easy: false,
+    normal: true,
+    hard: true,
+    nightmare: true,
+  } as Record<Difficulty, boolean>,
   stageWidth: 1280,
   stageHeight: 720,
   ponpiCenterX: 640,

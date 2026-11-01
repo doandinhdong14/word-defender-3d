@@ -161,7 +161,7 @@ export class GameEngine {
     this.equippedStyleId = options.equippedStyleId || 'style_yellow';
     this.equippedBulletId = options.equippedBulletId || 'bullet_default';
     this.ammoCounts = { ...(options.ammoCounts || {}) };
-    this.maxConcurrentEnemies = options.maxConcurrentEnemies ?? GAME_BALANCE.maxConcurrentEnemies;
+    this.maxConcurrentEnemies = options.maxConcurrentEnemies ?? (GAME_BALANCE.maxConcurrentEnemiesByDifficulty[options.difficulty] ?? GAME_BALANCE.maxConcurrentEnemies);
     this.startedAt = new Date().toISOString();
 
     this.onAttempt = options.onAttempt;
@@ -299,12 +299,16 @@ export class GameEngine {
     const speedMult = GAME_BALANCE.speedMultiplierByDifficulty[this.difficulty] || 1.0;
     const baseSpeed = GAME_BALANCE.baseEnemySpeedPxPerSec * speedMult;
 
-    // Archetype selection based on Round:
+    // Archetype selection based on Difficulty & Round:
+    // Beginner: Chỉ cho quái normal (1 từ, không tách, không bắn, đi chậm thư giãn)
     // Round 1: Start gentle! Chỉ cho quái normal, tối đa 1-2 con nhanh (speedster), không bắn, không tách.
     // Round 2: normal + speedsters + shooters + splitting monsters
     // Round 3: chaotic mix of speedsters, shooters, tanks, normal, and splitters!
     let chosenMeta: typeof REGULAR_MONSTER_SPECIES[0];
-    if (this.currentRound === 1) {
+    if (this.difficulty === 'beginner') {
+      const normalSpecies = REGULAR_MONSTER_SPECIES.filter((s) => s.archetype === 'normal');
+      chosenMeta = normalSpecies[Math.floor(Math.random() * normalSpecies.length)] || REGULAR_MONSTER_SPECIES[0];
+    } else if (this.currentRound === 1) {
       const normalSpecies = REGULAR_MONSTER_SPECIES.filter((s) => s.archetype === 'normal');
       const speedsterSpecies = REGULAR_MONSTER_SPECIES.filter((s) => s.archetype === 'speedster');
 
@@ -495,7 +499,7 @@ export class GameEngine {
 
     const speedMult = GAME_BALANCE.speedMultiplierByDifficulty[this.difficulty] || 1.0;
     // Slower boss descent scaled to the number of words, giving ample intense typing time for all words
-    const bossSpeed = Math.max(6, (GAME_BALANCE.baseEnemySpeedPxPerSec * speedMult) * (3.0 / Math.max(3, bossCount)));
+    const bossSpeed = Math.max(3, (GAME_BALANCE.baseEnemySpeedPxPerSec * speedMult) * (3.0 / Math.max(3, bossCount)));
 
     // Choose thematic boss per round
     let chosenBoss = BOSS_MONSTER_SPECIES[0].id;
@@ -567,9 +571,13 @@ export class GameEngine {
     if (this.status === 'WAVE_PLAYING' && this.roundPhase === 'mobs') {
       if (this.waveQueue.length > 0 && this.gameTimeMs >= this.nextSpawnTimeMs) {
         this.spawnRegularEnemy();
-        this.nextSpawnTimeMs = this.gameTimeMs + GAME_BALANCE.spawnIntervalMs;
+        const spawnMult = GAME_BALANCE.spawnIntervalMultiplierByDifficulty[this.difficulty] || 1.0;
+        this.nextSpawnTimeMs = this.gameTimeMs + (GAME_BALANCE.spawnIntervalMs * spawnMult);
       }
     }
+
+    // Check if enemy shooting is enabled for this difficulty tier (false for beginner and easy)
+    const canEnemyShoot = GAME_BALANCE.enemyShootingByDifficulty[this.difficulty] ?? true;
 
     // Update Enemies motion & abilities
     for (let i = this.enemies.length - 1; i >= 0; i--) {
@@ -581,7 +589,8 @@ export class GameEngine {
       enemy.y += effSpeed * dtSec;
 
       // Splitting mechanic: when a splitting monster travels to the middle (y >= 350 && y <= 460), it splits into 3 smaller enemies!
-      if (enemy.canSplit && !enemy.hasSplit && enemy.y >= 350 && enemy.y <= 460) {
+      // In beginner difficulty, disable splitting to keep gameplay relaxed and predictable
+      if (this.difficulty !== 'beginner' && enemy.canSplit && !enemy.hasSplit && enemy.y >= 350 && enemy.y <= 460) {
         enemy.hasSplit = true;
         if (this.enemies.length + 2 <= this.maxConcurrentEnemies) {
           this.splitEnemyIntoThree(enemy);
@@ -589,9 +598,9 @@ export class GameEngine {
         }
       }
 
-      // Shooter firing: Shoots directly AT Ponpi (the player character)
+      // Shooter firing: Shoots directly AT Ponpi (only if enemy shooting is enabled for this difficulty)
       const meta = ALL_SPECIES_META[enemy.speciesId];
-      if (meta?.canShoot && enemy.archetype === 'shooter') {
+      if (canEnemyShoot && meta?.canShoot && enemy.archetype === 'shooter') {
         if (!enemy.lastShotGameMs) {
           // Ra 1 tý rồi mới bắn (3.8s - 5.5s)
           enemy.lastShotGameMs = this.gameTimeMs + 4000 + Math.random() * 1500;
@@ -620,8 +629,8 @@ export class GameEngine {
         }
       }
 
-      // Boss firing: Boss shoots energy spheres
-      if (enemy.isBoss) {
+      // Boss firing: Boss shoots energy spheres (only if enemy shooting is enabled for this difficulty)
+      if (canEnemyShoot && enemy.isBoss) {
         if (!enemy.lastShotGameMs) {
           // Round 1 Boss bắn rất ít (chờ 12s mới bắn phát đầu)
           enemy.lastShotGameMs = this.gameTimeMs + (this.currentRound === 1 ? 12000 : 4500);
