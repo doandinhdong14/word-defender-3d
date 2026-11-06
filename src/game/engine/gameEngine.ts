@@ -419,7 +419,7 @@ export class GameEngine {
       let entryId = parent.entryId;
       let acceptedAnswers = parent.acceptedAnswers;
 
-      if (s > 0 && this.wordPool.length > 0) {
+      if ((s > 0 || parent.pendingDefeat) && this.wordPool.length > 0) {
         const extraEntry = this.wordPool[(this.completedWordsCount + s + Math.floor(Math.random() * 5)) % this.wordPool.length];
         entryId = extraEntry.id;
         entryWord = extraEntry.english;
@@ -456,8 +456,8 @@ export class GameEngine {
         scale: 0.68,
       };
 
-      // Seamless continuation: if parent was selected, child 0 preserves target and buffer
-      if (s === 0 && wasSelected) {
+      // Seamless continuation: if parent was selected, child 0 preserves target and buffer (only if mid-travel split)
+      if (s === 0 && wasSelected && !parent.pendingDefeat) {
         childEnemy.selected = true;
         this.selectedEnemyId = childEnemy.id;
         this.typedBuffer = preservedBuffer;
@@ -733,7 +733,7 @@ export class GameEngine {
 
     // Safety fallback: only for regular mobs awaiting lethal bullet that was lost
     for (const enemy of [...this.enemies]) {
-      if (enemy.pendingDefeat && !enemy.isBoss && !(enemy.archetype === 'tank' && (enemy.hp || 0) > 1)) {
+      if (enemy.pendingDefeat && !enemy.isBoss && !(enemy.archetype === 'tank' && (enemy.hp || 0) > 0)) {
         const hasIncomingBullet = this.bullets.some((b) => b.targetEnemyId === enemy.id && b.isFinishingBullet);
         if (!hasIncomingBullet) {
           this.handleEnemyKilledByBullet(enemy, enemy.word);
@@ -1134,6 +1134,9 @@ export class GameEngine {
         this.targetStartTimeMs = this.gameTimeMs;
         this.currentTargetHadHint = false;
       } else {
+        if (currentTarget.archetype === 'tank') {
+          currentTarget.hp = 0;
+        }
         currentTarget.pendingDefeat = true;
         this.selectedEnemyId = null;
         this.typedBuffer = '';
@@ -1233,22 +1236,22 @@ export class GameEngine {
       return;
     }
 
-    // Handle Tank monster
+    // Handle Tank monster: if it still has armor/HP remaining, don't remove yet
     if (enemy.archetype === 'tank' && (enemy.hp || 0) > 0) {
       this.onSoundEffect?.('boss_hit');
       this.spawnExplosionParticles(enemy.x, enemy.y, '#95A5A6', 16);
       return;
     }
 
-    // Regular Mob Defeated: Pop into paper confetti
-    this.spawnExplosionParticles(enemy.x, enemy.y, '#C69BEC', 20);
-    this.removeEnemy(enemy.id);
-    if (this.selectedEnemyId === enemy.id) {
-      this.selectedEnemyId = null;
-      this.typedBuffer = '';
+    // Splitting monster: upon death, splits into 3 smaller enemies!
+    if (enemy.canSplit && !enemy.hasSplit) {
+      enemy.hasSplit = true;
+      this.spawnExplosionParticles(enemy.x, enemy.y, '#C69BEC', 25);
+      this.splitEnemyIntoThree(enemy);
+      return;
     }
 
-    // Regular Mob Defeated: Pop into paper confetti
+    // Regular / Final Tank Mob Defeated: Pop into paper confetti
     this.spawnExplosionParticles(enemy.x, enemy.y, '#C69BEC', 20);
     this.removeEnemy(enemy.id);
     if (this.selectedEnemyId === enemy.id) {

@@ -339,4 +339,157 @@ describe('Game Engine enemy lanes', () => {
     expect(engine.selectedEnemyId).toBe(dogTarget.id);
     expect(engine.typedBuffer).toBe('d');
   });
+
+  it('correctly destroys tank monster with 3 words without infinite defeatedWordEffects loop', () => {
+    const words: VocabularyEntry[] = [
+      { id: 'w1', setId: 'set_test', english: 'cat', vietnamese: 'mèo', acceptedAnswers: ['cat'], createdAt: '', updatedAt: '' },
+      { id: 'w2', setId: 'set_test', english: 'dog', vietnamese: 'chó', acceptedAnswers: ['dog'], createdAt: '', updatedAt: '' },
+      { id: 'w3', setId: 'set_test', english: 'healthy', vietnamese: 'khỏe mạnh', acceptedAnswers: ['healthy'], createdAt: '', updatedAt: '' },
+    ];
+
+    const engine = new GameEngine({
+      setId: 'set_test',
+      mode: 'copy',
+      difficulty: 'normal',
+      words,
+      equippedSkills: [],
+      equippedHatId: null,
+      equippedShirtId: null,
+      equippedStyleId: 'style_classic',
+    });
+
+    // Manually spawn a 3-word tank mob (like multi_eye_spiky)
+    engine.enemies = [
+      {
+        id: 'tank_test',
+        speciesId: 'multi_eye_spiky',
+        entryId: 'w1',
+        word: 'cat',
+        acceptedAnswers: ['cat'],
+        promptText: 'cat',
+        meaningText: 'mèo',
+        mode: 'copy',
+        x: 360,
+        y: 150,
+        width: 60,
+        height: 60,
+        baseVelocityY: 20,
+        statusEffects: {},
+        selected: false,
+        spawnedAtGameMs: 0,
+        archetype: 'tank',
+        hp: 3,
+        maxHp: 3,
+        tankQueue: [
+          { entryId: 'w2', word: 'dog', acceptedAnswers: ['dog'], promptText: 'dog', meaningText: 'chó' },
+          { entryId: 'w3', word: 'healthy', acceptedAnswers: ['healthy'], promptText: 'healthy', meaningText: 'khỏe mạnh' },
+        ],
+      },
+    ];
+
+    // Word 1: 'cat'
+    for (const ch of 'cat') {
+      engine.handleKeyDown({ key: ch, code: `Key${ch.toUpperCase()}`, preventDefault: () => {} } as any);
+    }
+    // Update until bullet hits
+    for (let i = 0; i < 35; i++) {
+      engine.update(50);
+    }
+    const tank = engine.enemies.find((e) => e.id === 'tank_test')!;
+    expect(tank).toBeDefined();
+    expect(tank.hp).toBe(2);
+    expect(tank.word).toBe('dog');
+
+    // Word 2: 'dog'
+    for (const ch of 'dog') {
+      engine.handleKeyDown({ key: ch, code: `Key${ch.toUpperCase()}`, preventDefault: () => {} } as any);
+    }
+    for (let i = 0; i < 35; i++) {
+      engine.update(50);
+    }
+    expect(tank.hp).toBe(1);
+    expect(tank.word).toBe('healthy');
+
+    // Word 3 (final word): 'healthy'
+    for (const ch of 'healthy') {
+      engine.handleKeyDown({ key: ch, code: `Key${ch.toUpperCase()}`, preventDefault: () => {} } as any);
+    }
+    expect(tank.hp).toBe(0);
+    expect(tank.pendingDefeat).toBe(true);
+
+    // Update 50 frames (simulating multiple seconds)
+    for (let i = 0; i < 50; i++) {
+      engine.update(50);
+    }
+
+    // Tank MUST be completely removed from enemies
+    expect(engine.enemies.some((e) => e.id === 'tank_test')).toBe(false);
+
+    // defeatedWordEffects MUST NOT have duplicate stacked cards for 'healthy' (should only have 1 for healthy)
+    const healthyEffects = engine.defeatedWordEffects.filter((eff) => eff.word === 'healthy');
+    expect(healthyEffects.length).toBeLessThanOrEqual(1);
+  });
+
+  it('splitting monster splits into 3 smaller enemies upon death', () => {
+    const words: VocabularyEntry[] = [
+      { id: 'w1', setId: 'set_test', english: 'cat', vietnamese: 'mèo', acceptedAnswers: ['cat'], createdAt: '', updatedAt: '' },
+      { id: 'w2', setId: 'set_test', english: 'dog', vietnamese: 'chó', acceptedAnswers: ['dog'], createdAt: '', updatedAt: '' },
+      { id: 'w3', setId: 'set_test', english: 'bird', vietnamese: 'chim', acceptedAnswers: ['bird'], createdAt: '', updatedAt: '' },
+      { id: 'w4', setId: 'set_test', english: 'fish', vietnamese: 'cá', acceptedAnswers: ['fish'], createdAt: '', updatedAt: '' },
+    ];
+
+    const engine = new GameEngine({
+      setId: 'set_test',
+      mode: 'copy',
+      difficulty: 'normal',
+      words,
+      equippedSkills: [],
+      equippedHatId: null,
+      equippedShirtId: null,
+      equippedStyleId: 'style_classic',
+    });
+
+    // Manually spawn a splitting monster
+    engine.enemies = [
+      {
+        id: 'split_parent',
+        speciesId: 'bat_purple',
+        entryId: 'w1',
+        word: 'cat',
+        acceptedAnswers: ['cat'],
+        promptText: 'cat',
+        meaningText: 'mèo',
+        mode: 'copy',
+        x: 360,
+        y: 150,
+        width: 60,
+        height: 60,
+        baseVelocityY: 20,
+        statusEffects: {},
+        selected: false,
+        spawnedAtGameMs: 0,
+        canSplit: true,
+        hasSplit: false,
+      },
+    ];
+
+    // Kill the splitting monster
+    for (const ch of 'cat') {
+      engine.handleKeyDown({ key: ch, code: `Key${ch.toUpperCase()}`, preventDefault: () => {} } as any);
+    }
+
+    for (let i = 0; i < 35; i++) {
+      engine.update(50);
+    }
+
+    // Parent is removed and exactly 3 children are spawned!
+    expect(engine.enemies.some((e) => e.id === 'split_parent')).toBe(false);
+    const splitChildren = engine.enemies.filter((e) => e.hasSplit);
+    expect(splitChildren.length).toBe(3);
+    for (const child of splitChildren) {
+      expect(child.canSplit).toBe(false);
+      expect(child.hasSplit).toBe(true);
+      expect(child.scale).toBe(0.68);
+    }
+  });
 });

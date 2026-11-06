@@ -1,6 +1,34 @@
 import React from 'react';
 import { GameMode } from '../types/game';
 
+/**
+ * Rút gọn chuỗi nghĩa tiếng Việt nếu chứa danh sách từ đồng nghĩa dài cách nhau bằng dấu phẩy
+ * Giúp tag quái vật gọn gàng, vừa vặn khung thẻ, tránh tràn viền và vỡ giao diện.
+ * Ví dụ:
+ *  - "điện thoại, máy điện thoại, dây nói, phôn" -> "điện thoại"
+ *  - "tạo, tạo nên, tạo ra, tạo thành, sáng tạo" -> "tạo, tạo nên"
+ *  - "con mèo" -> "con mèo"
+ */
+export function formatTagMeaning(meaning?: string, maxChars = 20, maxParts = 2): string {
+  if (!meaning) return '';
+  const trimmed = meaning.trim();
+  if (!trimmed.includes(',')) return trimmed;
+
+  const parts = trimmed.split(',').map((p) => p.trim()).filter(Boolean);
+  if (parts.length <= 1) return trimmed;
+
+  let result = parts[0];
+  for (let i = 1; i < Math.min(parts.length, maxParts); i++) {
+    const candidate = `${result}, ${parts[i]}`;
+    if (candidate.length <= maxChars) {
+      result = candidate;
+    } else {
+      break;
+    }
+  }
+  return result;
+}
+
 interface WordTagProps {
   promptText: string;
   expectedWord: string;
@@ -37,18 +65,39 @@ export const WordTag: React.FC<WordTagProps> = ({
   onClick,
 }) => {
   const displayMeaning = meaningText || promptText;
+  const formattedMeaning = formatTagMeaning(displayMeaning, compact ? 16 : 22);
 
   // Render content according to the 3 Tiers (Nấc 1, Nấc 2, Nấc 3)
   const renderContent = () => {
     // If revealed by Reveal Bullet in the last 0.5s:
     if (isRevealed) {
+      const meaningMaxWidth = compact ? '130px' : '180px';
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', width: '100%', minWidth: 0 }}>
           <span style={{ fontSize: '0.72rem' }}>👁️</span>
           <span style={{ fontFamily: 'var(--font-english)', fontWeight: 800, fontSize: '0.9rem', color: '#B45309' }}>
             {expectedWord}
           </span>
-          {displayMeaning && <small style={{ fontSize: '0.65rem', color: '#666' }}>{displayMeaning}</small>}
+          {displayMeaning && (
+            <small
+              title={displayMeaning}
+              style={{
+                fontSize: '0.65rem',
+                color: '#666',
+                fontFamily: 'var(--font-vietnamese)',
+                fontWeight: 600,
+                lineHeight: 1.25,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: meaningMaxWidth,
+                padding: '0 4px',
+                display: 'block',
+              }}
+            >
+              {formattedMeaning}
+            </small>
+          )}
         </div>
       );
     }
@@ -64,9 +113,10 @@ export const WordTag: React.FC<WordTagProps> = ({
       const remainingPart = expectedWord.slice(typedLen);
 
       const fontSize = compact ? (isBoss ? '0.8rem' : '0.72rem') : (isBoss ? '1.05rem' : '0.92rem');
+      const meaningMaxWidth = compact ? (isBoss ? '180px' : '135px') : (isBoss ? '260px' : '190px');
 
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', width: '100%', minWidth: 0 }}>
           <div
             style={{
               fontFamily: 'var(--font-english)',
@@ -83,15 +133,22 @@ export const WordTag: React.FC<WordTagProps> = ({
           </div>
           {displayMeaning && (
             <span
+              title={displayMeaning}
               style={{
                 fontFamily: 'var(--font-vietnamese)',
                 fontWeight: 700,
                 fontSize: compact ? '0.62rem' : '0.72rem',
                 color: '#64748B',
-                lineHeight: 1.1,
+                lineHeight: 1.25,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: meaningMaxWidth,
+                padding: '0 4px',
+                display: 'block',
               }}
             >
-              {displayMeaning}
+              {formattedMeaning}
             </span>
           )}
         </div>
@@ -109,25 +166,27 @@ export const WordTag: React.FC<WordTagProps> = ({
       const remainingSlots = Math.max(0, expectedWord.length - typedLen);
       const meaningFontSize = compact ? (isBoss ? '0.76rem' : '0.68rem') : (isBoss ? '0.96rem' : '0.86rem');
       const englishFontSize = compact ? (isBoss ? '0.74rem' : '0.66rem') : (isBoss ? '0.9rem' : '0.8rem');
+      const meaningMaxWidth = compact ? (isBoss ? '180px' : '135px') : (isBoss ? '260px' : '190px');
 
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', width: '100%', minWidth: 0 }}>
           {/* 1. NGHĨA TIẾNG VIỆT TO RÕ - LUÔN HIỂN THỊ TRÊN MỘT DÒNG KHÔNG VỠ CHỮ */}
           <div
+            title={displayMeaning}
             style={{
               fontFamily: 'var(--font-vietnamese)',
               fontWeight: 800,
               fontSize: meaningFontSize,
               color: '#0F172A',
-              lineHeight: 1.2,
+              lineHeight: 1.25,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              maxWidth: compact ? (isBoss ? '180px' : '140px') : (isBoss ? '260px' : '200px'),
-              padding: '0 2px',
+              maxWidth: meaningMaxWidth,
+              padding: '0 4px',
             }}
           >
-            {displayMeaning}
+            {formattedMeaning}
           </div>
 
           {/* 2. CÁC Ô CHỮ TIẾNG ANH (GÕ CHỮ ĐÚNG SẼ ĐIỀN XANH LÁ, LUÔN NẰM NGANG KHÔNG XẾP DỌC) */}
@@ -219,10 +278,12 @@ export const WordTag: React.FC<WordTagProps> = ({
         display: 'inline-flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: compact ? (isBoss ? '4px 8px' : '3px 7px') : (isBoss ? '7px 14px' : '4px 10px'),
+        padding: compact
+          ? (isBoss ? '4px 10px 5px' : '3px 8px 5px')
+          : (isBoss ? '6px 14px 7px' : '4px 12px 6px'),
         backgroundColor: '#FFFFFF',
         border: isSelected ? '3px solid var(--color-ponpi-pink)' : '2px solid var(--color-ink)',
-        borderRadius: 'var(--radius-md)',
+        borderRadius: '16px',
         boxShadow: isSelected
           ? '0 0 0 3px rgba(245, 138, 176, 0.4), 3px 3px 0 var(--color-ink)'
           : 'var(--shadow-sticker-sm)',
